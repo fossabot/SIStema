@@ -26,14 +26,14 @@ class CheckingResult(models.Model):
         RUNTIME_ERROR = djchoices.ChoiceItem(2, label='Run-time error')
         TIME_LIMIT_ERROR = djchoices.ChoiceItem(3, label='Time-limit exceeded')
         PRESENTATION_ERROR = djchoices.ChoiceItem(4, label='Presentation error')
-        WRONG_ANSWER_ERROR = djchoices.ChoiceItem(5, label='Wrong Answer')
+        WRONG_ANSWER_ERROR = djchoices.ChoiceItem(5, label='Wrong answer')
         CHECK_FAILED_ERROR = djchoices.ChoiceItem(6, label='Check failed')
         MEMORY_LIMIT_ERROR = djchoices.ChoiceItem(12, label='Memory limit exceeded')
         SECURITY_ERROR = djchoices.ChoiceItem(13, label='Security violation')
         STYLE_ERROR = djchoices.ChoiceItem(14, label='Coding style violation')
         WALL_TIME_LIMIT_ERROR = djchoices.ChoiceItem(15, label='Wall time-limit exceeded')
         SKIPPED = djchoices.ChoiceItem(18, label='Skipped')
-        UNKNOWN = djchoices.ChoiceItem(100)
+        UNKNOWN = djchoices.ChoiceItem(100, label='Unknown result')
 
         @classmethod
         def from_ejudge_status(cls, ejudge_status):
@@ -55,12 +55,23 @@ class CheckingResult(models.Model):
     def __str__(self):
         return CheckingResult.Result.values[self.result]
 
+    @property
+    def is_success(self):
+        return self.result == CheckingResult.Result.OK
+
     class Meta:
         abstract = True
 
 
 class SolutionCheckingResult(CheckingResult):
     failed_test = models.PositiveIntegerField(blank=True, null=True, default=None)
+
+    def __str__(self):
+        super_str = super().__str__()
+        if self.failed_test is None:
+            return super_str
+        return '%s on test %d' % (super_str, self.failed_test)
+
 
 
 class TestCheckingResult(CheckingResult):
@@ -114,6 +125,9 @@ class QueueElement(models.Model):
         super().save(*args, **kwargs)
 
     def get_result(self):
+        if self.status == QueueElement.Status.WONT_CHECK:
+            return self.wont_check_message
+
         if self.status != QueueElement.Status.CHECKED:
             return None
 

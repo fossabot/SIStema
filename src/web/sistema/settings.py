@@ -102,8 +102,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-LOGIN_URL = '/user/login'
-LOGOUT_URL = '/user/logout'
+LOGIN_URL = '/user/login/'
+LOGOUT_URL = '/user/logout/'
 
 SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True

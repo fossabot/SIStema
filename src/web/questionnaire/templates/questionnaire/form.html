@@ -1,0 +1,74 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}{{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <div class="mw800 center-block mt30">
+
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+
+                    <div class="panel-heading">
+                        <div class="panel-title">
+                            {{ questionnaire.title }}
+                        </div>
+                    </div>
+
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <div class="panel-body p25">
+
+                            {% if form.errors %}
+                                <div class="alert alert-micro alert-danger alert-border-left">
+                                    <span class="fa fa-remove pr10"></span>
+                                    Есть некоторые ошибки, давайте поправим
+                                </div>
+                            {% elif already_filled %}
+                                <div class="alert alert-micro alert-info alert-border-left">
+                                    <span class="fa fa-info pr10"></span>
+                                    Анкета уже заполнена, но вы можете внести в неё исправления
+                                </div>
+                            {% endif %}
+
+                            <div class="section row">
+                                <div class="col-md-8">
+                                    {% for field in form %}
+                                        <div class="section mb40">
+                                            <div class="{{ field.errors|yesno:'state-error,'}}">
+                                                <label for="{{ field.id_for_label }}" class="field-label fs18">
+                                                    {{ field.label }}
+                                                    {% if field.field.required %}
+                                                        *
+                                                    {% endif %}
+                                                </label>
+                                                {{ field }}
+                                                {% if field.help_text %}
+                                                    <p class="help-block">{{ field.help_text }}</p>
+                                                {% endif %}
+                                            </div>
+                                            {% if field.errors %}
+                                                {% for error in field.errors %}
+                                                    <em>{{ error }}</em>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel-footer p25 text-right">
+                            <button type="submit" class="button btn-success">Отправить</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

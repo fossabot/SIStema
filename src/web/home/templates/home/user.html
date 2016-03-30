@@ -1,0 +1,26 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}{{ school.name }}{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="mw800 center-block">
+            <div class="fs30 text-center text-alert-darker pb25">
+                {{ school.full_name }}
+            </div>
+
+            <div class="row">
+            {% for step in steps %}
+                {% if forloop.counter0|divisibleby:2 %}
+                    </div>
+                    <div class="row">
+                {% endif %}
+                <div class="col-sm-6">
+                    {{ step|safe }}
+                </div>
+            {% endfor %}
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

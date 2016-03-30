@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% load staticfiles %}
+
+{% block body_classes %}sb-r-c sb-l-c{% endblock %}
+
+{% block content_wrapper %}
+    <div>
+        <header class="navbar navbar-fixed-top navbar-shadow">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="menu-divider hidden-xs"><i class="fa fa-circle"></i></li>
+                <li class="dropdown menu-merge">
+                    <a href="#" class="dropdown-toggle fw600 p15" data-toggle="dropdown" aria-expanded="false">
+                        <img src="{% static 'images/default_avatar.jpg' %}" alt="avatar" class="mw30 br64">
+                        <span class="hidden-xs pl15"> {{ user.first_name }} {{ user.last_name }}</span>
+                        <span class="caret caret-tp hidden-xs"></span>
+                    </a>
+                    <ul class="dropdown-menu list-group dropdown-persist w150" role="menu">
+                        <!--
+                        <li class="list-group-item">
+                            <a href="#">
+                                <span class="fa fa-gear"></span> Настройки
+                            </a>
+                        </li>
+                        -->
+                        <li class="dropdown-footer">
+                            <a href="{% url 'logout' %}">
+                                <span class="fa fa-power-off pr5"></span> Выход
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </header>
+
+        <aside id="sidebar_left" class=""></aside>
+
+        <section id="content_wrapper">
+            <section id="content" class="">
+                {% block content %}
+                {% endblock %}
+            </section>
+        </section>
+    </div>
+{% endblock %}

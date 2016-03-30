@@ -12,8 +12,11 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from sistema.local_settings import *
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+BASE_DIR = os.path.dirname(PROJECT_DIR)
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,6 +30,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+ADMINS = [('Андрей Гейн', 'andgein@yandex.ru')]
+
+SERVER_EMAIL = 'admin@sistema.lksh.ru'
+EMAIL_SUBJECT_PREFIX = '[SIStema] '
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
 
 # Application definition
 
@@ -37,6 +48,18 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'reversion',
+    'social.apps.django_app.default',
+
+    'school',
+    'user',
+    'questionnaire',
+    'home',
+
+    'modules.ejudge',
+    'modules.entrance',
+    'modules.topics',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -52,10 +75,12 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'sistema.urls'
 
+AUTH_USER_MODEL = "user.User"
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(PROJECT_DIR, 'sistema', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,6 +94,28 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sistema.wsgi.application'
+
+AUTHENTICATION_BACKENDS = (
+    'social.backends.vk.VKOAuth2',
+    'social.backends.twitter.TwitterOAuth',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+LOGIN_URL = '/user/login'
+LOGOUT_URL = '/user/logout'
+
+SOCIAL_AUTH_USER_MODEL = AUTH_USER_MODEL
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
+SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/user/complete/'
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '2888774'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'xO6ka9PBnhNunuUyfx5f'
+
+SOCIAL_AUTH_TWITTER_KEY = 'a4XGu2XP4DZE7DAqphTZfdltj'
+SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs'
+
+
 
 
 # Database
@@ -99,4 +146,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
+STATIC_ROOT = '../static/'
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(PROJECT_DIR, 'static')
+]
+
+
+SISTEMA_UPLOAD_FILES_DIR = os.path.join(BASE_DIR, 'uploads')
+if not os.path.exists(SISTEMA_UPLOAD_FILES_DIR):
+    os.mkdir(SISTEMA_UPLOAD_FILES_DIR)
+else:
+    if not os.path.isdir(SISTEMA_UPLOAD_FILES_DIR):
+        raise Exception('Upload directory (SISTEMA_UPLOAD_FILES_DIR) exists but is not a folder')
+
+
+SISTEMA_EJUDGE_BACKEND_ADDRESS = 'https://ejudge.andgein.ru'

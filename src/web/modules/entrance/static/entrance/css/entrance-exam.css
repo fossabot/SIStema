@@ -1,0 +1,17 @@
+.entrance-exam__task__program__submits .submit {
+    display: table-row;
+}
+
+.entrance-exam__task__program__submits .submit.header {
+    font-weight: bold;
+}
+
+.entrance-exam__task__program__submits .submit > div {
+    display: table-cell;
+    padding-right: 10px;
+    padding-bottom: 5px;
+}
+
+.entrance-exam__task__program__submits .submit .language {
+
+}

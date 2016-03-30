@@ -1,0 +1,23 @@
+.centered-form {
+    max-width: 500px !important;
+}
+
+.admin-form .vk {
+    background-color: #4d75a3;
+    color: white;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.admin-form .vk:hover,
+.admin-form .vk:focus {
+    background-color: #234771;
+    color: white;
+}
+
+.admin-form .vk span {
+    background-color: #365f8f;
+}
+
+.admin-form .btn-social i {
+    top: 2px;
+}

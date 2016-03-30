@@ -1,0 +1,8 @@
+Структура SIStema/src
+	web [главный django-проект]
+		sistema
+		manage.py
+	core
+	  auth
+	  
+	modules

@@ -1,0 +1,160 @@
+  .model tiny
+  .386
+  .code
+  org 100h
+;  locals
+_1:
+	jmp start
+
+help db "Hi, I'm help!$"
+msg_s db "sit $"
+msg_k db "kill $" 
+msg_u db "up $"
+msg_fail db "I can't "
+msg_ok db "ok "
+msg1 db "Ok!$"
+msg2 db "Already!$"
+
+int2f:
+	cmp BX, 0ABCh
+  	jne notmy
+  	cmp CX, 1234h
+  	jne notmy
+  	cmp DX, 2345h
+  	jne notmy
+
+  	xchg CX, DX
+
+  	mov AX, CS
+  	lea BX, int2f
+  	mov DX, word ptr int2fold[0]
+	mov SI, word ptr int2fold[2]
+
+  	iret
+
+notmy:
+		db 0eah
+int2fold dd 0
+
+start:
+	mov BL, 02h:[83h]
+	cmp BL, 's'
+	je sit
+	cmp BL, 'k'
+	je kill
+	cmp BL, 'u'
+	je up
+
+	mov AH, 09h
+	lea DX, help
+	int 21h 
+	ret
+;------------------------------------------------------------------------------------------
+sit:
+
+	mov AH, 09h
+	lea DX, msg_s
+	int 21h 
+
+	mov BX, 0ABCh
+	mov CX, 1234h
+	mov DX, 2345h
+	int 2fh
+
+	cmp CX, 2345h
+	jne setint2f
+
+	mov AH, 09h
+	lea DX, msg2
+	int 21h
+	ret
+
+setint2f:
+	mov AX, 352fh
+	int 21h
+
+	; save old int
+	mov word ptr int2fold, BX
+	mov word ptr int2fold[2], ES 
+	; set new int
+  	mov AX, 252fh
+	lea DX, int2f 
+	int 21h
+
+	mov AH, 09h
+	lea DX, msg1
+	int 21h
+
+	mov AX, 3100h
+	mov DX, 30h
+	int 21h
+	ret
+
+;------------------------------------------------------------------------------------------
+kill:
+
+	mov AH, 09h
+	lea DX, msg_k
+	int 21h 
+
+	mov BX, 0ABCh
+	mov CX, 1234h
+	mov DX, 2345h
+	int 2fh
+
+	mov CX, AX
+
+  	mov DS, DX
+	mov DX, SI
+  	mov AX, 252fh
+	int 21h
+  
+ 	;push CX
+ 	;pop ES          
+  	;mov AH, 49h
+  	;int 21h   
+
+	ret
+
+;------------------------------------------------------------------------------------------
+up:
+
+	mov AH, 09h
+	lea DX, msg_u
+	int 21h 
+
+	; check
+  	mov AX, 352fh
+  	int 21h
+	
+	mov word ptr int2fold[0], BX
+	mov word ptr int2fold[2], ES 
+
+	mov BX, 0ABCh
+	mov CX, 1234h
+	mov DX, 2345h
+	int 2fh
+
+	cmp word ptr int2fold[2], AX
+	jne fail_up
+	cmp word ptr int2fold[0], BX
+	jne fail_up
+
+	;снимаем резидента
+  	mov DS, DX
+	mov DX, SI
+  	mov AX, 252fh
+	int 21h
+
+	mov AH, 09h
+	lea DX, msg_ok
+	int 21h
+	ret
+
+fail_up:
+	mov AH, 09h
+	lea DX, msg_fail
+	int 21h
+	ret
+
+end _1

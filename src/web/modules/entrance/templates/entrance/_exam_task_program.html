@@ -1,0 +1,54 @@
+{% extends 'entrance/_exam_task.html' %}
+
+{% block panel_icon %}
+    <span class="panel-icon">
+       <i class="fa fa-code"></i>
+   </span>
+{% endblock %}
+
+{% block answer_form %}
+    <form method="POST" action="" enctype="multipart/form-data">
+        {{ task.form }}
+        {% if task.help_text %}
+            <span class="help-block mbn">
+                {{ task.help_text }}
+            </span>
+        {% endif %}
+        <button class="entrance-exam__task__program__submit btn btn-info btn-small">Отправить</button>
+        <em class="status"></em>
+    </form>
+{% endblock %}
+
+{% block user_solutions %}
+    <div class="entrance-exam__task__program__submits col-md-3 col-sm-6 col-xs-12">
+        {% if task.user_solutions %}
+            <div class="submit header">
+                <div class="counter"></div>
+                <div class="language">
+                    Язык
+                </div>
+                <div class="status">
+                    Статус
+                </div>
+            </div>
+        {% endif %}
+        {% for solution in task.user_solutions %}
+            <div class="submit">
+                <div class="counter"> {{ forloop.revcounter }}.</div>
+                <div class="language">{{ solution.language }}</div>
+                {% with solution.ejudge_queue_element.get_result as result %}
+                    <div class="result">
+                        {% if result %}
+                            {{ result }}
+                        {% else %}
+                            Проверяется..
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            </div>
+        {% empty %}
+            <h5>Здесь будут отображаться ваши попытки по этой задаче</h5>
+        {% endfor %}
+
+    </div>
+{% endblock %}

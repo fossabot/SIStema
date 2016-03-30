@@ -5,5 +5,11 @@ Django >= 1.8.4
 Jinja2 >= 2.7.3
 django-jinja >= 1.4.1
 django-reversion
+reversion
+django-solo
+django-choices
 
 requests >= 2.7.0
+bs4
+python-social-auth
+cached-property

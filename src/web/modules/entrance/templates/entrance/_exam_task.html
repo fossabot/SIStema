@@ -1,0 +1,31 @@
+<div class="panel">
+    <div class="panel-heading">
+        {% block panel_icon %}
+        {% endblock %}
+        <span class="panel-title"> {{ index }}. {{ task.title }}</span>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+
+            {% if task.form.task_type == 'program' %}
+                <div class="col-md-5 col-sm-12 col-xs-12">
+                    {{ task.text|linebreaks }}
+                </div>
+            {% else %}
+                <div class="col-md-8 col-sm-6 col-xs-12">
+                    {{ task.text|linebreaks }}
+                </div>
+            {% endif %}
+
+            {% if task.form.task_type == 'program' %}
+                {% block user_solutions %}
+                {% endblock %}
+            {% endif %}
+            <div class="entrance-exam__task entrance-exam__task__{{ task.form.task_type }} col-md-4 col-sm-6 col-xs-12 form-group has-inf" data-submit-url="{% url 'school:entrance:submit' task.exam.for_school.short_name task.id%}">
+                {% block answer_form %}
+                    Произошла какая-то ошибка, обновите страницу или напишите <a href="mailto:lksh@lksh.ru">нам</a>.
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>

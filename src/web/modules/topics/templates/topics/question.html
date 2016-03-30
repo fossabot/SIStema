@@ -1,0 +1,108 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}{{ topic.title }} &mdash; {{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <div class="mw800 center-block mt30">
+
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+
+                    <div class="panel-heading">
+                        <span class="panel-title">
+                            <i class="fa fa-comments"></i> {{ questionnaire.title }}
+                        </span>
+                    </div>
+
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <div class="panel-body p25">
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="text-alert fs30">
+                                        {{ topic.title }}
+                                    </div>
+                                    <div class="help-block">
+                                        {{ topic.text }}
+                                    </div>
+
+                                    {% for field in form %}
+                                        {% if field.is_hidden %}
+                                            {{ field }}
+                                        {% else %}
+                                            <div class="mt20 {{ field.errors|yesno:"state-error,," }}">
+                                                <label for="{{ field.id_for_label }}" class="fs18">{{ field.label }}</label>
+
+                                                {% for radio in field %}
+                                                    <label for="{{ radio.id_for_label }}" class="option option-alert block mt5">
+                                                        {{ radio.tag }}
+                                                        <span class="radio"></span>
+                                                        {{ radio.choice_label }}
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                            {% for error in field.errors %}
+                                                <em>{{ error }}</em>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel-footer p25 text-left">
+                            {% if is_correcting %}
+                                <button type="submit" class="button btn-alert">Сохранить</button>
+                                <a class="btn btn-link" href="{% url 'school:topics:index' request.school.short_name%}">Отменить</a>
+                            {% else %}
+                                <button type="submit" class="button btn-alert">Ответить</button>
+                            {% endif %}
+                        </div>
+
+                    </form>
+                </div>
+
+                {% if issued_topics %}
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                История ответов <div class="fs14 lh10 mb15">ошибки в заполнении можно будет исправить в конце</div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            {% for topic_with_marks in issued_topics %}
+                                <div class="row">
+                                    <div class="col-xs-1">
+                                        <div class="mnw50 fs30 mr15 text-right text-{{ topic_with_marks.all_marks_are_automatically|yesno:"muted-lighter,alert" }}">
+                                            {{ forloop.revcounter }}
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-11 mb10">
+                                        <p class="text-{{ topic_with_marks.all_marks_are_automatically|yesno:"muted-lighter,alert" }} fs18 fw600 mt5">
+                                            {{ topic_with_marks.topic.title }}
+                                        </p>
+                                        {% for mark in topic_with_marks.marks %}
+                                            <p class="{{ mark.is_automatically|yesno:"text-muted-lighter," }}">
+                                                <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
+                                                <span class="label label-{{ mark.is_automatically|yesno:"muted,success" }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                                {% if mark.is_automatically %}
+                                                    <div class="text-muted small">(автоматическая оценка; видна только админам)</div>
+                                                {% endif %}
+                                            </p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

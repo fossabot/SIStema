@@ -2,78 +2,135 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0002_auto_20160320_1808'),
+        ('school', '0003_school_full_name'),
+        ('ejudge', '0007_auto_20160329_2040'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ChoiceQuestionnaireQuestion',
+            name='EntranceExam',
             fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
-                ('short_name', models.CharField(max_length=100, help_text='Идентификатор. Лучше сделать из английских букв, цифр и подчёркивания')),
-                ('text', models.CharField(max_length=100, help_text='Вопрос')),
-                ('is_required', models.BooleanField(help_text='Является ли вопрос обязательным')),
-                ('help_text', models.CharField(max_length=400, help_text='Подсказка, помогающая ответить на вопрос')),
+                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('for_school', models.OneToOneField(to='school.School')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='EntranceExamTask',
+            fields=[
+                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=100, help_text='Название')),
+                ('text', models.TextField(help_text='Формулировка задания')),
+                ('help_text', models.CharField(blank=True, max_length=100, help_text='Дополнительная информация, например, сведения о формате ответа')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='EntranceExamTaskSolution',
+            fields=[
+                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('solution', models.TextField()),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'abstract': False,
+                'ordering': ['-created_at'],
             },
         ),
         migrations.CreateModel(
-            name='ChoiceQuestionnaireQuestionVariant',
+            name='EntranceLevel',
             fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
-                ('text', models.CharField(max_length=100)),
-                ('is_multiple', models.BooleanField()),
-                ('is_inline', models.BooleanField()),
-                ('question', models.ForeignKey(to='entrance.ChoiceQuestionnaireQuestion', related_name='variants')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Questionnaire',
-            fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
+                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('short_name', models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')),
+                ('name', models.CharField(max_length=100)),
+                ('order', models.IntegerField(default=0)),
                 ('for_school', models.ForeignKey(to='school.School')),
-                ('for_session', models.ForeignKey(to='school.Session', null=True)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='TextQuestionnaireQuestion',
-            fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
-                ('short_name', models.CharField(max_length=100, help_text='Идентификатор. Лучше сделать из английских букв, цифр и подчёркивания')),
-                ('text', models.CharField(max_length=100, help_text='Вопрос')),
-                ('is_required', models.BooleanField(help_text='Является ли вопрос обязательным')),
-                ('help_text', models.CharField(max_length=400, help_text='Подсказка, помогающая ответить на вопрос')),
-                ('is_multiline', models.BooleanField()),
-                ('questionnaire', models.ForeignKey(to='entrance.Questionnaire', related_name='textquestionnairequestion_questions')),
             ],
             options={
-                'abstract': False,
+                'ordering': ['for_school_id', 'order'],
             },
         ),
         migrations.CreateModel(
-            name='YesNoQuestionnaireQuestion',
+            name='EntranceStep',
             fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
-                ('short_name', models.CharField(max_length=100, help_text='Идентификатор. Лучше сделать из английских букв, цифр и подчёркивания')),
-                ('text', models.CharField(max_length=100, help_text='Вопрос')),
-                ('is_required', models.BooleanField(help_text='Является ли вопрос обязательным')),
-                ('help_text', models.CharField(max_length=400, help_text='Подсказка, помогающая ответить на вопрос')),
-                ('questionnaire', models.ForeignKey(to='entrance.Questionnaire', related_name='yesnoquestionnairequestion_questions')),
+                ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
+                ('class_name', models.CharField(max_length=100, help_text='Путь до класса, описывающий шаг')),
+                ('params', models.TextField(help_text='Параметры для шага')),
+                ('order', models.IntegerField()),
+                ('for_school', models.ForeignKey(to='school.School', related_name='entrance_steps')),
             ],
             options={
-                'abstract': False,
+                'ordering': ['order'],
             },
+        ),
+        migrations.CreateModel(
+            name='FileEntranceExamTask',
+            fields=[
+                ('entranceexamtask_ptr', models.OneToOneField(primary_key=True, auto_created=True, parent_link=True, to='entrance.EntranceExamTask', serialize=False)),
+            ],
+            bases=('entrance.entranceexamtask',),
+        ),
+        migrations.CreateModel(
+            name='FileEntranceExamTaskSolution',
+            fields=[
+                ('entranceexamtasksolution_ptr', models.OneToOneField(primary_key=True, auto_created=True, parent_link=True, to='entrance.EntranceExamTaskSolution', serialize=False)),
+                ('original_filename', models.TextField()),
+            ],
+            bases=('entrance.entranceexamtasksolution',),
+        ),
+        migrations.CreateModel(
+            name='ProgramEntranceExamTask',
+            fields=[
+                ('entranceexamtask_ptr', models.OneToOneField(primary_key=True, auto_created=True, parent_link=True, to='entrance.EntranceExamTask', serialize=False)),
+                ('ejudge_contest_id', models.PositiveIntegerField(help_text='ID контеста в еджадже')),
+                ('ejudge_problem_id', models.PositiveIntegerField(help_text='ID задачи в еджадже')),
+            ],
+            bases=('entrance.entranceexamtask',),
+        ),
+        migrations.CreateModel(
+            name='ProgramEntranceExamTaskSolution',
+            fields=[
+                ('entranceexamtasksolution_ptr', models.OneToOneField(primary_key=True, auto_created=True, parent_link=True, to='entrance.EntranceExamTaskSolution', serialize=False)),
+                ('ejudge_queue_element', models.ForeignKey(to='ejudge.QueueElement')),
+                ('language', models.ForeignKey(to='ejudge.ProgrammingLanguage')),
+            ],
+            bases=('entrance.entranceexamtasksolution',),
+        ),
+        migrations.CreateModel(
+            name='TestEntranceExamTask',
+            fields=[
+                ('entranceexamtask_ptr', models.OneToOneField(primary_key=True, auto_created=True, parent_link=True, to='entrance.EntranceExamTask', serialize=False)),
+                ('correct_answer_re', models.CharField(max_length=100, help_text='Правильный ответ (регулярное выражение)')),
+                ('validation_re', models.CharField(blank=True, max_length=100, help_text='Регулярное выражение для валидации ввода')),
+            ],
+            bases=('entrance.entranceexamtask',),
         ),
         migrations.AddField(
-            model_name='choicequestionnairequestion',
-            name='questionnaire',
-            field=models.ForeignKey(to='entrance.Questionnaire', related_name='choicequestionnairequestion_questions'),
+            model_name='entrancelevel',
+            name='tasks',
+            field=models.ManyToManyField(to='entrance.EntranceExamTask', blank=True),
+        ),
+        migrations.AddField(
+            model_name='entranceexamtasksolution',
+            name='task',
+            field=models.ForeignKey(to='entrance.EntranceExamTask'),
+        ),
+        migrations.AddField(
+            model_name='entranceexamtasksolution',
+            name='user',
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+        ),
+        migrations.AddField(
+            model_name='entranceexamtask',
+            name='exam',
+            field=models.ForeignKey(to='entrance.EntranceExam', related_name='entranceexamtask'),
+        ),
+        migrations.AlterIndexTogether(
+            name='entranceexamtasksolution',
+            index_together=set([('task', 'user')]),
         ),
     ]

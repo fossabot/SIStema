@@ -51,6 +51,7 @@ INSTALLED_APPS = (
 
     'reversion',
     'social.apps.django_app.default',
+    'markdown_deux',
 
     'school',
     'user',

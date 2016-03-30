@@ -64,7 +64,7 @@ def _get_questionnaire_status(user, questionnaire):
     return user_status
 
 
-def _get_user_marks_by_topics(user, questionnaire):
+def _get_user_marks_by_topics(user, questionnaire, not_show_auto_marks=True):
     """
     :return: Возвращает все оценки пользователя, сгруппированные по темам, в виде массива объектов TopicWithUserMarks
     """
@@ -74,7 +74,7 @@ def _get_user_marks_by_topics(user, questionnaire):
         .prefetch_related('scale_in_topic__scale_label_group__scale')
 
     # Only staff can see automatically marks
-    if not user.is_staff:
+    if not_show_auto_marks and not user.is_staff:
         user_marks = user_marks.filter(is_automatically=False)
 
     # Grouping marks for the same topics
@@ -94,7 +94,7 @@ def _get_user_marks_by_topics(user, questionnaire):
 
 
 def correcting(request):
-    topics_with_marks = _get_user_marks_by_topics(request.user, request.questionnaire)
+    topics_with_marks = _get_user_marks_by_topics(request.user, request.questionnaire, not_show_auto_marks=False)
     topics_with_marks = sorted(topics_with_marks, key=lambda t: t.topic.order)
 
     return render(request, 'topics/correcting.html', {

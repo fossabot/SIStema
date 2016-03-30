@@ -1,3 +1,6 @@
+{#{% load markdown_filter %}#}
+{% load markdown_deux_tags %}
+
 <div class="panel">
     <div class="panel-heading">
         {% block panel_icon %}
@@ -9,11 +12,11 @@
 
             {% if task.form.task_type == 'program' %}
                 <div class="col-md-5 col-sm-12 col-xs-12">
-                    {{ task.text|linebreaks }}
+                    {{ task.text|markdown }}
                 </div>
             {% else %}
                 <div class="col-md-8 col-sm-6 col-xs-12">
-                    {{ task.text|linebreaks }}
+                    {{ task.text|markdown }}
                 </div>
             {% endif %}
 

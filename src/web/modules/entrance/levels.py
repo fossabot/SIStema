@@ -60,3 +60,30 @@ class AlreadyWasEntranceLevelLimiter(EntranceLevelLimiter):
             return EntranceLevelLimit(levels.filter(short_name='c_prime').get())
 
         return EntranceLevelLimit(self._find_minimal_level())
+
+
+class AgeEntranceLevelLimiter(EntranceLevelLimiter):
+    # TODO: move it to settings?
+    question_short_name = 'class'
+
+    def get_limit(self, user):
+        qs = QuestionnaireAnswer.objects.filter(questionnaire__for_school=self.school,
+                                                user=user,
+                                                question_short_name=self.question_short_name)
+        if not qs.exists():
+            return EntranceLevelLimit(self._find_minimal_level())
+
+        answer = qs.first()
+        try:
+            _class = int(answer)
+        except:
+            return EntranceLevelLimit(self._find_minimal_level())
+
+        levels = models.EntranceLevel.objects.filter(for_school=self.school)
+
+        if _class >= 10:
+            return EntranceLevelLimit(levels.filter(short_name='b_prime').get())
+        if _class == 9:
+            return EntranceLevelLimit(levels.filter(short_name='c').get())
+        if _class == 8:
+            return EntranceLevelLimit(levels.filter(short_name='c_prime').get())

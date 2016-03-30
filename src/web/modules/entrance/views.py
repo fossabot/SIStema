@@ -20,7 +20,8 @@ def index(request):
 
 def _get_entrance_level(school, user):
     limiters = [modules.topics.entrance.levels.TopicsEntranceLevelLimiter,
-                modules.entrance.levels.AlreadyWasEntranceLevelLimiter
+                modules.entrance.levels.AlreadyWasEntranceLevelLimiter,
+                modules.entrance.levels.AgeEntranceLevelLimiter
                 ]
 
     current_limit = modules.entrance.levels.EntranceLevelLimit(None)

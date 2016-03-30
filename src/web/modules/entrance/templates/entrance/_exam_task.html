@@ -19,6 +19,15 @@
                         <div>Ограничение по памяти: <b>{{ task.programentranceexamtask.memory_limit|filesizeformat }} </b></div>
                     </div>
                     {{ task.text|markdown }}
+
+                    <div>
+                        <h4>Формат входного файла</h4>
+                        {{ task.programentranceexamtask.input_format|markdown }}
+                    </div>
+                    <div>
+                        <h4>Формат выходного файла</h4>
+                        {{ task.programentranceexamtask.output_format|markdown }}
+                    </div>
                 </div>
             {% else %}
                 <div class="col-md-9 col-sm-6 col-xs-12">

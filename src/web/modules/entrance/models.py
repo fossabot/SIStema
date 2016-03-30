@@ -46,17 +46,17 @@ class ProgramEntranceExamTask(EntranceExamTask):
 
     ejudge_problem_id = models.PositiveIntegerField(help_text='ID задачи в еджадже')
 
-    input_file_name = models.CharField(max_length=100)
+    input_file_name = models.CharField(max_length=100, blank=True)
 
-    output_file_name = models.CharField(max_length=100)
+    output_file_name = models.CharField(max_length=100, blank=True)
 
     time_limit = models.PositiveIntegerField()
 
     memory_limit = models.PositiveIntegerField()
 
-    input_format = models.TextField()
+    input_format = models.TextField(blank=True)
 
-    output_format = models.TextField()
+    output_format = models.TextField(blank=True)
 
 
 class EntranceExam(models.Model):

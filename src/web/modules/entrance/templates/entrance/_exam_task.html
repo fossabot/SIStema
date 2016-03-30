@@ -20,14 +20,18 @@
                     </div>
                     {{ task.text|markdown }}
 
-                    <div>
-                        <h4>Формат входного файла</h4>
-                        {{ task.programentranceexamtask.input_format|markdown }}
-                    </div>
-                    <div>
-                        <h4>Формат выходного файла</h4>
-                        {{ task.programentranceexamtask.output_format|markdown }}
-                    </div>
+                    {% if task.programentranceexamtask.input_format %}
+                        <div>
+                            <h4>Формат входного файла</h4>
+                            {{ task.programentranceexamtask.input_format|markdown }}
+                        </div>
+                    {% endif %}
+                    {% if task.programentranceexamtask.output_format %}
+                        <div>
+                            <h4>Формат выходного файла</h4>
+                            {{ task.programentranceexamtask.output_format|markdown }}
+                        </div>
+                    {% endif %}
                 </div>
             {% else %}
                 <div class="col-md-9 col-sm-6 col-xs-12">

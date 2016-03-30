@@ -34,7 +34,7 @@
         {% endif %}
         {% for solution in task.user_solutions %}
             {% with solution.ejudge_queue_element.get_result as result %}
-                <div class="submit {{ result.is_success|yesno:'text-success,text-danger'}}">
+                <div class="submit {{ result.is_success|yesno:'text-success,text-danger,'}}">
                     <div class="counter"> {{ forloop.revcounter }}.</div>
                     <div class="language">{{ solution.language }}</div>
 

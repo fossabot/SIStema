@@ -9,6 +9,10 @@
 {% endblock %}
 
 {% block content %}
+    {% if user.is_staff %}
+        Информация только для админов: определившаяся параллель {{ entrance_level }}
+    {% endif %}
+
     {% if test_tasks %}
         <div class="fs18">Тестовые задания</div>
         <div class="help-block mb20">

@@ -61,6 +61,7 @@ def exam(request):
                                        program_task.entranceexamtasksolution_set.order_by('-created_at')]
 
     return render(request, 'entrance/exam.html', {
+        'entrance_level': entrance_level,
         'school': request.school,
         'test_tasks': test_tasks,
         'file_tasks': file_tasks,

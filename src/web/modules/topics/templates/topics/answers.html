@@ -1,0 +1,49 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}{{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <div class="mw800 center-block mt30">
+
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+
+                    <div class="panel-heading">
+                        <span class="panel-title">
+                            <i class="fa fa-comments"></i> {{ questionnaire.title }}
+                        </span>
+                    </div>
+
+                    <div class="panel-body p25">
+
+                        {% for topic_with_marks in topics %}
+                            <div class="row">
+                                <div class="col-xs-1">
+                                    <div class="mnw50 fs30 mr15 text-right text-{{ topic_with_marks.exists_automatically_mark|yesno:"alert,muted-lighter," }}">
+                                        {{ forloop.counter }}
+                                    </div>
+                                </div>
+                                <div class="col-xs-11 mb10">
+                                    <p class="text-{{ topic_with_marks.exists_automatically_mark|yesno:"alert,muted-lighter," }} fs18 fw600 mt5">
+                                        {{ topic_with_marks.topic.title }}
+                                    </p>
+                                    {% for mark in topic_with_marks.marks %}
+                                        <p class="{{ mark.is_automatically|yesno:",text-muted-lighter," }}">
+                                            <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
+                                            <span class="label label-{{ mark.is_automatically|yesno:"success,muted," }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                        </p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

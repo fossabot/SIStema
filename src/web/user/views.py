@@ -16,10 +16,10 @@ def get_email_confirmation_link(request, user):
 def send_confirmation_email(request, user):
     return 0 < mail.send_mail('Регистрация в ЛКШ',
                               'Здравствуйте, ' + user.first_name + ' ' + user.last_name + '!\n\n'
-                              'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней Компьютерной школе (http://sistema.lksh.ru).'
+                              'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '
                               'Для окончания регистрации просто пройдите по этой ссылке: ' +
                               get_email_confirmation_link(request, user) + '\n\n' +
-                              'Если вы не регистрировались, просто проигнорируйте это письмо.\n\n'
+                              'Если вы не регистрировались, игнорируйте это письмо.\n\n'
                               'С уважением,\n'
                               'Команда ЛКШ',
                               settings.SERVER_EMAIL,

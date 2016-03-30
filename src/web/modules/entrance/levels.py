@@ -75,7 +75,7 @@ class AgeEntranceLevelLimiter(EntranceLevelLimiter):
 
         answer = qs.first()
         try:
-            _class = int(answer)
+            _class = int(answer.answer)
         except:
             return EntranceLevelLimit(self._find_minimal_level())
 
@@ -87,3 +87,5 @@ class AgeEntranceLevelLimiter(EntranceLevelLimiter):
             return EntranceLevelLimit(levels.filter(short_name='c').get())
         if _class == 8:
             return EntranceLevelLimit(levels.filter(short_name='c_prime').get())
+
+        return EntranceLevelLimit(self._find_minimal_level())

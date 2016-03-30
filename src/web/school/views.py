@@ -59,7 +59,7 @@ def index(request):
     })
 
 
-# TODO: copy-paste :(
+@login_required
 @school_view
 def questionnaire(request, questionnaire_name):
     return questionnaire_views.questionnaire(request, questionnaire_name)

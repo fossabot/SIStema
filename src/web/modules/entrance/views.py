@@ -13,11 +13,6 @@ from modules.entrance import forms
 from . import models
 
 
-@school.decorators.school_view
-def index(request):
-    return None
-
-
 def _get_entrance_level(school, user):
     limiters = [modules.topics.entrance.levels.TopicsEntranceLevelLimiter,
                 modules.entrance.levels.AlreadyWasEntranceLevelLimiter,

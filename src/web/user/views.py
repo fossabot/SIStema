@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import auth
@@ -91,6 +92,7 @@ def complete(request, form):
 
 
 # TODO: only POST with csrf token
+@login_required
 def logout(request):
     auth.logout(request)
     return redirect('home')

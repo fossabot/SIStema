@@ -1,5 +1,5 @@
-{#{% load markdown_filter %}#}
 {% load markdown_deux_tags %}
+{% load staticfiles %}
 
 <div class="panel">
     <div class="panel-heading">
@@ -18,20 +18,27 @@
                         <div>Ограничение по времени: <b>{% widthratio task.programentranceexamtask.time_limit 1000 1%} с.</b></div>
                         <div>Ограничение по памяти: <b>{{ task.programentranceexamtask.memory_limit|filesizeformat }} </b></div>
                     </div>
-                    {{ task.text|markdown }}
 
-                    {% if task.programentranceexamtask.input_format %}
-                        <div>
-                            <h4>Формат входного файла</h4>
-                            {{ task.programentranceexamtask.input_format|markdown }}
-                        </div>
-                    {% endif %}
-                    {% if task.programentranceexamtask.output_format %}
-                        <div>
-                            <h4>Формат выходного файла</h4>
-                            {{ task.programentranceexamtask.output_format|markdown }}
-                        </div>
-                    {% endif %}
+                    <a href="/static/uploads/entrance-exam-pdf/{{ task.id }}.pdf" target="_blank">Читать условие задачи</a>
+
+                    {% comment %}
+
+                        {{ task.text|markdown }}
+
+                        {% if task.programentranceexamtask.input_format %}
+                            <div>
+                                <h4>Формат входного файла</h4>
+                                {{ task.programentranceexamtask.input_format|markdown }}
+                            </div>
+                        {% endif %}
+                        {% if task.programentranceexamtask.output_format %}
+                            <div>
+                                <h4>Формат выходного файла</h4>
+                                {{ task.programentranceexamtask.output_format|markdown }}
+                            </div>
+                        {% endif %}
+
+                    {% endcomment %}
                 </div>
             {% else %}
                 <div class="col-md-9 col-sm-6 col-xs-12">

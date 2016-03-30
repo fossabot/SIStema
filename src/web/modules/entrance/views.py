@@ -58,7 +58,8 @@ def exam(request):
     for program_task in program_tasks:
         program_task.form = forms.ProgramEntranceTaskForm(program_task)
         program_task.user_solutions = [s.programentranceexamtasksolution for s in
-                                       program_task.entranceexamtasksolution_set.order_by('-created_at')]
+                                       program_task.entranceexamtasksolution_set.filter(user=request.user).order_by(
+                                           '-created_at')]
 
     return render(request, 'entrance/exam.html', {
         'entrance_level': entrance_level,

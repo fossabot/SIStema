@@ -3,7 +3,6 @@ import operator
 
 from modules.entrance import levels
 from modules.entrance import models as entrance_models
-from .. import settings
 from .. import models
 
 from django.db import models as django_models
@@ -20,7 +19,7 @@ class EntranceLevelRequirement(django_models.Model):
 
     entrance_level = django_models.ForeignKey(entrance_models.EntranceLevel)
 
-    tag = django_models.ForeignKey(settings.Tag)
+    tag = django_models.ForeignKey(models.Tag)
 
     max_penalty = django_models.PositiveIntegerField()
 

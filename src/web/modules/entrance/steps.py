@@ -2,15 +2,23 @@ from django.template import engines, Context
 
 
 class EntranceStep:
-    def __init__(self, school):
+    def __init__(self, school, previous_questionnaire=None):
         self.school = school
         self._template_factory = engines['django'].from_string
 
-    def is_available(self, user):
-        raise NotImplementedError('Child should implement its own is_available()')
+        self.previous_questionnaire = previous_questionnaire
+        if self.previous_questionnaire is not None \
+                and self.previous_questionnaire.for_school is not None \
+                and self.previous_questionnaire.for_school_id != self.school.id:
+            raise ValueError('entrance.steps.EntranceStep: Previous questionnaire must be for this school')
 
     def is_passed(self, user):
-        raise NotImplementedError('Child should implement its own is_passed()')
+        return True
+
+    def is_available(self, user):
+        if self.previous_questionnaire is None:
+            return True
+        return self.previous_questionnaire.is_filled_by(user)
 
     def render(self, user):
         raise NotImplementedError('Child should implement its own render()')
@@ -39,50 +47,99 @@ class EntranceStep:
 
 
 class QuestionnaireEntranceStep(EntranceStep):
-    def __init__(self, school, questionnaire):
-        super(QuestionnaireEntranceStep, self).__init__(school)
+    def __init__(self, school, questionnaire, previous_questionnaire=None, message=None, button_text=None):
+        super().__init__(school, previous_questionnaire=previous_questionnaire)
+
         self.questionnaire = questionnaire
         if self.questionnaire.for_school is not None and self.questionnaire.for_school_id != self.school.id:
             raise ValueError('entrance.steps.QuestionnaireEntranceStep: Questionnaire must be for this school')
 
+        self.message = message
+        if self.message is None:
+            self.message = '{{ user.first_name }}, чтобы подать заявку в {{ school.name }} нужно заполнить информацию о себе'
+        self.button_text = button_text
+        if self.button_text is None:
+            self.button_text = 'Заполнить'
+
     def is_passed(self, user):
-        return False
+        return self.questionnaire.is_filled_by(user) and super().is_passed(user)
 
     def is_available(self, user):
-        return True
+        return super().is_available(user)
 
     def render(self, user):
+        if not self.is_available(user):
+            template = self._template_factory('''
+            <p>
+                {{ questionnaire.title }} будет доступна после заполнения раздела «{{ previous.title }}».
+            </p>
+            ''')
+            body = template.render(Context({
+                'questionnaire': self.questionnaire,
+                'previous': self.previous_questionnaire,
+            }))
+            return self.panel(self.questionnaire.title, body, 'default')
+
+        if self.is_passed(user):
+            template = self._template_factory('''
+            <p>
+                Раздел «{{ questionnaire.title }}» заполнен. Вы можете изменить что-нибудь, если хотите.
+            </p>
+            <div>
+                <a class="btn btn-success" href="{{ questionnaire.get_absolute_url }}">Править</a>
+            </div>
+            ''')
+            body = template.render(Context({
+                'user': user,
+                'questionnaire': self.questionnaire,
+            }))
+
+            return self.panel(self.questionnaire.title, body, 'success')
+
         template = self._template_factory('''
         <p>
-            {{ user.first_name }}, чтобы подать заявку в {{ school.name }} нужно заполнить информацию о себе.
+            ''' + self.message + '''.
         </p>
         <div>
-            <a class="btn btn-alert" href="{{ questionnaire.get_absolute_url }}">Подать заявку</a>
+            <a class="btn btn-alert" href="{{ questionnaire.get_absolute_url }}">{{ button_text }}</a>
         </div>
         ''')
         body = template.render(Context({
             'user': user,
             'school': self.school,
             'questionnaire': self.questionnaire,
+            'button_text': self.button_text
         }))
 
         return self.panel(self.questionnaire.title, body, 'alert')
 
 
 class ExamEntranceStep(EntranceStep):
-    def __init__(self, school):
-        super(ExamEntranceStep, self).__init__(school)
+    def __init__(self, school, previous_questionnaire=None):
+        super().__init__(school, previous_questionnaire=previous_questionnaire)
         self.exam = self.school.entranceexam
         if self.exam is None:
             raise ValueError('entrance.steps.ExamEntranceStep: School must have defined entrance exam for this step')
 
     def is_passed(self, user):
-        pass
+        return super().is_passed(user)
 
     def is_available(self, user):
-        pass
+        return super().is_available(user)
 
     def render(self, user):
+        if not self.is_available(user):
+            template = self._template_factory('''
+            <p>
+                Задания будут доступны после заполнения раздела «{{ previous.title }}».
+            </p>
+            ''')
+            body = template.render(Context({
+                'exam': self.exam,
+                'previous': self.previous_questionnaire,
+            }))
+            return self.panel('Вступительная работа', body, 'default')
+
         template = self._template_factory('''
         <p>
             И наконец-то вступительная работа. На основе тематическоя анкеты мы отобрали для вас задачи, попробуйте!

@@ -1,21 +1,20 @@
 from django.contrib import admin
 
-from . import settings
 from . import models
 from .entrance import levels
 
 
-admin.site.register(settings.TopicQuestionnaire)
-admin.site.register(settings.Topic)
-admin.site.register(settings.TopicDependency)
-admin.site.register(settings.Level)
-admin.site.register(settings.LevelDownwardDependency)
-admin.site.register(settings.LevelUpwardDependency)
-admin.site.register(settings.Scale)
-admin.site.register(settings.ScaleLabelGroup)
-admin.site.register(settings.ScaleLabel)
-admin.site.register(settings.ScaleInTopic)
-admin.site.register(settings.Tag)
+admin.site.register(models.TopicQuestionnaire)
+admin.site.register(models.Topic)
+admin.site.register(models.TopicDependency)
+admin.site.register(models.Level)
+admin.site.register(models.LevelDownwardDependency)
+admin.site.register(models.LevelUpwardDependency)
+admin.site.register(models.Scale)
+admin.site.register(models.ScaleLabelGroup)
+admin.site.register(models.ScaleLabel)
+admin.site.register(models.ScaleInTopic)
+admin.site.register(models.Tag)
 
 admin.site.register(models.UserQuestionnaireStatus)
 admin.site.register(models.UserMark)

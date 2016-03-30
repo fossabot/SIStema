@@ -13,3 +13,4 @@ requests >= 2.7.0
 bs4
 python-social-auth
 cached-property
+mysqlclient

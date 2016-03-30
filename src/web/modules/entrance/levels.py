@@ -42,6 +42,7 @@ class AlreadyWasEntranceLevelLimiter(EntranceLevelLimiter):
         variants = list(
             ChoiceQuestionnaireQuestionVariant.objects.filter(question__questionnaire__for_school=self.school,
                                                               question__short_name=self.question_short_name))
+        answers = [a.answer for a in answers]
         variants = [v.text for v in variants if str(v.id) in answers]
 
         levels = models.EntranceLevel.objects.filter(for_school=self.school)

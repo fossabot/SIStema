@@ -9,7 +9,10 @@ reversion
 django-solo
 django-choices
 django-markdown-deux
+django-ses
+python-postmark
 
+boto
 requests >= 2.7.0
 bs4
 python-social-auth

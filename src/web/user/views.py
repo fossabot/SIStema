@@ -16,8 +16,8 @@ def get_email_confirmation_link(request, user):
 def send_confirmation_email(request, user):
     return 0 < mail.send_mail('Регистрация в ЛКШ',
                               'Здравствуйте, ' + user.first_name + ' ' + user.last_name + '!\n\n'
-                              'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '
-                              'Для окончания регистрации просто пройдите по этой ссылке: ' +
+                                                                                          'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '
+                                                                                          'Для окончания регистрации просто пройдите по этой ссылке: ' +
                               get_email_confirmation_link(request, user) + '\n\n' +
                               'Если вы не регистрировались, игнорируйте это письмо.\n\n'
                               'С уважением,\n'
@@ -65,13 +65,19 @@ def register(request, form):
     return redirect('home')
 
 
+def fill_complete_form(request):
+    if not request.user.is_authenticated():
+        return redirect('login')
+    return {'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+            }
+
+
 @transaction.atomic
 @decorators.form_handler('user/complete.html',
                          forms.CompleteUserCreationForm,
-                         lambda request: {'first_name': request.user.first_name,
-                                          'last_name': request.user.last_name,
-                                          'email': request.user.email,
-                                          })
+                         fill_complete_form)
 def complete(request, form):
     email = form.cleaned_data['email']
 

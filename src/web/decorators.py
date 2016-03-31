@@ -1,3 +1,4 @@
+from django.http.response import HttpResponse
 from django.shortcuts import render
 
 
@@ -15,6 +16,8 @@ def form_handler(view_name, form_class, initial_data_constructor=None):
                 initial_data = None
                 if initial_data_constructor is not None:
                     initial_data = initial_data_constructor(request)
+                if isinstance(initial_data, HttpResponse):
+                    return initial_data
                 return render(request, view_name, {'form': form_class(initial=initial_data)})
 
         func_wrapper.__doc__ = handler.__doc__

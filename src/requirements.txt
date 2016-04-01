@@ -11,6 +11,7 @@ django-choices
 django-markdown-deux
 django-ses
 python-postmark
+django-hijack
 
 boto
 requests >= 2.7.0

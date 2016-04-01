@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^questionnaire/', include('questionnaire.urls')),
     url(r'^(?P<school_name>[^/]+)/', include('school.urls', namespace='school')),
+    url(r'^hijack/', include('hijack.urls')),
 ]

@@ -283,6 +283,9 @@ class UserQuestionnaireStatus(models.Model):
 
     status = models.PositiveIntegerField(choices=Status.choices, validators=[Status.validator])
 
+    def __str__(self):
+        return 'Пользователь %s. %s. Статус: %s' % (self.user, self.questionnaire, self.status)
+
     class Meta:
         verbose_name_plural = 'User questionnaire statuses'
         unique_together = ('user', 'questionnaire')

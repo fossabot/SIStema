@@ -117,7 +117,7 @@ class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
             attrs = {}
 
         return forms.TypedChoiceField(required=self.is_required,
-                                      coerce=bool,
+                                      coerce=lambda x: x == 'True',
                                       choices=((False, 'Нет'), (True, 'Да')),
                                       widget=sistema.forms.SistemaRadioSelect(attrs=attrs),
                                       label=self.text,

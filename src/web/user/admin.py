@@ -13,6 +13,7 @@ class UserAdmin(VersionAdmin, HijackUserAdminMixin):
         'email',
         'is_superuser',
         'is_staff',
+        'is_email_confirmed',
         'hijack_field',
     )
 

@@ -53,6 +53,8 @@ INSTALLED_APPS = (
     'reversion',
     'social.apps.django_app.default',
     'markdown_deux',
+    'hijack',
+    'compat',
 
     'school',
     'user',
@@ -62,9 +64,6 @@ INSTALLED_APPS = (
     'modules.ejudge',
     'modules.entrance',
     'modules.topics',
-
-    'hijack',
-    'compat',
 )
 
 MIDDLEWARE_CLASSES = (

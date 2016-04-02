@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 
 {% load staticfiles %}
+{% load hijack_tags %}
 
 {% block body_classes %}sb-r-c sb-l-c{% endblock %}
 
@@ -36,6 +37,7 @@
         <aside id="sidebar_left" class=""></aside>
 
         <section id="content_wrapper">
+            {% hijack_notification %}
             <section id="content" class="">
                 {% block content %}
                 {% endblock %}

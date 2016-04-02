@@ -53,6 +53,8 @@ INSTALLED_APPS = (
     'reversion',
     'social.apps.django_app.default',
     'markdown_deux',
+    'hijack',
+    'compat',
 
     'school',
     'user',
@@ -158,7 +160,6 @@ STATICFILES_DIRS = [
 EMAIL_BACKEND = "postmark.django_backend.EmailBackend"
 
 
-
 SISTEMA_UPLOAD_FILES_DIR = os.path.join(BASE_DIR, 'uploads')
 if not os.path.exists(SISTEMA_UPLOAD_FILES_DIR):
     os.mkdir(SISTEMA_UPLOAD_FILES_DIR)
@@ -168,3 +169,7 @@ else:
 
 
 SISTEMA_EJUDGE_BACKEND_ADDRESS = 'https://ejudge.andgein.ru'
+
+HIJACK_DISPLAY_ADMIN_BUTTON = False
+HIJACK_LOGIN_REDIRECT_URL = '/'
+HIJACK_LOGOUT_REDIRECT_URL = '/admin/user/user'

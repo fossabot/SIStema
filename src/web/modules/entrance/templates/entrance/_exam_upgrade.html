@@ -9,21 +9,30 @@
         <span class="panel-title">Повысить уровень</span>
     </div>
     <div class="panel-body">
-        <div class="row">
-
-            <div class="col-md-9 col-sm-6 col-xs-12 entrance-exam__upgrade__description">
-                {% if can_upgrade %}
-                    Поздравляем! Вы решили все практические задачи. Если они вам показались слишком простыми и не потребовали много времени для решения, нажмите на эту кнопку, чтобы получить задания посложнее. Все ваши сданные решения будут сохранены и учтены при зачислении.
-                {% elif is_user_at_maximum_level %}
-                    Вам уже выданы задачи максимального уровня.
-                {% else %}
-                    Если вы решите все практические задачи, и они покажутся вам слишком простыми, вы сможете получить задачи посложнее, нажав на эту кнопку.
-                {% endif %}
-            </div>
-
-            <div class="entrance-exam__upgrade col-md-3 col-sm-6 col-xs-12 has-inf">
-                <a class="entrance-exam__upgrade__submit btn btn-small mt10 {{ can_upgrade|yesno:'btn-success,disabled btn-default,' }}" href="{% url 'school:entrance:upgrade' school.short_name %}" role="button">Получить более сложные задания</a>
-            </div>
+        <div class="entrance-exam__upgrade__description">
+            {% if can_upgrade %}
+                <p>
+                    <strong>Поздравляем! Вы решили все практические задачи</strong>
+                </p>
+                <p>
+                    Если они показались вам слишком простыми и не потребовали много времени для решения,
+                    нажмите на эту кнопку, чтобы получить задания посложнее.
+                    Все ваши решения сохранены и будут учтены при зачислении.
+                </p>
+            {% elif is_user_at_maximum_level %}
+                Вам уже выданы самые сложные задачи, повышать уровень некуда.
+            {% else %}
+                Задачи кажутся слишком простыми? Решите их, и мы выдадим вам более сложные.
+            {% endif %}
         </div>
+
+        {% if not is_user_at_maximum_level %}
+            <div class="entrance-exam__upgrade">
+                <form action="{% url 'school:entrance:upgrade' school.short_name %}" method="POST">
+                    {% csrf_token %}
+                    <button class="entrance-exam__upgrade__submit btn btn-small mt10 {{ can_upgrade|yesno:'btn-success,disabled btn-default,' }}">Получить более сложные задания</button>
+                </form>
+            </div>
+        {% endif %}
     </div>
 </div>

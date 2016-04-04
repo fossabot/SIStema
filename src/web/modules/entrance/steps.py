@@ -142,7 +142,7 @@ class ExamEntranceStep(EntranceStep):
 
         template = self._template_factory('''
         <p>
-            И наконец-то вступительная работа. На основе тематическоя анкеты мы отобрали для вас задачи, попробуйте!
+            И наконец-то вступительная работа. На основе тематической анкеты мы отобрали для вас задачи, попробуйте!
         </p>
         <div>
             <a class="btn btn-alert" href="{{ exam.get_absolute_url }}">Решать</a>

@@ -23,7 +23,7 @@ class EntranceLevelLimit:
             return
 
         if other_limit.min_level is not None:
-            if self.min_level.order < other_limit.min_level.order:
+            if self.min_level < other_limit.min_level:
                 self.min_level = other_limit.min_level
 
 

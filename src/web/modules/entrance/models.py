@@ -106,6 +106,18 @@ class EntranceLevel(models.Model):
     def __str__(self):
         return 'Уровень вступительной работы «%s» для %s' % (self.name, self.for_school)
 
+    def __gt__(self, other):
+        return self.order > other.order
+
+    def __lt__(self, other):
+        return self.order < other.order
+
+    def __ge__(self, other):
+        return self.order >= other.order
+
+    def __le__(self, other):
+        return self.order <= other.order
+
     class Meta:
         ordering = ['for_school_id', 'order']
 
@@ -136,3 +148,21 @@ class ProgramEntranceExamTaskSolution(EntranceExamTaskSolution):
     language = models.ForeignKey(modules.ejudge.models.ProgrammingLanguage)
 
     ejudge_queue_element = models.ForeignKey(modules.ejudge.models.QueueElement)
+
+    @property
+    def is_checked(self):
+        return self.ejudge_queue_element.status == modules.ejudge.models.QueueElement.Status.CHECKED
+
+    @property
+    def result(self):
+        if not self.is_checked:
+            return None
+        return self.ejudge_queue_element.get_result()
+
+
+class EntranceLevelUpgrade(models.Model):
+    user = models.ForeignKey(user.models.User)
+
+    upgraded_to = models.ForeignKey(EntranceLevel, related_name='+')
+
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -38,6 +38,9 @@ def login(request, form):
         auth.login(request, user)
         return redirect('home')
 
+    form.add_error('password', 'Неверный пароль')
+    return None
+
 
 @transaction.atomic
 @decorators.form_handler('user/registration.html', forms.RegistrationForm)

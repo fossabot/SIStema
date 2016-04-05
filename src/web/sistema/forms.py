@@ -18,7 +18,6 @@ class TextInputWithFaIcon(forms.TextInput):
     def fa_type_safe(self):
         return self.fa_type.replace(r'"', r'\"')
 
-    # TODO: add class "gui-input" here
     def render(self, name, value, attrs=None):
         base_rendered = super().render(name, value, attrs=attrs)
 
@@ -43,9 +42,6 @@ class TextareaWithFaIcon(forms.Textarea):
         return self.fa_type.replace(r'"', r'\"')
 
     def render(self, name, value, attrs=None):
-        if attrs is None:
-            attrs = {}
-        attrs['class'] = 'gui-textarea ' + attrs.pop('class', '')
         base_rendered = super().render(name, value, attrs=attrs)
 
         return '<label class="field prepend-icon">%s<label class="field-icon"><i class="fa fa-%s"></i></label>' % \

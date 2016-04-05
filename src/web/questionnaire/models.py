@@ -61,6 +61,11 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         if 'placeholder' not in attrs:
             attrs['placeholder'] = self.placeholder
 
+        if self.is_multiline:
+            attrs['class'] = 'gui-textarea ' + attrs.pop('class', '')
+        else:
+            attrs['class'] = 'gui-input ' + attrs.pop('class', '')
+
         if self.fa != '':
             if 'fa' not in attrs:
                 attrs['fa'] = self.fa

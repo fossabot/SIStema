@@ -18,6 +18,7 @@ class TextInputWithFaIcon(forms.TextInput):
     def fa_type_safe(self):
         return self.fa_type.replace(r'"', r'\"')
 
+    # TODO: add class "gui-input" here
     def render(self, name, value, attrs=None):
         base_rendered = super().render(name, value, attrs=attrs)
 
@@ -27,6 +28,28 @@ class TextInputWithFaIcon(forms.TextInput):
 
 class PasswordInputWithFaIcon(forms.PasswordInput, TextInputWithFaIcon):
     pass
+
+
+class TextareaWithFaIcon(forms.Textarea):
+    fa_type = None
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        if attrs is not None:
+            self.fa_type = attrs.pop('fa', self.fa_type)
+
+    @property
+    def fa_type_safe(self):
+        return self.fa_type.replace(r'"', r'\"')
+
+    def render(self, name, value, attrs=None):
+        if attrs is None:
+            attrs = {}
+        attrs['class'] = 'gui-textarea ' + attrs.pop('class', '')
+        base_rendered = super().render(name, value, attrs=attrs)
+
+        return '<label class="field prepend-icon">%s<label class="field-icon"><i class="fa fa-%s"></i></label>' % \
+               (base_rendered, self.fa_type_safe)
 
 
 class SistemaChoiceInput(widgets.ChoiceInput):

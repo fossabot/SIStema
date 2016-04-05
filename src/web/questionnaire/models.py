@@ -3,10 +3,9 @@ from itertools import chain
 from operator import attrgetter
 
 from cached_property import cached_property
-from django import forms
 from django.core import urlresolvers
 from django.db import models
-from django.forms.widgets import TextInput, RadioSelect
+from django import forms
 from djchoices import choices
 
 import school.models
@@ -65,9 +64,15 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         if self.fa != '':
             if 'fa' not in attrs:
                 attrs['fa'] = self.fa
-            widget = sistema.forms.TextInputWithFaIcon(attrs)
+            if self.is_multiline:
+                widget = sistema.forms.TextareaWithFaIcon(attrs)
+            else:
+                widget = sistema.forms.TextInputWithFaIcon(attrs)
         else:
-            widget = TextInput(attrs)
+            if self.is_multiline:
+                widget = forms.Textarea(attrs)
+            else:
+                widget = forms.TextInput(attrs)
 
         return forms.CharField(required=self.is_required,
                                help_text=self.help_text,

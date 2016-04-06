@@ -28,6 +28,7 @@ class CheckingResult(models.Model):
         PRESENTATION_ERROR = djchoices.ChoiceItem(4, label='Presentation error')
         WRONG_ANSWER_ERROR = djchoices.ChoiceItem(5, label='Wrong answer')
         CHECK_FAILED_ERROR = djchoices.ChoiceItem(6, label='Check failed')
+        PARTIAL_SOLUTION = djchoices.ChoiceItem(7, label='Partial solution')
         MEMORY_LIMIT_ERROR = djchoices.ChoiceItem(12, label='Memory limit exceeded')
         SECURITY_ERROR = djchoices.ChoiceItem(13, label='Security violation')
         STYLE_ERROR = djchoices.ChoiceItem(14, label='Coding style violation')
@@ -44,7 +45,7 @@ class CheckingResult(models.Model):
 
     result = models.PositiveIntegerField(choices=Result.choices, validators=[Result.validator])
 
-    score = models.PositiveIntegerField(default=0)
+    score = models.PositiveIntegerField(default=None, blank=True, null=True)
 
     max_possible_score = models.PositiveIntegerField(default=0)
 
@@ -70,6 +71,8 @@ class SolutionCheckingResult(CheckingResult):
         super_str = super().__str__()
         if self.failed_test is None:
             return super_str
+        if self.score is not None:
+            return 'Score: %d' % self.score
         return '%s on test %d' % (super_str, self.failed_test)
 
 

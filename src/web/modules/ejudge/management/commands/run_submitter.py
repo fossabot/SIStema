@@ -104,16 +104,24 @@ class Command(BaseCommand):
         table = parsed.find(attrs={'class': 'table'})
         for tr in table.find_all('tr')[1:]:
             tds = tr.find_all('td')
-            # Run_id, Time, Size, Problem, Language, Result, Failed Text, Report
+            # Run_id, Time, Size, Problem, Language, Result, Failed Test, Report
             run_id = tds[0].get_text()
             if run_id == str(submit_id):
                 result = tds[5].get_text()
                 failed_test = tds[6].get_text()
                 try:
                     failed_test = int(failed_test)
-                except:
+                except Exception:
                     failed_test = None
-                return result, failed_test
+
+                score = 0
+                if result == 'Partial solution':
+                    try:
+                        score = int(tds[7].get_text())
+                    except Exception:
+                        pass
+
+                return result, failed_test, score
 
         return None, None
 
@@ -164,7 +172,7 @@ class Command(BaseCommand):
                     queue_element.submission.ejudge_contest_id,
                     queue_element.submission.ejudge_submit_id))
 
-                result, failed_test = self._get_ejudge_run_status(queue_element.submission.ejudge_contest_id,
+                result, failed_test, score = self._get_ejudge_run_status(queue_element.submission.ejudge_contest_id,
                                                                   queue_element.submission.ejudge_submit_id)
                 if result is None:
                     self.stdout.write('Hmmm, strange.. I can\'t found run in ejudge: queue element #%d' % queue_element.id)
@@ -177,7 +185,8 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     checking_result = models.SolutionCheckingResult(
                         result=models.CheckingResult.Result.from_ejudge_status(result),
-                        failed_test=failed_test
+                        failed_test=failed_test,
+                        score=score,
                     )
                     checking_result.save()
                     queue_element.submission.result = checking_result

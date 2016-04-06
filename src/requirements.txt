@@ -20,3 +20,5 @@ python-social-auth
 cached-property
 mysqlclient
 markdown
+sqlparse
+

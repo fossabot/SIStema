@@ -114,7 +114,7 @@ class Command(BaseCommand):
                 except Exception:
                     failed_test = None
 
-                score = 0
+                score = None
                 if result == 'Partial solution':
                     try:
                         score = int(tds[7].get_text())
@@ -123,7 +123,7 @@ class Command(BaseCommand):
 
                 return result, failed_test, score
 
-        return None, None
+        return None, None, None
 
     def _submit_solution(self, contest_id, problem_id, language, file_name):
         ejudge_sid = self._login(contest_id)

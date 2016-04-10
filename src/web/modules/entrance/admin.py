@@ -15,6 +15,15 @@ class EntranceLevelUpgradeAdmin(admin.ModelAdmin):
     def get_school(self, obj):
         return obj.upgraded_to.for_school
 
+
+class SolveTaskEntranceLevelUpgradeRequirementAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'base_level',
+        'task',
+    )
+
+
 admin.site.register(models.TestEntranceExamTask)
 admin.site.register(models.FileEntranceExamTask)
 admin.site.register(models.ProgramEntranceExamTask)
@@ -27,3 +36,5 @@ admin.site.register(models.EntranceExamTaskSolution)
 admin.site.register(models.ProgramEntranceExamTaskSolution)
 
 admin.site.register(models.EntranceLevelUpgrade, EntranceLevelUpgradeAdmin)
+admin.site.register(models.SolveTaskEntranceLevelUpgradeRequirement,
+                    SolveTaskEntranceLevelUpgradeRequirementAdmin)

@@ -63,7 +63,7 @@ class TopicQuestionnaireEntranceStep(steps.EntranceStep):
 
             <p>
                 <span class="fa fa-warning"></span>
-                Заполните её, даже вы освобождены от выполнения вступительной работы.
+                Заполните её, даже если вы освобождены от выполнения вступительной работы.
             </p>
             <div>
                 <a class="btn btn-danger pastel" href="{{ questionnaire.get_absolute_url }}">Продолжить</a>

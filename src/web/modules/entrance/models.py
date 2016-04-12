@@ -28,6 +28,10 @@ class EntranceExamTask(models.Model):
 
         return None
 
+    def is_solved_by_user(self, user):
+        # Always not solved by default. Override when subclassing.
+        return False
+
 
 class TestEntranceExamTask(EntranceExamTask):
     correct_answer_re = models.CharField(max_length=100, help_text='Правильный ответ (регулярное выражение)')
@@ -57,6 +61,14 @@ class ProgramEntranceExamTask(EntranceExamTask):
     input_format = models.TextField(blank=True)
 
     output_format = models.TextField(blank=True)
+
+    def is_solved_by_user(self, user):
+        related_field = 'programentranceexamtasksolution__ejudge_queue_element__submission__result'
+        user_solutions = [s.programentranceexamtasksolution
+                          for s in self.entranceexamtasksolution_set.filter(user=user)
+                                       .select_related(related_field)]
+        task_has_ok = any(filter(lambda s: s.is_checked and s.result.is_success, user_solutions))
+        return task_has_ok
 
 
 class EntranceExam(models.Model):
@@ -166,3 +178,29 @@ class EntranceLevelUpgrade(models.Model):
     upgraded_to = models.ForeignKey(EntranceLevel, related_name='+')
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class EntranceLevelUpgradeRequirement(models.Model):
+    base_level = models.ForeignKey(EntranceLevel, related_name='+')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_child_object(self):
+        child = [SolveTaskEntranceLevelUpgradeRequirement]
+        for children in child:
+            class_name = children.__name__.lower()
+            if hasattr(self, class_name):
+                return getattr(self, class_name)
+
+        return None
+
+    def is_met_by_user(self, user):
+        # Always met by default. Override when subclassing.
+        return True
+
+
+class SolveTaskEntranceLevelUpgradeRequirement(EntranceLevelUpgradeRequirement):
+    task = models.ForeignKey(EntranceExamTask, related_name='+')
+
+    def is_met_by_user(self, user):
+        return self.task.get_child_object().is_solved_by_user(user)

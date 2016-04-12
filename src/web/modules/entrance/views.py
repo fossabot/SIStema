@@ -46,26 +46,18 @@ def _is_user_at_maximum_level(school, user, base_level):
 
 
 # User can upgrade if he hasn't reached the maximum level yet and solved all
-# the issued program tasks.
+# the required tasks.
 def _can_user_upgrade(school, user):
     base_level = _get_base_entrance_level(school, user)
+    issued_level = _get_maximum_issued_entrance_level(school, user, base_level)
 
     if _is_user_at_maximum_level(school, user, base_level):
         return False
 
-    tasks = _get_entrance_tasks(school, user, base_level)
-    # TODO(artemtab): refactor this
-    program_tasks = list(filter(lambda t: hasattr(t, 'programentranceexamtask'), tasks))
+    requirements = models.EntranceLevelUpgradeRequirement.objects.filter(base_level=issued_level)
 
-    every_task_has_ok = True
-    for task in program_tasks:
-        user_solutions = [s.programentranceexamtasksolution for s in
-                          task.entranceexamtasksolution_set.filter(user=user)
-                              .select_related('programentranceexamtasksolution__ejudge_queue_element__submission__result')]
-        task_has_ok = any(filter(lambda s: s.is_checked and s.result.is_success, user_solutions))
-        every_task_has_ok = every_task_has_ok and task_has_ok
-
-    return every_task_has_ok
+    return all(requirement.get_child_object().is_met_by_user(user)
+               for requirement in requirements)
 
 
 def _get_entrance_tasks(school, user, base_level):

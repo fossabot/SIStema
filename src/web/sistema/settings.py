@@ -55,6 +55,7 @@ INSTALLED_APPS = (
     'markdown_deux',
     'hijack',
     'compat',
+    'ipware',
 
     'school',
     'user',

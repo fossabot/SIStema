@@ -141,6 +141,10 @@ class EntranceExamTaskSolution(models.Model):
 
     solution = models.TextField()
 
+    ip = models.CharField(max_length=50,
+                          help_text='IP-адрес, с которого было отправлено решение',
+                          default='')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

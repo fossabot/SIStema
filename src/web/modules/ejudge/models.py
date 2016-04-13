@@ -93,6 +93,11 @@ class Submission(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return "Посылка {} контеста {}, {}".format(self.ejudge_submit_id,
+                                                   self.ejudge_contest_id,
+                                                   self.result)
+
 
 class QueueElement(models.Model):
     class Status(djchoices.DjangoChoices):

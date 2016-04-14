@@ -26,6 +26,10 @@ class EntranceLevelRequirement(django_models.Model):
     class Meta:
         unique_together = ('questionnaire', 'entrance_level', 'tag')
 
+    def __str__(self):
+        return 'EntranceLevelRequirement(level: {}, tag: {}, max_penalty: {})'.format(
+                    self.entrance_level.name, self.tag.title, self.max_penalty)
+
     def satisfy(self, sum_marks, max_marks):
         return max_marks - sum_marks <= self.max_penalty
 

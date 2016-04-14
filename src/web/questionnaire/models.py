@@ -92,6 +92,9 @@ class ChoiceQuestionnaireQuestionVariant(models.Model):
                                  on_delete=models.CASCADE,
                                  related_name='variants')
 
+    def __str__(self):
+        return 'Variant for {}: {}'.format(self.question.short_name, self.text)
+
 
 class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
     is_multiple = models.BooleanField()
@@ -234,3 +237,6 @@ class UserQuestionnaireStatus(models.Model):
     class Meta:
         verbose_name_plural = 'User questionnaire statuses'
         unique_together = ('user', 'questionnaire')
+
+    def __str__(self):
+        return 'Status {} of {} for {}'.format(self.status, self.questionnaire, self.user)

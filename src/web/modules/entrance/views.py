@@ -4,6 +4,8 @@ from django.http.response import HttpResponseNotFound, JsonResponse, HttpRespons
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
+import ipware.ip
+
 import school.decorators
 import sistema.uploads
 import sistema.helpers
@@ -124,6 +126,7 @@ def submit(request, task_id):
         return HttpResponseNotFound()
 
     child_task = task.get_child_object()
+    ip = ipware.ip.get_ip(request) or ''
 
     if isinstance(child_task, models.TestEntranceExamTask):
         form = forms.TestEntranceTaskForm(task, request.POST)
@@ -131,7 +134,8 @@ def submit(request, task_id):
             solution_text = form.cleaned_data['solution']
             solution = models.EntranceExamTaskSolution(user=request.user,
                                                        task=task,
-                                                       solution=solution_text)
+                                                       solution=solution_text,
+                                                       ip=ip)
             solution.save()
 
             return JsonResponse({'status': 'ok', 'solution_id': solution.id})
@@ -147,7 +151,8 @@ def submit(request, task_id):
             solution = models.FileEntranceExamTaskSolution(user=request.user,
                                                            task=task,
                                                            solution=solution_file,
-                                                           original_filename=form_file.name)
+                                                           original_filename=form_file.name,
+                                                           ip=ip)
             solution.save()
             return JsonResponse({'status': 'ok', 'solution_id': solution.id})
 
@@ -168,7 +173,8 @@ def submit(request, task_id):
                                                                   task=task,
                                                                   solution=solution_file,
                                                                   language=form.cleaned_data['language'],
-                                                                  ejudge_queue_element=ejudge_queue_element)
+                                                                  ejudge_queue_element=ejudge_queue_element,
+                                                                  ip=ip)
                 solution.save()
             return JsonResponse({'status': 'ok', 'solution_id': solution.id})
 

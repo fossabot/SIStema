@@ -12,6 +12,7 @@ django-markdown-deux
 django-ses
 python-postmark
 django-hijack
+django-ipware
 
 boto
 requests >= 2.7.0

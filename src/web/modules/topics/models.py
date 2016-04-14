@@ -226,7 +226,7 @@ class ScaleInTopic(models.Model):
         return self.topic.questionnaire
 
     def __str__(self):
-        return '%s для темы «%s»' % (self.scale_label_group, self.topic.title)
+        return '%s.%s' % (self.topic.short_name, self.scale.short_name)
 
     class Meta:
         unique_together = ('topic', 'scale_label_group')

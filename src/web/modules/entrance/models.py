@@ -116,7 +116,7 @@ class EntranceLevel(models.Model):
     tasks = models.ManyToManyField(EntranceExamTask, blank=True)
 
     def __str__(self):
-        return 'Уровень вступительной работы «%s» для %s' % (self.name, self.for_school)
+        return 'Уровень «%s» для %s' % (self.name, self.for_school)
 
     def __gt__(self, other):
         return self.order > other.order

@@ -93,9 +93,7 @@ class Command(BaseCommand):
 
         return run_id
 
-    def _get_ejudge_run_status(self, contest_id, submit_id):
-        ejudge_sid = self._login(contest_id)
-        runs_url = '%s/cgi-bin/new-client?SID=%s&action=140&all_runs=1' % (self.backend_address, ejudge_sid)
+    def _get_ejudge_run_status_from_url(self, runs_url, ejudge_sid, submit_id):
         r = self.session.get(runs_url)
         if r.status_code != 200:
             raise EjudgeException('Bad http status code: %d' % r.status_code)
@@ -124,6 +122,16 @@ class Command(BaseCommand):
                 return result, failed_test, score
 
         return None, None, None
+
+    def _get_ejudge_run_status(self, contest_id, submit_id):
+        ejudge_sid = self._login(contest_id)
+        runs_url = '%s/cgi-bin/new-client?SID=%s&action=140' % (self.backend_address, ejudge_sid)
+        result, failed_test, score = self._get_ejudge_run_status_from_url(runs_url, ejudge_sid, submit_id)
+        if result is None:
+            runs_url = '%s/cgi-bin/new-client?SID=%s&action=140&all_runs=1' % (self.backend_address, ejudge_sid)
+            result, failed_test, score = self._get_ejudge_run_status_from_url(runs_url, ejudge_sid, submit_id)
+
+        return result, failed_test, score
 
     def _submit_solution(self, contest_id, problem_id, language, file_name):
         ejudge_sid = self._login(contest_id)

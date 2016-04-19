@@ -5,7 +5,8 @@ from django.contrib import auth
 from django.core import mail, urlresolvers
 import decorators
 from sistema import settings
-from user.models import User
+
+from . import models
 from . import forms
 
 
@@ -16,10 +17,26 @@ def get_email_confirmation_link(request, user):
 def send_confirmation_email(request, user):
     return 0 < mail.send_mail('Регистрация в ЛКШ',
                               'Здравствуйте, ' + user.first_name + ' ' + user.last_name + '!\n\n'
-                                                                                          'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '
-                                                                                          'Для окончания регистрации просто пройдите по этой ссылке: ' +
+                              'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '
+                              'Для окончания регистрации просто пройдите по этой ссылке: ' +
                               get_email_confirmation_link(request, user) + '\n\n' +
                               'Если вы не регистрировались, игнорируйте это письмо.\n\n'
+                              'С уважением,\n'
+                              'Команда ЛКШ',
+                              settings.SERVER_EMAIL,
+                              [user.email])
+
+
+def get_password_recovery_link(request, recovery):
+    return request.build_absolute_uri(urlresolvers.reverse('recover', args=[recovery.recovery_token]))
+
+
+def send_password_recovery_email(request, recovery):
+    user = recovery.user
+    return 0 < mail.send_mail('Восстановление пароля в ЛКШ',
+                              'Здравствуйте, ' + user.first_name + ' ' + user.last_name + '!\n\n'
+                              'Для восстановления пароля просто пройдите по этой ссылке: ' +
+                              get_password_recovery_link(request, recovery) + '\n\n' +
                               'С уважением,\n'
                               'Команда ЛКШ',
                               settings.SERVER_EMAIL,
@@ -47,7 +64,7 @@ def login(request, form):
 def register(request, form):
     email = form.cleaned_data['email']
 
-    if User.objects.filter(username=email).exists():
+    if models.User.objects.filter(username=email).exists():
         # TODO: make link to forget-password
         form.add_error('email', 'Вы уже зарегистрированы. Забыли пароль?')
         return None
@@ -55,12 +72,12 @@ def register(request, form):
     password = form.cleaned_data['password']
     first_name = form.cleaned_data['first_name']
     last_name = form.cleaned_data['last_name']
-    user = User.objects.create_user(username=email,
-                                    email=email,
-                                    password=password,
-                                    first_name=first_name,
-                                    last_name=last_name,
-                                    )
+    user = models.User.objects.create_user(username=email,
+                                           email=email,
+                                           password=password,
+                                           first_name=first_name,
+                                           last_name=last_name,
+                                           )
 
     user.save()
     send_confirmation_email(request, user)
@@ -84,7 +101,7 @@ def fill_complete_form(request):
 def complete(request, form):
     email = form.cleaned_data['email']
 
-    if User.objects.filter(username=email).exists():
+    if models.User.objects.filter(username=email).exists():
         # TODO: make link to forget-password
         form.add_error('email', 'Вы уже зарегистрированы. Забыли пароль?')
         return None
@@ -109,7 +126,7 @@ def logout(request):
 
 @transaction.atomic
 def confirm(request, token):
-    user = get_object_or_404(User, email_confirmation_token=token)
+    user = get_object_or_404(models.User, email_confirmation_token=token)
 
     user.is_email_confirmed = True
     user.save()
@@ -119,3 +136,44 @@ def confirm(request, token):
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     auth.login(request, user)
     return redirect('home')
+
+
+@decorators.form_handler('user/forget.html',
+                         forms.ForgetPasswordForm)
+def forget(request, form):
+    email = form.cleaned_data['email']
+
+    if not models.User.objects.filter(username=email).exists():
+        form.add_error('email', 'Пользователя с таким адресом не зарегистрировано')
+        return None
+
+    user = models.User.objects.filter(username=email).get()
+    recovery = models.UserPasswordRecovery(user=user)
+    recovery.save()
+
+    # TODO: show form with message "We've send an email to you"
+    send_password_recovery_email(request, recovery)
+    return redirect('home')
+
+
+@decorators.form_handler('user/recover.html',
+                         forms.PasswordRecoveryForm)
+def recover(request, form, token):
+    recoveries = models.UserPasswordRecovery.objects.filter(recovery_token=token, is_used=False)
+    if recoveries.exists():
+        recovery = recoveries.first()
+        recovery.is_used = True
+        recovery.save()
+
+        user = recovery.user
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+
+        # Don't use authenticate(), for details see
+        # http://stackoverflow.com/questions/2787650/manually-logging-in-a-user-without-password
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        auth.login(request, user)
+
+        return redirect('home')
+
+    return None

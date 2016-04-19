@@ -92,3 +92,43 @@ class RegistrationForm(CompleteUserCreationForm):
                                      initial=True,
                                      label='Запомнить меня',
                                      widget=forms.CheckboxInput())
+
+
+class ForgetPasswordForm(CenteredForm):
+    email = forms.CharField(required=True,
+                            label='Электронная почта',
+                            widget=TextInputWithFaIcon(attrs={
+                                 'placeholder': 'Введите почту',
+                                 'class': 'gui-input',
+                                 'fa': 'envelope',
+                             }))
+
+    class Meta:
+        show_fields = ('email', )
+
+
+class PasswordRecoveryForm(CenteredForm):
+    password = forms.CharField(required=True,
+                               label='Новый пароль',
+                               widget=PasswordInputWithFaIcon(attrs={
+                                   'placeholder': 'Введите пароль',
+                                   'class': 'gui-input',
+                                   'fa': 'unlock-alt',
+                               }))
+
+    password_repeat = forms.CharField(required=True,
+                                      label='Ещё раз',
+                                      widget=PasswordInputWithFaIcon(attrs={
+                                          'placeholder': 'Повторите пароль',
+                                          'class': 'gui-input',
+                                          'fa': 'lock'
+                                      }))
+
+    def clean_password_repeat(self):
+        password = self.cleaned_data.get('password')
+        password_repeat = self.cleaned_data.get('password_repeat')
+        if password and password_repeat and password != password_repeat:
+            self._errors['password_repeat'] = self.error_class(['Пароли не совпадают'])
+
+    class Meta:
+        show_fields = ('password', 'password_repeat')

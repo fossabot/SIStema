@@ -26,6 +26,8 @@ class QueueElementAdmin(admin.ModelAdmin):
         'ejudge_problem_id',
     )
 
+    search_fields = ('id',)
+
 admin.site.register(models.QueueElement, QueueElementAdmin)
 
 

@@ -78,6 +78,9 @@ def get_entrance_tasks(school, user, base_level):
 @login_required
 @school.decorators.school_view
 def exam(request):
+    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    is_closed = entrance_exam.is_closed()
+
     base_level = get_base_entrance_level(request.school, request.user)
     tasks = get_entrance_tasks(request.school, request.user, base_level)
 
@@ -98,6 +101,8 @@ def exam(request):
         if test_task.user_solution is not None:
             initial['solution'] = test_task.user_solution.solution
         test_task.form = forms.TestEntranceTaskForm(test_task, initial=initial)
+        if is_closed:
+            test_task.form['solution'].field.widget.attrs['readonly'] = True
     for file_task in file_tasks:
         file_task.form = forms.FileEntranceTaskForm(file_task)
     for program_task in program_tasks:
@@ -107,6 +112,7 @@ def exam(request):
                                            '-created_at')]
 
     return render(request, 'entrance/exam.html', {
+        'is_closed': is_closed,
         'entrance_level': base_level,
         'school': request.school,
         'test_tasks': test_tasks,
@@ -121,6 +127,9 @@ def exam(request):
 @school.decorators.school_view
 @require_POST
 def submit(request, task_id):
+    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    is_closed = entrance_exam.is_closed()
+
     task = get_object_or_404(models.EntranceExamTask, pk=task_id)
     if task.exam.for_school != request.school:
         return HttpResponseNotFound()
@@ -130,7 +139,9 @@ def submit(request, task_id):
 
     if isinstance(child_task, models.TestEntranceExamTask):
         form = forms.TestEntranceTaskForm(task, request.POST)
-        if form.is_valid():
+        if is_closed:
+            form.add_error('solution', 'Вступительная работа завершена. Решения больше не принимаются')
+        elif form.is_valid():
             solution_text = form.cleaned_data['solution']
             solution = models.EntranceExamTaskSolution(user=request.user,
                                                        task=task,
@@ -144,7 +155,9 @@ def submit(request, task_id):
 
     if isinstance(child_task, models.FileEntranceExamTask):
         form = forms.FileEntranceTaskForm(task, request.POST, request.FILES)
-        if form.is_valid():
+        if is_closed:
+            form.add_error('solution', 'Вступительная работа завершена. Решения больше не принимаются')
+        elif form.is_valid():
             form_file = form.cleaned_data['solution']
             solution_file = sistema.uploads.save_file(form_file, 'entrance-exam-files-solutions')
 
@@ -160,7 +173,9 @@ def submit(request, task_id):
 
     if isinstance(child_task, models.ProgramEntranceExamTask):
         form = forms.ProgramEntranceTaskForm(task, request.POST, request.FILES)
-        if form.is_valid():
+        if is_closed:
+            form.add_error('solution', 'Вступительная работа завершена. Решения больше не принимаются')
+        elif form.is_valid():
             solution_file = sistema.uploads.save_file(form.cleaned_data['solution'], 'entrance-exam-programs-solutions')
 
             with transaction.atomic():
@@ -200,6 +215,13 @@ def solution(request, solution_id):
 @school.decorators.school_view
 @transaction.atomic
 def upgrade(request):
+    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    is_closed = entrance_exam.is_closed()
+
+    # Not allow to upgrade if exam has been finished already
+    if is_closed:
+        return redirect('school:entrance:exam', school_name=request.school.short_name)
+
     base_level = get_base_entrance_level(request.school, request.user)
 
     # We may need to upgrade several times because there are levels with

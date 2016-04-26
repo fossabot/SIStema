@@ -8,13 +8,17 @@
 
 {% block answer_form %}
     <form method="POST" action="" enctype="multipart/form-data">
-        {{ task.form }}
+        {% if not is_closed %}
+            {{ task.form }}
+        {% endif %}
         {% if task.help_text %}
             <span class="help-block mbn">
                 {{ task.help_text }}
             </span>
         {% endif %}
-        <button class="entrance-exam__task__program__submit btn btn-info btn-small mt10">Отправить</button>
+        {% if not is_closed %}
+            <button class="entrance-exam__task__program__submit btn btn-info btn-small mt10">Отправить</button>
+        {% endif %}
         <em class="status"></em>
     </form>
 {% endblock %}

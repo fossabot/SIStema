@@ -120,11 +120,12 @@ def correcting(request):
 @topic_questionnaire_view
 @transaction.atomic
 def correcting_topic_marks(request, topic_name):
+    if request.questionnaire.is_closed():
+        return redirect('school:topics:index', school_name=request.school.short_name)
+
     user_status = _get_questionnaire_status(request.user, request.questionnaire)
     if user_status.status != models.UserQuestionnaireStatus.Status.CORRECTING:
-        return redirect(urlresolvers.reverse('school:topics:index', kwargs={
-            'school_name': request.school.short_name,
-        }))
+        return redirect('school:topics:index', school_name=request.school.short_name)
 
     topic = get_object_or_404(models.Topic, questionnaire=request.questionnaire, short_name=topic_name)
 
@@ -157,11 +158,16 @@ def _show_or_process_topic_form(request, topic_issue):
     user_status = _get_questionnaire_status(request.user, request.questionnaire)
     is_correcting = user_status.status == models.UserQuestionnaireStatus.Status.CORRECTING
 
+    is_closed = request.questionnaire.is_closed()
+
     if request.method == 'POST':
         form = form_class(data=request.POST)
 
         # Clean form for creating form.cleaned_data
         form.full_clean()
+
+        if is_closed:
+            form.add_error(None, 'Вступительная работа завершена. Изменения в тематическую анкету больше не принимаются')
 
         # Check that topic_id from form is equal to last issued topic, else update page for show the new question
         if 'topic_id' in form.cleaned_data and form.cleaned_data['topic_id'] != topic_issue.topic_id:

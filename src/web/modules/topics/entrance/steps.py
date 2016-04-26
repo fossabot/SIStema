@@ -18,6 +18,21 @@ class TopicQuestionnaireEntranceStep(steps.EntranceStep):
         return super().is_available(user)
 
     def render(self, user):
+        if self.is_available(user) and self.questionnaire.is_closed():
+            template = self._template_factory('''
+            <p>
+                Вступительная работа завершена.
+            </p>
+            <div>
+                <a class="btn btn-default" href="{{ questionnaire.get_absolute_url }}">Посмотреть анкету</a>
+            </div>
+            ''')
+            body = template.render(Context({
+                'questionnaire': self.questionnaire,
+            }))
+
+            return self.panel(self.questionnaire.title, body, 'default')
+
         if not self.is_available(user):
             template = self._template_factory('''
             <p>
@@ -42,7 +57,6 @@ class TopicQuestionnaireEntranceStep(steps.EntranceStep):
             <p>
                 Вступительная работа в параллель P опубликована на
                 <a href="https://lksh.ru/sis/2016/parallel-p.shtml">сайте</a>.
-                Задания для <a href="https://lksh.ru/sis/2016/parallel-a.shtml">группы A-ML</a> появится здесь 6 апреля.
             </p>
             <div>
                 <a class="btn btn-success" href="{{ questionnaire.get_absolute_url }}">Посмотреть</a>

@@ -4,6 +4,8 @@ import re
 from django.core import urlresolvers
 from django.conf import settings
 from django.db import models
+import django.utils.timezone
+
 import school.models
 import modules.ejudge.models
 import user.models
@@ -81,8 +83,13 @@ class ProgramEntranceExamTask(EntranceExamTask):
 class EntranceExam(models.Model):
     for_school = models.OneToOneField(school.models.School)
 
+    close_time = models.DateTimeField(blank=True, default=None, null=True)
+
     def __str__(self):
         return 'Вступительная работа для %s' % self.for_school
+
+    def is_closed(self):
+        return self.close_time is not None and django.utils.timezone.now() >= self.close_time
 
     def get_absolute_url(self):
         return urlresolvers.reverse('school:entrance:exam', kwargs={ 'school_name': self.for_school.short_name })

@@ -8,7 +8,9 @@
 
 {% block answer_form %}
     <form method="POST" action="" enctype="multipart/form-data">
-        {{ task.form }}
+        {% if not is_closed %}
+            {{ task.form }}
+        {% endif %}
         {% if task.user_solution %}
             <div>
                 <a href="{% url 'school:entrance:solution' school.short_name task.user_solution.id %}">Скачать</a> ваше решение для этой задачи

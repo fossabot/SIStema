@@ -104,7 +104,7 @@
                                             {% for solution in program_task.user_solutions %}
                                                 <div>
                                                     <div>
-                                                        <a href="{% url 'school:entrance:solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>,
+                                                        <a href="{% url 'school:entrance:user_solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>,
                                                         {{ solution.language }}
                                                     </div>
                                                     <div class="mb10">
@@ -141,7 +141,7 @@
                     {% for file_task in file_tasks %}
                         <div>
                             {% if file_task.last_solution %}
-                                <a href="{% url 'school:entrance:solution' request.school.short_name file_task.last_solution.id %}">
+                                <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}">
                                     <div class="fs14 mb5">{{ file_task.title }}</div>
                                 </a>
 
@@ -155,7 +155,7 @@
                                 </div>
 
 {#                                {% for solution in file_task.user_solutions %}#}
-{#                                    <a href="{% url 'school:entrance:solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>#}
+{#                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>#}
 {#                                {% endfor %}#}
                             {% else %}
                                 <div class="fs14 mb5 fw600">{{ file_task.title }} <span class="fs12 fw400">(не сдана)</span></div>

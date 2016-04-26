@@ -257,11 +257,10 @@ def solution(request, solution_id):
     if hasattr(task_solution, 'fileentranceexamtasksolution'):
         file_solution = task_solution.fileentranceexamtasksolution
         original_filename = file_solution.original_filename
-
-        return respond_as_attachment(request, file_solution.solution, '%06d_%s' % (solution_id, original_filename))
+        return respond_as_attachment(request, file_solution.solution, '%06d_%s' % (int(task_solution.id), original_filename))
 
     if hasattr(task_solution, 'programentranceexamtasksolution'):
         program_solution = task_solution.programentranceexamtasksolution
-        return respond_as_attachment(request, program_solution.solution, '%06d' % solution_id)
+        return respond_as_attachment(request, program_solution.solution, '%06d' % int(task_solution.id))
 
     return HttpResponseNotFound()

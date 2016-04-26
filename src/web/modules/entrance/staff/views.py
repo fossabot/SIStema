@@ -67,10 +67,13 @@ class EnrollingUsersTable(frontend.table.Table):
         return table
 
     def after_filter_applying(self):
+        # TODO: use only id's via .values_list('id', flat=True)?
+        filtered_users = list(self.paged_queryset)
+
         self.about_questionnaire_answers = group_by(
                 questionnaire.models.QuestionnaireAnswer.objects.filter(
                         questionnaire=self.about_questionnaire,
-                        user__in=self.paged_queryset
+                        user__in=filtered_users
                 ),
                 operator.attrgetter('user_id')
         )
@@ -78,7 +81,7 @@ class EnrollingUsersTable(frontend.table.Table):
         self.enrollee_questionnaire_answers = group_by(
                 questionnaire.models.QuestionnaireAnswer.objects.filter(
                         questionnaire=self.enrollee_questionnaire,
-                        user__in=self.paged_queryset
+                        user__in=filtered_users
                 ),
                 operator.attrgetter('user_id')
         )

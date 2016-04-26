@@ -16,7 +16,7 @@ from modules.entrance import forms
 from . import models
 
 
-def _get_base_entrance_level(school, user):
+def get_base_entrance_level(school, user):
     limiters = [modules.topics.entrance.levels.TopicsEntranceLevelLimiter,
                 modules.entrance.levels.AlreadyWasEntranceLevelLimiter,
                 modules.entrance.levels.AgeEntranceLevelLimiter
@@ -50,7 +50,7 @@ def _is_user_at_maximum_level(school, user, base_level):
 # User can upgrade if he hasn't reached the maximum level yet and solved all
 # the required tasks.
 def _can_user_upgrade(school, user):
-    base_level = _get_base_entrance_level(school, user)
+    base_level = get_base_entrance_level(school, user)
     issued_level = _get_maximum_issued_entrance_level(school, user, base_level)
 
     if _is_user_at_maximum_level(school, user, base_level):
@@ -62,7 +62,7 @@ def _can_user_upgrade(school, user):
                for requirement in requirements)
 
 
-def _get_entrance_tasks(school, user, base_level):
+def get_entrance_tasks(school, user, base_level):
     maximum_level = _get_maximum_issued_entrance_level(school, user, base_level)
 
     issued_levels = models.EntranceLevel.objects.filter(order__range=(base_level.order, maximum_level.order))
@@ -78,8 +78,8 @@ def _get_entrance_tasks(school, user, base_level):
 @login_required
 @school.decorators.school_view
 def exam(request):
-    base_level = _get_base_entrance_level(request.school, request.user)
-    tasks = _get_entrance_tasks(request.school, request.user, base_level)
+    base_level = get_base_entrance_level(request.school, request.user)
+    tasks = get_entrance_tasks(request.school, request.user, base_level)
 
     for task in tasks:
         qs = task.entranceexamtasksolution_set.filter(user=request.user).order_by('-created_at')
@@ -200,7 +200,7 @@ def solution(request, solution_id):
 @school.decorators.school_view
 @transaction.atomic
 def upgrade(request):
-    base_level = _get_base_entrance_level(request.school, request.user)
+    base_level = get_base_entrance_level(request.school, request.user)
 
     # We may need to upgrade several times because there are levels with
     # the same sets of tasks

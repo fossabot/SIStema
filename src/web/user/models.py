@@ -1,4 +1,4 @@
-from django.contrib import auth
+from django.contrib.auth import models as auth_models
 from django.db import models
 from django.utils import crypto
 
@@ -7,14 +7,12 @@ def generate_random_secret_string():
     return crypto.get_random_string(length=32)
 
 
-class User(auth.models.AbstractUser):
-    city = models.CharField(max_length=100)
-
+class User(auth_models.AbstractUser):
     email_confirmation_token = models.CharField(default=generate_random_secret_string, max_length=32)
 
     is_email_confirmed = models.BooleanField(default=False)
 
-    class Meta(auth.models.AbstractUser.Meta):
+    class Meta(auth_models.AbstractUser.Meta):
         pass
 
 

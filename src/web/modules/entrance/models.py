@@ -1,4 +1,8 @@
+import datetime
+
+import re
 from django.core import urlresolvers
+from django.conf import settings
 from django.db import models
 import school.models
 import modules.ejudge.models
@@ -39,6 +43,9 @@ class TestEntranceExamTask(EntranceExamTask):
     validation_re = models.CharField(max_length=100,
                                      help_text='Регулярное выражение для валидации ввода',
                                      blank=True)
+
+    def check_solution(self, solution):
+        return re.fullmatch(self.correct_answer_re, solution) is not None
 
 
 class FileEntranceExamTask(EntranceExamTask):
@@ -208,3 +215,44 @@ class SolveTaskEntranceLevelUpgradeRequirement(EntranceLevelUpgradeRequirement):
 
     def is_met_by_user(self, user):
         return self.task.get_child_object().is_solved_by_user(user)
+
+
+class CheckingGroup(models.Model):
+    for_school = models.ForeignKey(school.models.School)
+
+    short_name = models.CharField(max_length=100,
+                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return 'Группа проверки %s для %s' % (self.name, self.for_school)
+
+    class Meta:
+        unique_together = ('for_school', 'short_name')
+
+
+class UserInCheckingGroup(models.Model):
+    user = models.ForeignKey(user.models.User)
+
+    group = models.ForeignKey(CheckingGroup)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s: пользователь %s' % (self.group, self.user)
+
+    class Meta:
+        ordering = ('-created_at', )
+
+
+def get_locked_timeout():
+    return datetime.datetime.now() + settings.SISTEMA_ENTRANCE_CHECKING_TIMEOUT
+
+
+class CheckingLock(models.Model):
+    locked_user = models.ForeignKey(user.models.User, related_name='checking_locked')
+
+    locked_by = models.ForeignKey(user.models.User, related_name='checking_lock')
+
+    locked_until = models.DateTimeField(default=get_locked_timeout)

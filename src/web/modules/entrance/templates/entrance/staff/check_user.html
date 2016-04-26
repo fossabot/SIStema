@@ -1,0 +1,201 @@
+{% extends 'staff_layout.html' %}
+
+{% load dict_tags %}
+
+{% block title %}{{ user_for_checking.get_full_name }}{% endblock %}
+
+{% block topbar_left %}
+    <div class="fs16 fw600 mt10 mb5">
+        {% if checking_group %}
+            Группа {{ checking_group.name }}, {{ user_for_checking.get_full_name }}
+        {% else %}
+            {{ user_for_checking.get_full_name }}, вступительная работа
+        {% endif %}
+
+        <form method="POST" action="" class="form form-horizontal form-inline inline">
+            {% csrf_token %}
+            {{ put_into_checking_group_form|get_item:'group' }}
+            <button class="btn btn-default">Переложить</button>
+        </form>
+
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="mtn5 mb15">
+        Выданы задания уровня <span class="label label-sm label-{{ level_upgrades|yesno:'primary,success' }}">{{ base_entrance_level.name }}</span>
+        {% if level_upgrades %}
+            , повышения до
+            {% for upgrade in level_upgrades %}
+                <span class="label label-sm label-{{ forloop.last|yesno:'success,primary' }}" title="{{ upgrade.created_at }}">
+                {{ upgrade.upgraded_to.name }}
+            </span>
+                {% if not forloop.last %},{% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 col-sm-6 col-xs-12">
+            <div class="panel">
+                <div class="panel-heading">
+                    <span class="panel-title">Тестовые задания</span>
+                </div>
+                <div class="panel-body">
+                    {% for test_task in test_tasks %}
+                        <div>
+                            <div class="{{ test_task.is_solved|yesno:'text-success,text-danger' }} fs14 mb5">
+                                {{ test_task.title }}
+                                {% if test_task.user_solutions %}
+                                    <button class="btn btn-link btn-xs" data-toggle="modal" data-target="#tasks__test__{{ test_task.id }}">Попытки</button>
+                                {% endif %}
+                            </div>
+                            <div id="tasks__test__{{ test_task.id }}" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Решения теста</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            {% for solution in test_task.user_solutions %}
+                                                <div>
+                                                    <div>
+                                                        {{ solution.created_at }}
+                                                    </div>
+                                                    <div class="mb10">
+                                                        <span class="{{ solution.is_correct|yesno:'text-success,text-danger' }}">{{ solution.solution }}</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-heading">
+                    <span class="panel-title">Практика</span>
+                </div>
+                <div class="panel-body">
+                    {% for program_task in program_tasks %}
+                        <div>
+                            <div class="{{ program_task.is_solved|yesno:'text-success,text-danger' }} fs14 mb5">
+                                {{ program_task.title }}
+                                {% if program_task.user_solutions %}
+                                    <button class="btn btn-link btn-xs" data-toggle="modal" data-target="#tasks__program__{{ program_task.id }}">Попытки</button>
+                                {% endif %}
+                            </div>
+                            <div id="tasks__program__{{ program_task.id }}" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Решения по задаче</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            {% for solution in program_task.user_solutions %}
+                                                <div>
+                                                    <div>
+                                                        <a href="{% url 'school:entrance:solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>,
+                                                        {{ solution.language }}
+                                                    </div>
+                                                    <div class="mb10">
+                                                        {% with solution.ejudge_queue_element.get_result as result %}
+                                                            {% if result %}
+                                                                {{ result }}
+                                                            {% else %}
+                                                                Проверяется..
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-8 col-sm-6 col-xs-12">
+            <div class="panel">
+                <div class="panel-heading">
+                    <span class="panel-title">Теория</span>
+                </div>
+                <div class="panel-body">
+                    {% for file_task in file_tasks %}
+                        <div>
+                            {% if file_task.last_solution %}
+                                <a href="{% url 'school:entrance:solution' request.school.short_name file_task.last_solution.id %}">
+                                    <div class="fs14 mb5">{{ file_task.title }}</div>
+                                </a>
+
+                                <div class="btn-group inline" data-toggle="buttons-radio">
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('0')">0</button>
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('1')">1</button>
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('2')">2</button>
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('3')">3</button>
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('4')">4</button>
+                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('5')">5</button>
+                                </div>
+
+{#                                {% for solution in file_task.user_solutions %}#}
+{#                                    <a href="{% url 'school:entrance:solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>#}
+{#                                {% endfor %}#}
+                            {% else %}
+                                <div class="fs14 mb5 fw600">{{ file_task.title }} <span class="fs12 fw400">(не сдана)</span></div>
+                            {% endif %}
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <div class="admin-form">
+                <form method="POST" action="{% url 'school:entrance:check' request.school.short_name %}">
+                    {% csrf_token %}
+                    {{ file_tasks_mark_form }}
+
+                    {% with field=comment_form|get_item:'comment' %}
+                        <div class="{{ field.errors|yesno:'state-error,'}}">
+                            <label for="{{ field.id_for_label }}" class="field-label fs18">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="help-block">{{ field.help_text }}</p>
+                            {% endif %}
+                        </div>
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <em>{{ error }}</em>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                </form>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

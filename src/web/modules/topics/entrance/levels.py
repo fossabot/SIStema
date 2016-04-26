@@ -3,6 +3,7 @@ import operator
 
 from modules.entrance import levels
 from modules.entrance import models as entrance_models
+from sistema.helpers import group_by
 from .. import models
 
 from django.db import models as django_models
@@ -32,14 +33,6 @@ class EntranceLevelRequirement(django_models.Model):
 
     def satisfy(self, sum_marks, max_marks):
         return max_marks - sum_marks <= self.max_penalty
-
-
-# TODO: move to helpers
-def group_by(objects_list, func):
-    result = collections.defaultdict(list)
-    for obj in objects_list:
-        result[func(obj)].append(obj)
-    return result
 
 
 # TODO: cache results for each users

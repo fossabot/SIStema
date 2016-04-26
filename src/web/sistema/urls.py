@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^user/', include('user.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^questionnaire/', include('questionnaire.urls')),
+    url(r'^frontend/', include('frontend.urls', namespace='frontend')),
     url(r'^(?P<school_name>[^/]+)/', include('school.urls', namespace='school')),
     url(r'^hijack/', include('hijack.urls')),
 ]

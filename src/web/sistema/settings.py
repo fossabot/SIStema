@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import datetime
+
 from sistema.local_settings import *
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -57,10 +59,13 @@ INSTALLED_APPS = (
     'compat',
     'ipware',
 
+    'sistema',
+
     'school',
     'user',
     'questionnaire',
     'home',
+    'frontend',
 
     'modules.ejudge',
     'modules.entrance',
@@ -93,6 +98,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'sistema.staff.staff_context_processor',
             ],
         },
     },
@@ -129,7 +136,7 @@ SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db-prod-copy.sqlite3'),
     }
 }
 
@@ -170,6 +177,7 @@ else:
 
 
 SISTEMA_EJUDGE_BACKEND_ADDRESS = 'https://ejudge.andgein.ru'
+SISTEMA_ENTRANCE_CHECKING_TIMEOUT = datetime.timedelta(minutes=30)
 
 HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_LOGIN_REDIRECT_URL = '/'

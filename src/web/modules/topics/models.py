@@ -29,6 +29,12 @@ class TopicQuestionnaire(models.Model):
     def is_filled_by(self, user):
         return self.get_status(user) == UserQuestionnaireStatus.Status.FINISHED
 
+    def get_filled_users_ids(self):
+        return UserQuestionnaireStatus.objects.filter(
+            questionnaire=self,
+            status=UserQuestionnaireStatus.Status.FINISHED
+        ).values_list('user_id', flat=True)
+
 
 class Level(models.Model):
     questionnaire = models.ForeignKey(TopicQuestionnaire)
@@ -79,6 +85,7 @@ class LevelDownwardDependency(LevelDependency):
     Если школьник знает на максимальный балл хотя бы min_percent процентов тем из source_level,
     то он также знает все темы из destination_level.
     """
+
     class Meta:
         verbose_name_plural = 'Level downward dependencies'
 
@@ -88,6 +95,7 @@ class LevelUpwardDependency(LevelDependency):
     Если школьник знает на минимальный балл хотя бы min_percent процентов тем из source_level,
     то он не знает ни одной темы из destination_level.
     """
+
     class Meta:
         verbose_name_plural = 'Level upward dependencies'
 

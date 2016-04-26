@@ -1,0 +1,34 @@
+{% load url %}
+
+{% for menu_item in menu %}
+    <li class="active_">
+        <a href="{{ menu_item.view_link }}" class="{{ menu_item.child|yesno:'accordion-toggle,' }}">
+            {% if menu_item.icon %}
+                <span class="{{ menu_item.icon }}"></span>
+            {% endif %}
+
+            <span class="sidebar-title">{{ menu_item.text }}</span>
+
+            {% if menu_item.label or menu_item.button %}
+                <span class="sidebar-title-tray">
+                    {% if menu_item.label %}
+                        <span class="label label-xs label-rounded label-{{ menu_item.label.color }}">{{ menu_item.label.text }}</span>
+                    {% endif %}
+                    {% if menu_item.button %}
+                        <span class="btn btn-xs btn-{{ menu_item.button.color }} ph10">{{ menu_item.button.text }}</span>
+                    {% endif %}
+                </span>
+            {% endif %}
+
+            {% if menu_item.child %}
+                <span class="caret"></span>
+            {% endif %}
+        </a>
+
+        {% if menu_item.child %}
+            <ul class="nav sub-nav">
+                {% include '_staff_sidebar_menu.html' with menu=menu_item.child %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}

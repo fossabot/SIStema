@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/staff.css' %}" />
+{% endblock %}
+
+{% block content_wrapper %}
+    <div id="main">
+        {% include '_staff_header.html' %}
+        {% include '_staff_sidebar.html' %}
+
+        <section id="content_wrapper">
+            {% block topbar %}
+                <header id="topbar" class="">
+                    <div class="topbar-left">
+                        {% block topbar_left %}{% endblock %}
+                    </div>
+                </header>
+            {% endblock %}
+
+            <section id="content" class="">
+                {% block content %}
+                {% endblock %}
+            </section>
+        </section>
+    </div>
+{% endblock %}

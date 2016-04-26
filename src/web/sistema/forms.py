@@ -6,6 +6,9 @@ from django.utils.html import format_html
 from django.forms.forms import BoundField
 
 
+# TODO: move to the frontend application
+
+
 class TextInputWithFaIcon(forms.TextInput):
     fa_type = None
 
@@ -66,6 +69,33 @@ class SistemaChoiceInput(widgets.ChoiceInput):
                 self.input_type,
                 self.choice_label
         )
+
+
+# TODO: it's not working and not used now
+class ButtonGroup(widgets.NumberInput):
+    def render(self, name, value, attrs=None):
+        """
+            <div class="btn-toolbar inline">
+                <div class="btn-group inline" data-toggle="buttons-radio">
+                    <a class="btn inline active" onClick="$('#theory_2').val('0')">0</a>
+                    <a class="btn inline" onClick="$('#theory_2').val('1')">1</a>
+                    <a class="btn inline" onClick="$('#theory_2').val('2')">2</a>
+                    <a class="btn inline" onClick="$('#theory_2').val('3')">3</a>
+                    <a class="btn inline" onClick="$('#theory_2').val('4')">4</a>
+                    <a class="btn inline" onClick="$('#theory_2').val('5')">5</a>
+                </div>
+            </div>
+        """
+        hidden_input = widgets.HiddenInput().render(name, value, attrs)
+
+        return format('''
+        <div class="btn-toolbar inline">
+            <div class="btn-group inline" data-toggle="buttons-radio">
+                <a class="btn inline" onClick="$('#theory_2').val('4')">4</a>
+                <a class="btn inline" onClick="$('#theory_2').val('5')">5</a>
+            </div>
+        </div>
+        ''')
 
 
 class SistemaRadioChoiceInput(SistemaChoiceInput, widgets.RadioChoiceInput):

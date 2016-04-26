@@ -1,10 +1,13 @@
 import mimetypes
 import os
 import urllib.parse
+
+import collections
 from django.http import HttpResponse
 
 
 def respond_as_attachment(request, file_path, original_filename):
+    # TODO: check if file_path exists, otherwise return 404
     with open(file_path, 'rb') as fp:
         response = HttpResponse(fp.read())
 
@@ -29,3 +32,19 @@ def respond_as_attachment(request, file_path, original_filename):
         filename_header = 'filename*=UTF-8\'\'%s' % urllib.parse.quote(original_filename)
     response['Content-Disposition'] = 'attachment; ' + filename_header
     return response
+
+
+# TODO: if extract_key_function is str, make extract_key_function from operator.attrgetter
+# TODO: Replace with itertools.groupby?
+def group_by(collection, extract_key_function, extract_value_function=None):
+    if extract_value_function is None:
+        def extract_value_function(x):
+            return x
+
+    result = collections.defaultdict(list)
+    for item in collection:
+        key = extract_key_function(item)
+        value = extract_value_function(item)
+        result[key].append(value)
+
+    return result

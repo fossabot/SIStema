@@ -1,0 +1,20 @@
+{% extends 'staff_layout.html' %}
+
+{% block title %}Проверка{% endblock %}
+
+{% block topbar %}{% endblock %}
+
+{% block content %}
+    <h4>
+        Начать проверку группы
+    </h4>
+    {% for checking_group in checking_groups %}
+        <a href="{% url 'school:entrance:check_group' school_name=request.school.short_name group_name=checking_group.short_name %}"
+           class="btn {{ checking_group.users_count|yesno:"btn-success,disabled" }}">
+            {{ checking_group.name }}
+            {% if checking_group.users_count %}
+                <sup>{{ checking_group.users_count }} чел.</sup>
+            {% endif %}
+        </a>
+    {% endfor %}
+{% endblock %}

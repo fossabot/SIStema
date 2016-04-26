@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 
 from questionnaire.models import Questionnaire
 import questionnaire.views as questionnaire_views
@@ -12,9 +12,7 @@ class UserStep:
     pass
 
 
-@login_required
-@school_view
-def index(request):
+def user(request):
     steps = [('modules.entrance.steps.QuestionnaireEntranceStep', {
                 'school': request.school,
                 'questionnaire': Questionnaire.objects.filter(short_name='about').first()
@@ -36,7 +34,6 @@ def index(request):
                  'previous_questionnaire': request.school.topicquestionnaire,
              })]
 
-    rendered_steps = []
     user_steps = []
 
     for class_name, params in steps:
@@ -57,6 +54,19 @@ def index(request):
         'school': request.school,
         'steps': user_steps,
     })
+
+
+def staff(request):
+    return redirect('school:entrance:enrolling', school_name=request.school.short_name)
+
+
+@login_required
+@school_view
+def index(request):
+    if request.user.is_staff:
+        return staff(request)
+    else:
+        return user(request)
 
 
 @login_required

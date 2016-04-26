@@ -1,0 +1,77 @@
+<!-----------------------------------------------------------------+
+   "#sidebar_left" Helper Classes:
+-------------------------------------------------------------------+
+   * Positioning Classes:
+    '.affix' - Sets Sidebar Left to the fixed position
+
+   * Available Skin Classes:
+     .sidebar-dark (default no class needed)
+     .sidebar-light
+     .sidebar-light.light
+-------------------------------------------------------------------+
+   Example: <aside id="sidebar_left" class="affix sidebar-light">
+   Results: Fixed Left Sidebar with light/white background
+------------------------------------------------------------------->
+
+<!-- Start: Sidebar -->
+<aside id="sidebar_left" class="nano nano-light affix">
+
+    <!-- Start: Sidebar Left Content -->
+    <div class="sidebar-left-content nano-content">
+
+        <!-- Start: Sidebar Menu -->
+        <ul class="nav sidebar-menu">
+            <li class="sidebar-label school-name pt20 fs14">
+                {{ request.school.name }}
+                <!--
+                    <span class="glyphicon glyphicon-cog mr15 fs14 pull-right"></span>
+                -->
+            </li>
+
+            <!-- Sidebar Widget - Search (hidden) -->
+            <!--
+                <div class="sidebar-widget search-widget mv10 fs13">
+                    <label for="sidebar-search" class="ib">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <span class="fa fa-search"></span>
+                            </span>
+                            <input type="text" id="sidebar-search" class="form-control fs13 fw400" placeholder="Поиск по всему">
+                        </div>
+                    </label>
+                </div>
+            -->
+
+            {% include '_staff_sidebar_menu.html' with menu=staff_sidebar_menu %}
+
+
+            <!-- sidebar bullets -->
+            <li class="sidebar-label pt20">Ссылки</li>
+            <li class="sidebar-link">
+                <a href="http://lksh.ru" target="_blank">
+                    <span class="fa fa-dot-circle-o text-info"></span>
+                    <span class="sidebar-title">Сайт ЛКШ<span class="glyphicon glyphicon-new-window fs11 ml5"></span></span>
+                </a>
+            </li>
+            <li class="sidebar-link">
+                <a href="http://polygon.lksh.ru" target="_blank">
+                    <span class="fa fa-dot-circle-o text-warning"></span>
+                    <span class="sidebar-title">Полигон<span class="glyphicon glyphicon-new-window fs11 ml5"></span></span>
+                </a>
+            </li>
+            <li class="sidebar-link">
+                <a href="http://ejudge.lksh.ru" target="_blank">
+                    <span class="fa fa-dot-circle-o text-danger"></span>
+                    <span class="sidebar-title">Ejudge<span class="glyphicon glyphicon-new-window fs11 ml5"></span></span>
+                </a>
+            </li>
+
+
+        </ul>
+        <!-- End: Sidebar Menu -->
+
+    </div>
+    <!-- End: Sidebar Left Content -->
+
+</aside>
+<!-- End: Sidebar Left -->

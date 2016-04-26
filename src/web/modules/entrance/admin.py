@@ -97,3 +97,17 @@ class SolveTaskEntranceLevelUpgradeRequirementAdmin(admin.ModelAdmin):
 
 admin.site.register(models.SolveTaskEntranceLevelUpgradeRequirement,
                     SolveTaskEntranceLevelUpgradeRequirementAdmin)
+
+
+class CheckingGroupAdmin(admin.ModelAdmin):
+    list_display = ('id', 'for_school', 'short_name', 'name')
+    list_filter = ('for_school', )
+
+admin.site.register(models.CheckingGroup, CheckingGroupAdmin)
+
+
+class UserInCheckingGroupAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'group')
+    list_filter = ('group', )
+
+admin.site.register(models.UserInCheckingGroup, UserInCheckingGroupAdmin)

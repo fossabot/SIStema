@@ -39,8 +39,13 @@
 
     <script src="{% static 'vendor/jquery/jquery-1.11.1.min.js' %}"></script>
     <script src="{% static 'vendor/jquery/jquery_ui/jquery-ui.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'vendor/admin-designs/utility.js' %}"></script>
+    <script src="{% static 'vendor/admin-designs/main.js' %}"></script>
+    <script>
+        Core.init();
+    </script>
     <script src="{% static 'js/jquery.form.js' %}"></script>
+
     <script src="{% static 'js/ajax-csrf.js' %}"></script>
 
     {% block scripts %}

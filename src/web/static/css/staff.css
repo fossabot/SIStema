@@ -1,0 +1,66 @@
+.sidebar-widget.search-widget input,
+.sidebar-widget.search-widget .input-group-addon,
+.sidebar-widget.search-widget input::-webkit-input-placeholder
+{
+    color: #ccc;
+}
+
+.sidebar-usergroups a:hover {
+    text-decoration: none;
+}
+
+.sidebar-menu .school-name {
+    color: white;
+}
+
+.sidebar-link .sidebar-title .glyphicon {
+    position: relative;
+    top: -0.3px;
+}
+
+/* Должен быть разный цвет в зависимости от темы */
+.sidebar-menu > li > a[href]:hover {
+    background-color: #444 !important;
+}
+
+.onfocus-w400 {
+    transition: width 0.2s ease;
+    -webkit-transition: width 0.2s ease-in-out;
+    -moz-transition:width 0.2s ease-in-out;
+    -o-transition: width 0.2s ease-in-out;
+}
+
+.onfocus-w400:focus {
+    width: 400px !important;
+}
+
+/* I don't know why it's set to "z-index: 2" in theme.css*/
+.input-group .form-control {
+    z-index: 1;
+}
+
+/* Redefine: 180px -> 200px */
+body.sb-l-m .sidebar-menu > li > a > .sidebar-title,
+body.sb-l-m .sidebar-menu > li > ul > li ul,
+body.sb-l-m .sidebar-menu > li > ul {
+    width: 200px;
+}
+
+/* Redefine: 17px -> 5px (and maybe try 20px?) */
+.navbar .nav > li.dropdown .timeline-list li.timeline-item .timeline-date {
+    top: 5px;
+    right: 15px;
+}
+
+/* Theme disables selection for all devices, we need only for touch devices (todo) */
+.scroller, .scroller * {
+    -webkit-user-select: initial !important;
+    -moz-user-select: initial !important;
+    -ms-user-select: initial !important;
+    user-select: initial !important;
+}
+/*
+.sidebar-widget.search-widget input::-moz-placeholder,
+.sidebar-widget.search-widget input:-moz-placeholder,
+.sidebar-widget.search-widget input:-ms-input-placeholder
+*/

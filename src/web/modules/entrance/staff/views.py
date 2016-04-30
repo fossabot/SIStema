@@ -194,6 +194,15 @@ def check_user(request, user_for_checking, checking_group=None):
     checking_groups = [(g.id, g.name) for g in checking_groups]
     put_into_checking_group_form = forms.PutIntoCheckingGroupForm(checking_groups, initial={'user_id': user_for_checking.id})
 
+    scores = None
+    try:
+        import modules.exam_scorer_2016.models as scorer_models
+        scorers = scorer_models.EntranceExamScorer.objects.all()
+        scores = [(scorer.name, scorer.get_score(request.school, user_for_checking, tasks))
+                  for scorer in scorers]
+    except ImportError:
+        pass
+
     return render(request, 'entrance/staff/check_user.html', {
         'checking_group': checking_group,
         'user_for_checking': user_for_checking,
@@ -205,6 +214,7 @@ def check_user(request, user_for_checking, checking_group=None):
         'file_tasks_mark_form': file_tasks_mark_form,
         'comment_form': comment_form,
         'put_into_checking_group_form': put_into_checking_group_form,
+        'scores': scores,
     })
 
 

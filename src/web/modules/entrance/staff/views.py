@@ -157,6 +157,35 @@ def results(request):
     return None
 
 
+class UserSummary:
+    def __init__(self, class_number, previous_parallels, a_ml):
+        self.class_number = class_number
+        self.previous_parallels = previous_parallels
+        self.a_ml = a_ml
+
+    @classmethod
+    def summary_for_user(cls, user):
+        AnswerModel = questionnaire.models.QuestionnaireAnswer
+        VariantModel = questionnaire.models.ChoiceQuestionnaireQuestionVariant
+
+        variant_by_id = {str(var.id): var for var in VariantModel.objects.all()}
+
+        class_answer = AnswerModel.objects.filter(
+                user=user,
+                question_short_name='class').first()
+        class_number = class_answer.answer if class_answer is not None else None
+
+        prev_parallel_answers = AnswerModel.objects.filter(
+                user=user,
+                question_short_name='previous_parallels')
+        previous_parallels = [variant_by_id[ans.answer].text
+                              for ans in prev_parallel_answers]
+
+        a_ml = AnswerModel.objects.filter(user=user, question_short_name='a_ml').exists()
+
+        return cls(class_number, previous_parallels, a_ml)
+
+
 def check_user(request, user_for_checking, checking_group=None):
     entrance_exam = models.EntranceExam.objects.filter(for_school=request.school).first()
     base_entrance_level = get_base_entrance_level(request.school, user_for_checking)
@@ -205,6 +234,7 @@ def check_user(request, user_for_checking, checking_group=None):
         'file_tasks_mark_form': file_tasks_mark_form,
         'comment_form': comment_form,
         'put_into_checking_group_form': put_into_checking_group_form,
+        'user_summary': UserSummary.summary_for_user(user_for_checking),
     })
 
 

@@ -135,6 +135,32 @@
         <div class="col-md-8 col-sm-6 col-xs-12">
             <div class="panel">
                 <div class="panel-heading">
+                    <span class="panel-title">Общая информация</span>
+                </div>
+                <div class="panel-body">
+                    <div>Класс: <span class="">{{ user_summary.class_number }}</span></div>
+                    <div>
+                        {% if user_summary.previous_parallels %}
+                            Был в параллелях:
+                            {% for par in user_summary.previous_parallels %}
+                                {% if forloop.last %}
+                                    <span class="label label-sm label-success">{{ par }}</span>
+                                {% else %}
+                                    <span class="label label-sm label-primary">{{ par }}</span>,
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            Не был в ЛКШ
+                        {% endif %}
+                    </div>
+                    {% if user_summary.a_ml %}
+                        <div>Хочет в A-ML</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-heading">
                     <span class="panel-title">Теория</span>
                 </div>
                 <div class="panel-body">

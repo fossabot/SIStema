@@ -2,6 +2,7 @@ from django import forms
 from django.core import validators, urlresolvers
 from django.db import models
 from django.forms import widgets
+import django.utils.timezone
 
 import school.models
 import user.models
@@ -14,8 +15,13 @@ class TopicQuestionnaire(models.Model):
 
     title = models.CharField(max_length=100)
 
+    close_time = models.DateTimeField(blank=True, null=True, default=None)
+
     def __str__(self):
         return '%s. %s' % (self.for_school.name, self.title)
+
+    def is_closed(self):
+        return self.close_time is not None and django.utils.timezone.now() >= self.close_time
 
     def get_absolute_url(self):
         return urlresolvers.reverse('school:topics:index', kwargs={'school_name': self.for_school.short_name})

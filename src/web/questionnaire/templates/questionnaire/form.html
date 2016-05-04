@@ -26,10 +26,15 @@
                                     <span class="fa fa-remove pr10"></span>
                                     Есть некоторые ошибки, давайте поправим
                                 </div>
-                            {% elif already_filled %}
+                            {% elif already_filled and not is_closed%}
                                 <div class="alert alert-micro alert-info alert-border-left">
                                     <span class="fa fa-info pr10"></span>
                                     Анкета уже заполнена, но вы можете внести в неё исправления
+                                </div>
+                            {% elif is_closed %}
+                                <div class="alert alert-micro alert-info alert-border-left">
+                                    <span class="fa fa-info pr10"></span>
+                                    Обратите внимание, что вы уже не можете отредактировать анкету. Вам доступен только её просмотр
                                 </div>
                             {% endif %}
 
@@ -60,9 +65,11 @@
                             </div>
                         </div>
 
-                        <div class="panel-footer p25 text-right">
-                            <button type="submit" class="button btn-success">Отправить</button>
-                        </div>
+                        {% if not is_closed %}
+                            <div class="panel-footer p25 text-right">
+                                <button type="submit" class="button btn-success">Отправить</button>
+                            </div>
+                        {% endif %}
 
                     </form>
                 </div>

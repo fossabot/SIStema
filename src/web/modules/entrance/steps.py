@@ -68,6 +68,20 @@ class QuestionnaireEntranceStep(EntranceStep):
         return super().is_available(user)
 
     def render(self, user):
+        if self.is_available(user) and self.questionnaire.is_closed():
+            template = self._template_factory('''
+            <p>
+                Вступительная работа завершена. Вы не можете вносить изменения в анкету, но можете её посмотреть.
+            </p>
+            <div>
+                <a class="btn btn-default" href="{{ questionnaire.get_absolute_url }}">Посмотреть</a>
+            </div>
+            ''')
+            body = template.render(Context({
+                'questionnaire': self.questionnaire,
+            }))
+            return self.panel(self.questionnaire.title, body, 'default')
+
         if not self.is_available(user):
             template = self._template_factory('''
             <p>
@@ -128,6 +142,20 @@ class ExamEntranceStep(EntranceStep):
         return super().is_available(user)
 
     def render(self, user):
+        if self.is_available(user) and self.exam.is_closed():
+            template = self._template_factory('''
+            <p>
+                Вступительная работа завершена. Вы не можете отправлять новые решения.
+            </p>
+            <div>
+                <a class="btn btn-default" href="{{ exam.get_absolute_url }}">Посмотреть отправленные решения</a>
+            </div>
+            ''')
+            body = template.render(Context({
+                'exam': self.exam,
+            }))
+            return self.panel('Вступительная работа', body, 'default')
+
         if not self.is_available(user):
             template = self._template_factory('''
             <p>

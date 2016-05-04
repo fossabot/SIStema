@@ -194,6 +194,15 @@ def check_user(request, user_for_checking, checking_group=None):
     checking_groups = [(g.id, g.name) for g in checking_groups]
     put_into_checking_group_form = forms.PutIntoCheckingGroupForm(checking_groups, initial={'user_id': user_for_checking.id})
 
+    scores = None
+    try:
+        import modules.exam_scorer_2016.models as scorer_models
+        scorers = scorer_models.EntranceExamScorer.objects.all()
+        scores = [(scorer.name, scorer.get_score(request.school, user_for_checking, tasks))
+                  for scorer in scorers]
+    except ImportError:
+        pass
+
     return render(request, 'entrance/staff/check_user.html', {
         'checking_group': checking_group,
         'user_for_checking': user_for_checking,
@@ -205,6 +214,7 @@ def check_user(request, user_for_checking, checking_group=None):
         'file_tasks_mark_form': file_tasks_mark_form,
         'comment_form': comment_form,
         'put_into_checking_group_form': put_into_checking_group_form,
+        'scores': scores,
     })
 
 
@@ -257,11 +267,10 @@ def solution(request, solution_id):
     if hasattr(task_solution, 'fileentranceexamtasksolution'):
         file_solution = task_solution.fileentranceexamtasksolution
         original_filename = file_solution.original_filename
-
-        return respond_as_attachment(request, file_solution.solution, '%06d_%s' % (solution_id, original_filename))
+        return respond_as_attachment(request, file_solution.solution, '%06d_%s' % (int(task_solution.id), original_filename))
 
     if hasattr(task_solution, 'programentranceexamtasksolution'):
         program_solution = task_solution.programentranceexamtasksolution
-        return respond_as_attachment(request, program_solution.solution, '%06d' % solution_id)
+        return respond_as_attachment(request, program_solution.solution, '%06d' % int(task_solution.id))
 
     return HttpResponseNotFound()

@@ -2,10 +2,12 @@ import copy
 from itertools import chain
 from operator import attrgetter
 
+
 from cached_property import cached_property
 from django.core import urlresolvers
 from django.db import models
 from django import forms
+import django.utils.timezone
 from djchoices import choices
 
 import school.models
@@ -142,14 +144,20 @@ class Questionnaire(models.Model):
     title = models.CharField(max_length=100, help_text='Название анкеты')
 
     short_name = models.CharField(max_length=100,
-                                  help_text='Используется для урлов. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
 
     for_school = models.ForeignKey(school.models.School, blank=True, null=True)
 
     for_session = models.ForeignKey(school.models.Session, blank=True, null=True)
 
+    close_time = models.DateTimeField(blank=True, null=True, default=None)
+
     def __str__(self):
         return self.title
+
+    # TODO: Extract to ModelWithCloseTime?
+    def is_closed(self):
+        return self.close_time is not None and django.utils.timezone.now() >= self.close_time
 
     @cached_property
     def questions(self):

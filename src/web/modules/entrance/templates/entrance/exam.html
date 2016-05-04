@@ -81,7 +81,9 @@
         {% endfor %}
     {% endif %}
 
-    {% include 'entrance/_exam_upgrade.html' %}
+    {% if not is_closed %}
+        {% include 'entrance/_exam_upgrade.html' %}
+    {% endif %}
 
 {% endblock %}
 

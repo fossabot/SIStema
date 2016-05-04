@@ -70,6 +70,7 @@ INSTALLED_APPS = (
     'modules.ejudge',
     'modules.entrance',
     'modules.topics',
+    'modules.exam_scorer_2016',
 )
 
 MIDDLEWARE_CLASSES = (

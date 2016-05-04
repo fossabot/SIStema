@@ -13,6 +13,6 @@ urlpatterns = [
     url(r'^enrolling/(?P<user_id>\d+)/', staff_views.enrolling_user, name='enrolling_user'),
     url(r'^check/$', staff_views.check, name='check'),
     url(r'^check/(?P<group_name>[^/]+)/$', staff_views.check_group, name='check_group'),
-    url(r'^solution/(?P<solution_id>\d+)/', staff_views.solution, name='solution'),
+    url(r'^solution/(?P<solution_id>\d+)/', staff_views.solution, name='user_solution'),
     url(r'^results/$', staff_views.results, name='results'),
     ]

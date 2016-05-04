@@ -61,9 +61,13 @@ def questionnaire(request, questionnaire_name):
     questionnaire_answers = _get_user_questionnaire_answers(request.user, questionnaire)
     already_filled = len(questionnaire_answers) > 0
 
+    is_closed = questionnaire.is_closed()
+
     if request.method == 'POST':
         form = form_class(data=request.POST)
-        if form.is_valid():
+        if is_closed:
+            form.add_error(None, 'Время заполнения анкеты вышло')
+        elif form.is_valid():
             save_questionnaire_answers(request.user, questionnaire, form)
             if questionnaire.for_school is not None:
                 return redirect('school:index', school_name=questionnaire.for_school.short_name)
@@ -79,6 +83,7 @@ def questionnaire(request, questionnaire_name):
         'questionnaire': questionnaire,
         'form': form,
         'already_filled': already_filled,
+        'is_closed': is_closed,
     })
 
 

@@ -111,3 +111,41 @@ class UserInCheckingGroupAdmin(admin.ModelAdmin):
     list_filter = ('group', )
 
 admin.site.register(models.UserInCheckingGroup, UserInCheckingGroupAdmin)
+
+
+class CheckingLockAdmin(admin.ModelAdmin):
+    list_display = ('id', 'locked_user', 'locked_by', 'locked_until')
+    list_filter = ('locked_by', )
+
+admin.site.register(models.CheckingLock, CheckingLockAdmin)
+
+
+class SolutionScoreAdmin(admin.ModelAdmin):
+    list_display = ('id', 'solution', 'scored_by', 'score', 'created_at')
+    list_filter = ('scored_by', )
+
+admin.site.register(models.SolutionScore, SolutionScoreAdmin)
+
+
+class CheckingCommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'for_school', 'for_user', 'commented_by', 'comment', 'created_at')
+    list_filter = ('for_school', 'commented_by')
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+
+admin.site.register(models.CheckingComment, CheckingCommentAdmin)
+
+
+class EntranceRecommendationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'for_school', 'for_user', 'checked_by', 'parallel', 'created_at')
+    list_filter = ('for_school', 'checked_by')
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+
+admin.site.register(models.EntranceRecommendation, EntranceRecommendationAdmin)
+
+
+class EntranceStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
+    list_filter = ('status', 'session', 'parallel', 'created_by')
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+
+admin.site.register(models.EntranceStatus, EntranceStatusAdmin)

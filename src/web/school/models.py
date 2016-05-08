@@ -26,7 +26,24 @@ class Session(models.Model):
     school = models.ForeignKey(School)
 
     name = models.CharField(max_length=50, help_text='Например, Август')
-    short_name = models.CharField(max_length=20, help_text='Используется в адресах. Например, august')
+
+    short_name = models.CharField(max_length=20, help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием. Например, august')
+
+    class Meta:
+        unique_together = ['school', 'short_name']
+
+    def __str__(self):
+        return '%s.%s' % (self.school.name, self.name)
+
+
+class Parallel(models.Model):
+    school = models.ForeignKey(School, related_name='parallels')
+
+    short_name = models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием. Например, c_prime')
+
+    name = models.CharField(max_length=100, help_text='Например, C\'')
+
+    sessions = models.ManyToManyField(Session)
 
     class Meta:
         unique_together = ['school', 'short_name']

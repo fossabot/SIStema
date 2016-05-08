@@ -1,6 +1,8 @@
 import datetime
 
 import re
+
+import djchoices
 from django.core import urlresolvers
 from django.conf import settings
 from django.db import models
@@ -21,6 +23,8 @@ class EntranceExamTask(models.Model):
     help_text = models.CharField(max_length=100,
                                  help_text='Дополнительная информация, например, сведения о формате ответа',
                                  blank=True)
+
+    max_score = models.PositiveIntegerField()
 
     def __str__(self):
         return self.title
@@ -263,3 +267,70 @@ class CheckingLock(models.Model):
     locked_by = models.ForeignKey(user.models.User, related_name='checking_lock')
 
     locked_until = models.DateTimeField(default=get_locked_timeout)
+
+
+class SolutionScore(models.Model):
+    solution = models.ForeignKey(EntranceExamTaskSolution)
+
+    scored_by = models.ForeignKey(user.models.User)
+
+    score = models.PositiveIntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CheckingComment(models.Model):
+    for_school = models.ForeignKey(school.models.School, related_name='+')
+
+    for_user = models.ForeignKey(user.models.User, related_name='checking_comments')
+
+    commented_by = models.ForeignKey(user.models.User, related_name='+')
+
+    comment = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# Рекомендации от проверяющего по поступлению в определённую параллель
+class EntranceRecommendation(models.Model):
+    for_school = models.ForeignKey(school.models.School, related_name='+')
+
+    for_user = models.ForeignKey(user.models.User, related_name='entrance_recommendations')
+
+    checked_by = models.ForeignKey(user.models.User, related_name='+')
+
+    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class EntranceStatus(models.Model):
+    class Status(djchoices.DjangoChoices):
+        NOT_PARTICIPATED = djchoices.ChoiceItem(1, 'Не участвовал в конкурсе')
+        AUTO_REJECTED = djchoices.ChoiceItem(2, 'Автоматический отказ')
+        NOT_ENROLLED = djchoices.ChoiceItem(3, 'Не прошёл по конкурсу')
+        ENROLLED = djchoices.ChoiceItem(4, 'Поступил')
+
+    for_school = models.ForeignKey(school.models.School, related_name='entrance_statuses')
+
+    for_user = models.ForeignKey(user.models.User, related_name='entrance_statuses')
+
+    # created_by=None means system's auto creating
+    created_by = models.ForeignKey(user.models.User, blank=True, null=True, default=None)
+
+    public_comment = models.TextField(help_text='Публичный комментарий. Может быть виден поступающему')
+
+    is_status_visible = models.BooleanField()
+
+    status = models.IntegerField(choices=Status.choices, validators=[Status.validator])
+
+    session = models.ForeignKey(school.models.Session, blank=True, null=True, default=None)
+
+    parallel = models.ForeignKey(school.models.Parallel, blank=True, null=True, default=None)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['for_school', 'for_user']

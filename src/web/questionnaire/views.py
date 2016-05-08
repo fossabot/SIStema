@@ -50,25 +50,31 @@ def _get_user_questionnaire_answers(user, questionnaire):
     return result
 
 
-@login_required
-def questionnaire(request, questionnaire_name):
+def questionnaire_for_user(request, user, questionnaire_name):
     if hasattr(request, 'school'):
-        questionnaire = get_object_or_404(models.Questionnaire, for_school=request.school, short_name=questionnaire_name)
+        qs = models.Questionnaire.objects.filter(for_school=request.school, short_name=questionnaire_name)
+        # If questionnaire with exact name exists for this school use it,
+        # otherwise use common questionnaire (with for_school = None)
+        if qs.exists():
+            questionnaire = qs.first()
+        else:
+            questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
     else:
         questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
     form_class = questionnaire.get_form_class(attrs={'class': 'gui-input'})
 
-    questionnaire_answers = _get_user_questionnaire_answers(request.user, questionnaire)
+    questionnaire_answers = _get_user_questionnaire_answers(user, questionnaire)
     already_filled = len(questionnaire_answers) > 0
 
-    is_closed = questionnaire.is_closed()
+    # There are not closed questionnaires for staff users
+    is_closed = questionnaire.is_closed() and not request.user.is_staff
 
     if request.method == 'POST':
         form = form_class(data=request.POST)
         if is_closed:
             form.add_error(None, 'Время заполнения анкеты вышло')
         elif form.is_valid():
-            save_questionnaire_answers(request.user, questionnaire, form)
+            save_questionnaire_answers(user, questionnaire, form)
             if questionnaire.for_school is not None:
                 return redirect('school:index', school_name=questionnaire.for_school.short_name)
 
@@ -85,6 +91,11 @@ def questionnaire(request, questionnaire_name):
         'already_filled': already_filled,
         'is_closed': is_closed,
     })
+
+
+@login_required
+def questionnaire(request, questionnaire_name):
+    return questionnaire_for_user(request, request.user, questionnaire_name)
 
 
 @login_required

@@ -43,7 +43,7 @@ class CheckingResult(models.Model):
                     return val
             return cls.UNKNOWN
 
-    result = models.PositiveIntegerField(choices=Result.choices, validators=[Result.validator])
+    result = models.PositiveIntegerField(choices=Result.choices, validators=[Result.validator], db_index=True)
 
     score = models.PositiveIntegerField(default=None, blank=True, null=True)
 

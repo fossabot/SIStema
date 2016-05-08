@@ -95,8 +95,8 @@ def _get_user_marks_by_topics(user, questionnaire, not_show_auto_marks=True):
 
 
 # TODO: copy-paste with correcting(request)
-def show_final_answers(request):
-    topics_with_marks = _get_user_marks_by_topics(request.user, request.questionnaire, not_show_auto_marks=False)
+def show_final_answers(request, user):
+    topics_with_marks = _get_user_marks_by_topics(user, request.questionnaire, not_show_auto_marks=False)
     topics_with_marks = sorted(topics_with_marks, key=lambda t: t.topic.order)
 
     return render(request, 'topics/answers.html', {
@@ -231,7 +231,7 @@ def index(request):
 
     # Disable access for users which already filled an questionnaire
     if user_status.status == models.UserQuestionnaireStatus.Status.FINISHED:
-        return show_final_answers(request)
+        return show_final_answers(request, request.user)
 
     topic_issuer = issuer.TopicIssuer(request.user, request.questionnaire)
 

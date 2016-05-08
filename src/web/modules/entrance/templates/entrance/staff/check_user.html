@@ -1,6 +1,7 @@
 {% extends 'staff_layout.html' %}
 
 {% load dict_tags %}
+{% load range %}
 
 {% block title %}{{ user_for_checking.get_full_name }}{% endblock %}
 
@@ -12,10 +13,12 @@
             {{ user_for_checking.get_full_name }}, вступительная работа
         {% endif %}
 
-        <form method="POST" action="" class="form form-horizontal form-inline inline">
+        <form method="POST" action="" class="form form-horizontal form-inline ib pull-right">
             {% csrf_token %}
-            {{ put_into_checking_group_form|get_item:'group' }}
-            <button class="btn btn-default">Переложить</button>
+            <div class="form-group form-group-sm">
+                {{ put_into_checking_group_form|get_item:'group' }}
+                <button class="btn btn-sm btn-default">Переложить</button>
+            </div>
         </form>
 
     </div>
@@ -43,11 +46,13 @@
                 </div>
                 <div class="panel-body">
                     {% for test_task in test_tasks %}
-                        <div>
-                            <div class="{{ test_task.is_solved|yesno:'text-success,text-danger' }} fs14 mb5">
+                        <div class="mb10">
+                            <div class="{{ test_task.is_solved|yesno:'text-success,text-danger' }} fs14">
                                 {{ test_task.title }}
                                 {% if test_task.user_solutions %}
-                                    <button class="btn btn-link btn-xs" data-toggle="modal" data-target="#tasks__test__{{ test_task.id }}">Попытки</button>
+                                    <button class="btn btn-link btn-xs" data-toggle="modal" data-target="#tasks__test__{{ test_task.id }}" title="Показать все попытки">
+                                        Последняя попытка: {{ test_task.last_try|truncatechars:10 }}
+                                    </button>
                                 {% endif %}
                             </div>
                             <div id="tasks__test__{{ test_task.id }}" class="modal fade" role="dialog">
@@ -55,7 +60,7 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h4 class="modal-title">Решения теста</h4>
+                                            <h4 class="modal-title">Решения задания «{{ test_task.title }}»</h4>
                                         </div>
                                         <div class="modal-body">
                                             {% for solution in test_task.user_solutions %}
@@ -75,6 +80,12 @@
                                     </div>
                                 </div>
                             </div>
+                            {% if test_task.last_try and not test_task.is_last_correct and test_task.testentranceexamtask.correct_answer_re %}
+                                <div class="fs10">
+                                    Правильный ответ:
+                                    <span class="регулярное выражение">{{ test_task.testentranceexamtask.correct_answer_re }}</span>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -87,18 +98,24 @@
                 <div class="panel-body">
                     {% for program_task in program_tasks %}
                         <div>
-                            <div class="{{ program_task.is_solved|yesno:'text-success,text-danger' }} fs14 mb5">
+                            <div class="{{ program_task.is_solved|yesno:'text-success,text-danger' }} fs14">
                                 {{ program_task.title }}
                                 {% if program_task.user_solutions %}
                                     <button class="btn btn-link btn-xs" data-toggle="modal" data-target="#tasks__program__{{ program_task.id }}">Попытки</button>
                                 {% endif %}
+                            </div>
+                            <div class="fs10 mb10">
+                                Уровни:
+                                {% for entrance_level in program_task.entrancelevel_set.all %}
+                                    <span class="">{{ entrance_level.name }}</span>{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
                             </div>
                             <div id="tasks__program__{{ program_task.id }}" class="modal fade" role="dialog">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h4 class="modal-title">Решения по задаче</h4>
+                                            <h4 class="modal-title">Решения по задаче «{{ program_task.title }}»</h4>
                                         </div>
                                         <div class="modal-body">
                                             {% for solution in program_task.user_solutions %}
@@ -130,37 +147,92 @@
                 </div>
             </div>
 
+            {% if scores %}
+                <div class="panel">
+                    <div class="panel-heading">
+                        <span class="panel-title">Баллы</span>
+                    </div>
+                    <div class="panel-body">
+                        {% for scorer_name, score in scores %}
+                            <div>
+                                <div class="fs14 mb5">
+                                    {{ scorer_name }}: {{score}}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
         </div>
 
         <div class="col-md-8 col-sm-6 col-xs-12">
+            <div class="panel">
+                <div class="panel-heading">
+                    <span class="panel-title">Общая информация</span>
+                    <div class="mr10 pull-right fs12">
+                        Анкеты:
+                        <a href="{% url 'school:entrance:user_questionnaire' request.school.short_name user_for_checking.id 'about' %}"
+                           target="_blank" class="ml10" title="Откроется в новом окне">
+                            О себе</a>
+                        <a href="{% url 'school:entrance:user_questionnaire' request.school.short_name user_for_checking.id 'enrollee' %}"
+                           target="_blank" class="ml10" title="Откроется в новом окне">
+                            Поступающего</a>
+                        <a href="{% url 'school:entrance:user_topics' request.school.short_name user_for_checking.id %}"
+                           target="_blank" class="ml10" title="Откроется в новом окне">
+                            Тематическая</a>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div>
+                        <span><b>{{ user_summary.class_number }} класс</b></span>,
+                        <span>{{ user_summary.school }}</span>,
+                        <span>{{ user_summary.city }}</span>
+                    </div>
+                    <div>
+                        {% if user_summary.previous_parallels %}
+                            <b>Был в параллелях:</b>
+                            {% for par in user_summary.previous_parallels %}
+                                {{ par }}{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <b>Не был в ЛКШ</b>
+                        {% endif %}
+                    </div>
+                    <div><b>Хочет в A-ML:</b> {{ user_summary.a_ml|yesno:"Да,Нет" }}</div>
+                </div>
+            </div>
+
             <div class="panel">
                 <div class="panel-heading">
                     <span class="panel-title">Теория</span>
                 </div>
                 <div class="panel-body">
                     {% for file_task in file_tasks %}
-                        <div>
+                        <div class="row mb5">
                             {% if file_task.last_solution %}
-                                <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}">
-                                    <div class="fs14 mb5">{{ file_task.title }}</div>
-                                </a>
-
-                                <div class="btn-group inline" data-toggle="buttons-radio">
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('0')">0</button>
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('1')">1</button>
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('2')">2</button>
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('3')">3</button>
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('4')">4</button>
-                                    <button type="button" class="btn inline" onClick="$('#{{ file_task.mark_field_id }}').val('5')">5</button>
+                                <div class="fs14 col-sm-8">
+                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}">
+                                        {{ file_task.title }}
+                                    </a>
                                 </div>
 
+                                <div class="btn-group col-sm-4" data-toggle="buttons">
+                                    {% with max_score=file_task.max_score|add:1 %}
+                                        {% mkrange max_score as marks_range %}
+                                        {% for mark in marks_range %}
+                                            <label class="btn btn-xs btn-default fs10" >
+                                                <input type="radio" onClick="$('#{{ file_task.mark_field_id }}').val('{{ mark }}')">{{ mark }}
+                                            </label>
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
 {#                                {% for solution in file_task.user_solutions %}#}
 {#                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name solution.id %}" target="_blank">{{ solution.created_at }}</a>#}
 {#                                {% endfor %}#}
                             {% else %}
-                                <div class="fs14 mb5 fw600">{{ file_task.title }} <span class="fs12 fw400">(не сдана)</span></div>
+                                <div class="col-sm-12 fs14 fw600">{{ file_task.title }} <span class="fs12 fw400">(не сдана)</span></div>
                             {% endif %}
-
                         </div>
                     {% endfor %}
 
@@ -172,24 +244,26 @@
                     {% csrf_token %}
                     {{ file_tasks_mark_form }}
 
-                    {% with field=comment_form|get_item:'comment' %}
-                        <div class="{{ field.errors|yesno:'state-error,'}}">
-                            <label for="{{ field.id_for_label }}" class="field-label fs18">
-                                {{ field.label }}
-                            </label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <p class="help-block">{{ field.help_text }}</p>
+                    {% for field in recommendation_form %}
+                        {% if not field.is_hidden %}
+                            <div class="form-group {{ field.errors|yesno:'state-error,'}}">
+                                <label for="{{ field.id_for_label }}" class="field-label fs18">
+                                    {{ field.label }}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help-block">{{ field.help_text }}</p>
+                                {% endif %}
+                            </div>
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <em>{{ error }}</em>
+                                {% endfor %}
                             {% endif %}
-                        </div>
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <em>{{ error }}</em>
-                            {% endfor %}
                         {% endif %}
-                    {% endwith %}
+                    {% endfor %}
 
-                    <button type="submit" class="btn btn-success">Сохранить</button>
+                    <button type="submit" class="btn btn-success mt10">Сохранить</button>
                 </form>
             </div>
         </div>

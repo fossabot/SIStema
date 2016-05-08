@@ -4,13 +4,15 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Count
-from django.http.response import Http404, HttpResponseNotFound
+from django.http.response import Http404, HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 import frontend.table
 import frontend.icons
 import questionnaire.models
-from modules.ejudge.models import SolutionCheckingResult
+import questionnaire.views
+import modules.topics.views as topics_views
+from modules.ejudge.models import SolutionCheckingResult, CheckingResult
 from school.decorators import school_view
 import school.models
 import sistema.staff
@@ -38,7 +40,8 @@ class EnrollingUsersTable(frontend.table.Table):
                 short_name='enrollee'
         ).first()
 
-        name_column = frontend.table.SimplePropertyColumn('get_full_name', 'Имя', search_attrs=['first_name', 'last_name'])
+        name_column = frontend.table.SimplePropertyColumn('get_full_name', 'Имя',
+                                                          search_attrs=['first_name', 'last_name'])
         name_column.data_type = frontend.table.LinkDataType(
                 frontend.table.StringDataType(),
                 lambda user: reverse('school:entrance:enrolling_user', args=(self.school.short_name, user.id))
@@ -136,6 +139,23 @@ def enrolling(request):
     return render(request, 'entrance/staff/enrolling.html', {'users_table': users_table})
 
 
+@school_view
+@sistema.staff.only_staff
+def user_questionnaire(request, user_id, questionnaire_name):
+    _user = get_object_or_404(user.models.User, id=user_id)
+    # TODO: use staff interface for showing questionnaire (here and in user_topics)
+    return questionnaire.views.questionnaire_for_user(request, _user, questionnaire_name)
+
+
+@school_view
+@sistema.staff.only_staff
+@topics_views.topic_questionnaire_view
+def user_topics(request, user_id):
+    # TODO: check that status of topics questionnaire for this user is FINISHED
+    _user = get_object_or_404(user.models.User, id=user_id)
+    return topics_views.show_final_answers(request, _user)
+
+
 def _remove_old_checking_locks():
     models.CheckingLock.objects.filter(locked_until__lt=datetime.datetime.now()).delete()
 
@@ -157,6 +177,45 @@ def results(request):
     return None
 
 
+class UserSummary:
+    def __init__(self, class_number, school, city, previous_parallels, a_ml):
+        self.class_number = class_number
+        self.school = school
+        self.city = city
+        self.previous_parallels = previous_parallels
+        self.a_ml = a_ml
+
+    @classmethod
+    def get_answer(cls, user, answer_model, question_short_name):
+        answer = answer_model.objects.filter(
+                user=user,
+                question_short_name=question_short_name
+        ).first()
+        return answer.answer if answer is not None else None
+
+    # TODO [BUG]: this method works only for first school (=first questionnaire) for each user
+    @classmethod
+    def summary_for_user(cls, user):
+        AnswerModel = questionnaire.models.QuestionnaireAnswer
+        VariantModel = questionnaire.models.ChoiceQuestionnaireQuestionVariant
+
+        variant_by_id = {str(var.id): var for var in VariantModel.objects.all()}
+
+        class_number = cls.get_answer(user, AnswerModel, 'class')
+        school = cls.get_answer(user, AnswerModel, 'school')
+        city = cls.get_answer(user, AnswerModel, 'city')
+
+        prev_parallel_answers = AnswerModel.objects.filter(
+                user=user,
+                question_short_name='previous_parallels')
+        previous_parallels = [variant_by_id[ans.answer].text
+                              for ans in prev_parallel_answers]
+
+        a_ml = AnswerModel.objects.filter(user=user, question_short_name='a_ml').exists()
+
+        return cls(class_number, school, city, previous_parallels, a_ml)
+
+
 def check_user(request, user_for_checking, checking_group=None):
     entrance_exam = models.EntranceExam.objects.filter(for_school=request.school).first()
     base_entrance_level = get_base_entrance_level(request.school, user_for_checking)
@@ -174,6 +233,7 @@ def check_user(request, user_for_checking, checking_group=None):
             for solution in task.user_solutions:
                 solution.is_correct = task.testentranceexamtask.check_solution(solution.solution)
             task.is_solved = any([s.is_correct for s in task.user_solutions])
+            task.last_try = task.user_solutions[0].solution if len(task.user_solutions) > 0 else None
             task.is_last_correct = len(task.user_solutions) > 0 and task.user_solutions[0].is_correct
         if hasattr(task, 'programentranceexamtask'):
             task.user_solutions = [s.programentranceexamtasksolution for s in task.user_solutions]
@@ -188,11 +248,24 @@ def check_user(request, user_for_checking, checking_group=None):
     file_tasks = list(filter(lambda t: hasattr(t, 'fileentranceexamtask'), tasks))
     program_tasks = list(filter(lambda t: hasattr(t, 'programentranceexamtask'), tasks))
 
+    parallels = request.school.parallels.all()
+    parallels = [(p.id, p.name) for p in parallels]
+
     file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks, initial={'user_id': user_for_checking.id})
-    comment_form = forms.EntranceCommentForm(initial={'user_id': user_for_checking.id})
+    recommendation_form = forms.EntranceRecommendationForm(parallels, initial={'user_id': user_for_checking.id})
     checking_groups = models.CheckingGroup.objects.filter(for_school=request.school)
     checking_groups = [(g.id, g.name) for g in checking_groups]
-    put_into_checking_group_form = forms.PutIntoCheckingGroupForm(checking_groups, initial={'user_id': user_for_checking.id})
+    put_into_checking_group_form = forms.PutIntoCheckingGroupForm(checking_groups,
+                                                                  initial={'user_id': user_for_checking.id})
+
+    scores = None
+    try:
+        import modules.exam_scorer_2016.models as scorer_models
+        scorers = scorer_models.EntranceExamScorer.objects.all()
+        scores = [(scorer.name, scorer.get_score(request.school, user_for_checking, tasks))
+                  for scorer in scorers]
+    except ImportError:
+        pass
 
     return render(request, 'entrance/staff/check_user.html', {
         'checking_group': checking_group,
@@ -203,8 +276,10 @@ def check_user(request, user_for_checking, checking_group=None):
         'file_tasks': file_tasks,
         'program_tasks': program_tasks,
         'file_tasks_mark_form': file_tasks_mark_form,
-        'comment_form': comment_form,
+        'recommendation_form': recommendation_form,
         'put_into_checking_group_form': put_into_checking_group_form,
+        'scores': scores,
+        'user_summary': UserSummary.summary_for_user(user_for_checking),
     })
 
 
@@ -257,10 +332,72 @@ def solution(request, solution_id):
     if hasattr(task_solution, 'fileentranceexamtasksolution'):
         file_solution = task_solution.fileentranceexamtasksolution
         original_filename = file_solution.original_filename
-        return respond_as_attachment(request, file_solution.solution, '%06d_%s' % (int(task_solution.id), original_filename))
+        return respond_as_attachment(request, file_solution.solution,
+                                     '%06d_%s' % (int(task_solution.id), original_filename))
 
     if hasattr(task_solution, 'programentranceexamtasksolution'):
         program_solution = task_solution.programentranceexamtasksolution
         return respond_as_attachment(request, program_solution.solution, '%06d' % int(task_solution.id))
 
     return HttpResponseNotFound()
+
+
+@school_view
+@sistema.staff.only_staff
+def initial_reset(request):
+    models.EntranceStatus.objects.all().delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@school_view
+@sistema.staff.only_staff
+def initial_auto_reject(request):
+    users_ids = get_enrolling_users_ids(request.school)
+
+    # In case of MySQL we need to make users_ids = list(users_ids) because of the MySQL's limitations
+    from django.conf import settings
+    if 'mysql' in settings.DATABASES['default']['ENGINE'].lower():
+        users_ids = list(users_ids)
+
+    program_solutions = group_by(
+            models.ProgramEntranceExamTaskSolution.objects.filter(
+                    task__exam__for_school=request.school,
+                    user_id__in=users_ids,
+                    ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
+            ),
+            operator.attrgetter('user_id')
+    )
+    file_solutions = group_by(
+            models.FileEntranceExamTaskSolution.objects.filter(task__exam__for_school=request.school,
+                                                               user_id__in=users_ids),
+            operator.attrgetter('user_id')
+    )
+
+    for user_id in users_ids:
+        reason = None
+        if user_id not in program_solutions:
+            reason = 'Не решено полностью ни одной практической задачи'
+        if user_id not in file_solutions:
+            reason = 'Не сдано ни одной теоретический задачи'
+        if reason is not None:
+            models.EntranceStatus.objects.update_or_create(
+                for_school=request.school,
+                for_user_id=user_id,
+                defaults={
+                    'public_comment': reason,
+                    'is_status_visible': True,
+                    'status': models.EntranceStatus.Status.AUTO_REJECTED
+                })
+
+    return JsonResponse({
+        'rejected': [s.__dir__ for s in models.EntranceStatus.objects.filter(
+                for_school=request.school,
+                status=models.EntranceStatus.Status.AUTO_REJECTED
+        )]
+    })
+
+
+@school_view
+@sistema.staff.only_staff
+def initial_checking_groups(request):
+    return None

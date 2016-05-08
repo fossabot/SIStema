@@ -15,11 +15,20 @@ class FileEntranceExamTasksMarkForm(forms.Form):
                                                        widget=forms.HiddenInput(attrs={'id': field_id}))
 
 
-class EntranceCommentForm(forms.Form):
+class EntranceRecommendationForm(forms.Form):
     user_id = forms.IntegerField(widget=forms.HiddenInput())
 
-    comment = forms.CharField(widget=sistema.forms.TextareaWithFaIcon(attrs={'fa': 'comment'}),
+    comment = forms.CharField(widget=sistema.forms.TextInputWithFaIcon(attrs={'fa': 'comment'}),
                               label='Комментарий')
+
+    score = forms.IntegerField(label='Баллы', initial=0)
+
+    def __init__(self, parallels, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        available_parallels = [('-', 'Не зачислить')] + list(parallels)
+        self.fields['recommended_parallel'] = forms.ChoiceField(widget=forms.Select(),
+                                                                choices=available_parallels,
+                                                                label='Рекомендованная параллель')
 
 
 class PutIntoCheckingGroupForm(forms.Form):

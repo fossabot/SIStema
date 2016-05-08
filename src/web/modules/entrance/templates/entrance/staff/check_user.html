@@ -13,10 +13,10 @@
             {{ user_for_checking.get_full_name }}, вступительная работа
         {% endif %}
 
-        <form method="POST" action="" class="form form-horizontal form-inline ib pull-right">
+        <form method="POST" action="{% url 'school:entrance:change_group' request.school.short_name user_for_checking.id %}" class="form form-horizontal form-inline ib pull-right">
             {% csrf_token %}
             <div class="form-group form-group-sm">
-                {{ put_into_checking_group_form|get_item:'group' }}
+                {{ put_into_checking_group_form|get_item:'group_id' }}
                 <button class="btn btn-sm btn-default">Переложить</button>
             </div>
         </form>
@@ -212,7 +212,7 @@
                         <div class="row mb5">
                             {% if file_task.last_solution %}
                                 <div class="fs14 col-sm-8">
-                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}">
+                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}" title="Скачать решение">
                                         {{ file_task.title }}
                                     </a>
                                 </div>

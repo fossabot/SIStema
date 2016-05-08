@@ -5,7 +5,7 @@ import re
 import djchoices
 from django.core import urlresolvers
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 import django.utils.timezone
 
 import school.models
@@ -248,6 +248,8 @@ class UserInCheckingGroup(models.Model):
 
     group = models.ForeignKey(CheckingGroup)
 
+    is_actual = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -255,6 +257,14 @@ class UserInCheckingGroup(models.Model):
 
     class Meta:
         ordering = ('-created_at', )
+
+    @classmethod
+    @transaction.atomic
+    def put_user_into_group(cls, user, group):
+        for instance in cls.objects.filter(group__for_school=group.for_school, user=user):
+            instance.is_actual = False
+            instance.save()
+        cls(user=user, group=group).save()
 
 
 def get_locked_timeout():

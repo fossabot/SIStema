@@ -2,6 +2,8 @@ from django import forms
 
 import sistema.forms
 
+from .. import models
+
 
 class FileEntranceExamTasksMarkForm(forms.Form):
     user_id = forms.IntegerField(widget=forms.HiddenInput())
@@ -23,6 +25,7 @@ class EntranceRecommendationForm(forms.Form):
 
     score = forms.IntegerField(label='Баллы', initial=0)
 
+    # TODO: choose school as a parameter
     def __init__(self, parallels, *args, **kwargs):
         super().__init__(*args, **kwargs)
         available_parallels = [('-', 'Не зачислить')] + list(parallels)
@@ -32,9 +35,10 @@ class EntranceRecommendationForm(forms.Form):
 
 
 class PutIntoCheckingGroupForm(forms.Form):
-    user_id = forms.IntegerField(widget=forms.HiddenInput())
-
-    def __init__(self, groups, *args, **kwargs):
+    def __init__(self, school, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['group'] = forms.ChoiceField(widget=forms.Select(), choices=list(groups))
+
+        groups = models.CheckingGroup.objects.filter(for_school=school)
+        groups = [(g.id, g.name) for g in groups]
+        self.fields['group_id'] = forms.ChoiceField(widget=forms.Select(), choices=list(groups))
 

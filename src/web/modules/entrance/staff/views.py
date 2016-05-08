@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.http.response import Http404, HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
 
 import frontend.table
 import frontend.icons
@@ -18,6 +19,7 @@ import school.models
 import sistema.staff
 import modules.topics.models
 import user.models
+from sistema.local_settings import POSTMARK_API_KEY
 from . import forms
 from .. import models
 from ..views import get_base_entrance_level, get_entrance_tasks
@@ -156,6 +158,20 @@ def user_topics(request, user_id):
     return topics_views.show_final_answers(request, _user)
 
 
+@school_view
+@sistema.staff.only_staff
+@require_POST
+def change_group(request, user_id):
+    _user = get_object_or_404(user.models.User, id=user_id)
+    form = forms.PutIntoCheckingGroupForm(request.school, data=request.POST)
+
+    if form.is_valid():
+        group = get_object_or_404(models.CheckingGroup, for_school=request.school, id=form.cleaned_data.get('group_id'))
+        models.UserInCheckingGroup.put_user_into_group(_user, group)
+
+    return redirect('school:entrance:enrolling_user', school_name=request.school.short_name, user_id=_user.id)
+
+
 def _remove_old_checking_locks():
     models.CheckingLock.objects.filter(locked_until__lt=datetime.datetime.now()).delete()
 
@@ -253,10 +269,8 @@ def check_user(request, user_for_checking, checking_group=None):
 
     file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks, initial={'user_id': user_for_checking.id})
     recommendation_form = forms.EntranceRecommendationForm(parallels, initial={'user_id': user_for_checking.id})
-    checking_groups = models.CheckingGroup.objects.filter(for_school=request.school)
-    checking_groups = [(g.id, g.name) for g in checking_groups]
-    put_into_checking_group_form = forms.PutIntoCheckingGroupForm(checking_groups,
-                                                                  initial={'user_id': user_for_checking.id})
+
+    put_into_checking_group_form = forms.PutIntoCheckingGroupForm(request.school)
 
     scores = None
     try:
@@ -303,7 +317,8 @@ def check_group(request, group_name):
             user_for_checking = already_check_user.first().locked_user
         else:
             group_users = models.UserInCheckingGroup.objects.filter(group=checking_group,
-                                                                    user__checking_locked__isnull=True)
+                                                                    user__checking_locked__isnull=True,
+                                                                    is_actual=True)
             if not group_users.exists():
                 return redirect('school:entrance:check', school_name=request.school.short_name)
 
@@ -390,7 +405,7 @@ def initial_auto_reject(request):
                 })
 
     return JsonResponse({
-        'rejected': [s.__dir__ for s in models.EntranceStatus.objects.filter(
+        'rejected': [s.__dict__ for s in models.EntranceStatus.objects.filter(
                 for_school=request.school,
                 status=models.EntranceStatus.Status.AUTO_REJECTED
         )]

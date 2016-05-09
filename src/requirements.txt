@@ -12,6 +12,7 @@ django-markdown-deux
 django-ses
 python-postmark
 django-hijack
+django-hijack-admin
 django-ipware
 
 boto

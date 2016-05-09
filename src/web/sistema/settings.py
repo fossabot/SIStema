@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'social.apps.django_app.default',
     'markdown_deux',
     'hijack',
+    'hijack_admin',
     'compat',
     'ipware',
 
@@ -184,3 +185,5 @@ HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_LOGIN_REDIRECT_URL = '/'
 HIJACK_LOGOUT_REDIRECT_URL = '/admin/user/user'
 HIJACK_USE_BOOTSTRAP = True
+HIJACK_REGISTER_ADMIN = False
+HIJACK_ALLOW_GET_REQUESTS = True

@@ -31,7 +31,7 @@
 
             {% if entrance_status %}
                 <div class="entrance-status alert alert-{{ entrance.status.is_enrolled|yesno:'success,danger' }} fs16 text-centerit">
-                    {{ entrance_status.message }}
+                    {{ entrance_status.message|urlize|linebreaks }}
                 </div>
             {% endif %}
 

@@ -66,7 +66,7 @@ def user(request):
         else:
             entrance_status.message = 'К сожалению, вы не приняты в %s' % (request.school.name,)
             if entrance_status.public_comment:
-                entrance_status.message += '. Причина: %s' % (entrance_status.public_comment,)
+                entrance_status.message += '.\nПричина: %s' % (entrance_status.public_comment,)
 
     return render(request, 'home/user.html', {
         'school': request.school,

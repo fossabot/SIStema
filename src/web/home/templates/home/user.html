@@ -1,25 +1,39 @@
 {% extends 'user_layout.html' %}
 
+{% load staticfiles %}
+
 {% block title %}{{ school.name }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home/css/home.css' %}" >
+{% endblock %}
 
 {% block content %}
     <div class="container-fluid">
-        <div class="mw800 center-block">
-            <div class="fs30 text-center text-alert-darker pb25">
+        <div class="mw1200 center-block">
+            <div class="fs30 text-center text-dark pb25">
                 {{ school.full_name }}
             </div>
 
-            <div class="row">
-            {% for step in steps %}
-                {% if forloop.counter0|divisibleby:2 %}
-                    </div>
-                    <div class="row">
-                {% endif %}
-                <div class="col-sm-6">
-                    {{ step.rendered|safe }}
+            <div class="entrance-steps past">
+                <div class="row">
+                    {% for step in steps %}
+                        {% if forloop.counter0|divisibleby:4 %}
+                            </div>
+                            <div class="row">
+                        {% endif %}
+                        <div class="col-sm-3">
+                            {{ step.rendered|safe }}
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
             </div>
+
+            {% if entrance_status %}
+                <div class="entrance-status alert alert-{{ entrance.status.is_enrolled|yesno:'success,danger' }} fs16 text-centerit">
+                    {{ entrance_status.message }}
+                </div>
+            {% endif %}
 
         </div>
     </div>

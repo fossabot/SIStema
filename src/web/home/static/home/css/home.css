@@ -1,0 +1,19 @@
+.entrance-steps.past .admin-form .heading-border .panel-heading {
+    padding: 13px 25px 0;
+}
+
+.entrance-steps.past .admin-form .panel-title {
+    font-size: 19px;
+}
+
+.entrance-steps.past .panel-body p {
+    font-size: 13px;
+}
+
+/* Copied from .btn-sm */
+.entrance-steps.past .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 2px;
+}

@@ -14,9 +14,9 @@ class UserStep:
 
 def user(request):
     steps = [('modules.entrance.steps.QuestionnaireEntranceStep', {
-                'school': request.school,
-                'questionnaire': Questionnaire.objects.filter(short_name='about').first()
-            }),
+        'school': request.school,
+        'questionnaire': Questionnaire.objects.filter(short_name='about').first()
+    }),
              ('modules.entrance.steps.QuestionnaireEntranceStep', {
                  'school': request.school,
                  'questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
@@ -50,9 +50,28 @@ def user(request):
 
         user_steps.append(user_step)
 
+    # TODO: usage of EntranceStatus is bad because entrance is a module, not a part of the core
+    import modules.entrance.models as entrance_models
+    qs = entrance_models.EntranceStatus.objects.filter(for_school=request.school, for_user=request.user,
+                                                       is_status_visible=True)
+    entrance_status = None
+    if qs.exists():
+        entrance_status = qs.first()
+        entrance_status.is_enrolled = entrance_status.status == entrance_models.EntranceStatus.Status.ENROLLED
+
+        if entrance_status.is_enrolled:
+            entrance_status.message = 'Поздравляем! Вы приняты в %s, в параллель %s смены %s' % (
+                request.school.name, entrance_status.parallel.name, entrance_status.session.name
+            )
+        else:
+            entrance_status.message = 'К сожалению, вы не приняты в %s' % (request.school.name,)
+            if entrance_status.public_comment:
+                entrance_status.message += '. Причина: %s' % (entrance_status.public_comment,)
+
     return render(request, 'home/user.html', {
         'school': request.school,
         'steps': user_steps,
+        'entrance_status': entrance_status,
     })
 
 

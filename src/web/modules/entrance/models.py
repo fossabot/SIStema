@@ -309,7 +309,13 @@ class EntranceRecommendation(models.Model):
 
     checked_by = models.ForeignKey(user.models.User, related_name='+')
 
-    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations')
+    # Null parallel means recommendation to not enroll user
+    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations',
+                                 blank=True,
+                                 null=True,
+                                 default=None)
+
+    score = models.PositiveIntegerField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 

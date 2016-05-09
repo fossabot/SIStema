@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from hijack.admin import HijackUserAdminMixin
+from hijack_admin.admin import HijackUserAdminMixin
 from reversion.admin import VersionAdmin
 
 from . import models

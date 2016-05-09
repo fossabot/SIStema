@@ -6,15 +6,22 @@ from .. import models
 
 
 class FileEntranceExamTasksMarkForm(forms.Form):
+    FIELD_ID_TEMPLATE = 'tasks__file__mark_%d'
+
     def __init__(self, tasks, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for task in tasks:
-            field_id = 'tasks__file__mark_%d' % task.id
+            field_id = self.FIELD_ID_TEMPLATE % task.id
             self.fields[field_id] = forms.IntegerField(min_value=0,
                                                        max_value=task.max_score,
                                                        widget=forms.HiddenInput(attrs={'id': field_id}),
                                                        required=False,
                                                        )
+            self.fields[field_id].task_id = task.id
+
+    def set_initial_mark(self, task_id, mark):
+        field_id = self.FIELD_ID_TEMPLATE % task_id
+        self.fields[field_id].initial = mark
 
 
 class EntranceRecommendationForm(forms.Form):

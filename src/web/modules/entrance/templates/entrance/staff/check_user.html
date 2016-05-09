@@ -221,8 +221,8 @@
                                     {% with max_score=file_task.max_score|add:1 %}
                                         {% mkrange max_score as marks_range %}
                                         {% for mark in marks_range %}
-                                            <label class="btn btn-xs btn-default fs10" >
-                                                <input type="radio" onClick="$('#{{ file_task.mark_field_id }}').val('{{ mark }}')">{{ mark }}
+                                            <label class="btn btn-xs btn-default {% if file_task.last_mark == mark %}active{% endif %} fs10" onClick="$('#{{ file_task.mark_field_id }}').val('{{ mark }}')">
+                                                <input type="radio">{{ mark }}
                                             </label>
                                         {% endfor %}
                                     {% endwith %}

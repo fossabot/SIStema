@@ -269,6 +269,19 @@ def check_user(request, user_for_checking, checking_group=None):
         recommendation_form = forms.EntranceRecommendationForm(request.school, data=request.POST)
 
         if file_tasks_mark_form.is_valid() and recommendation_form.is_valid():
+            file_tasks_ids = [t.id for t in file_tasks]
+            # TODO: not update marks which are not modified from last saved score
+            for field_id, field in file_tasks_mark_form.fields.items():
+                if field.task_id in file_tasks_ids:
+                    task_score = file_tasks_mark_form.cleaned_data[field_id]
+                    last_solution = user_for_checking.entranceexamtasksolution_set.filter(task_id=field.task_id).order_by('-created_at').first()
+                    if task_score is not None and last_solution is not None:
+                        models.SolutionScore(
+                            solution=last_solution,
+                            scored_by=request.user,
+                            score=task_score,
+                        ).save()
+
             comment = recommendation_form.cleaned_data['comment']
             if comment != '':
                 models.CheckingComment(
@@ -280,6 +293,7 @@ def check_user(request, user_for_checking, checking_group=None):
 
             score = recommendation_form.cleaned_data['score']
             recommended_parallel_id = recommendation_form.cleaned_data['recommended_parallel']
+            # TODO: not update score and parallel if it's equal to last saved ones
             if recommended_parallel_id != recommendation_form.RECOMMENDED_PARALLEL_UNFILLED:
                 if recommended_parallel_id < 0:
                     recommended_parallel_id = None
@@ -301,6 +315,13 @@ def check_user(request, user_for_checking, checking_group=None):
         if last_recommendation:
             recommendation_form.fields['score'].initial = last_recommendation.score
             recommendation_form.fields['recommended_parallel'].initial = last_recommendation.parallel_id
+
+        for file_task in file_tasks:
+            if file_task.last_solution is not None:
+                last_score = file_task.last_solution.scores.order_by('-created_at').first()
+                if last_score:
+                    file_task.last_mark = last_score.score
+                    file_tasks_mark_form.set_initial_mark(file_task.id, last_score.score)
 
     put_into_checking_group_form = forms.PutIntoCheckingGroupForm(request.school)
 

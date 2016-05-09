@@ -280,9 +280,9 @@ class CheckingLock(models.Model):
 
 
 class SolutionScore(models.Model):
-    solution = models.ForeignKey(EntranceExamTaskSolution)
+    solution = models.ForeignKey(EntranceExamTaskSolution, related_name='scores')
 
-    scored_by = models.ForeignKey(user.models.User)
+    scored_by = models.ForeignKey(user.models.User, related_name='+')
 
     score = models.PositiveIntegerField()
 

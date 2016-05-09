@@ -5,20 +5,13 @@
 {% block title %}Вступительный экзамен{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'entrance/css/entrance-exam.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'entrance/css/entrance-exam.css' %}">
 {% endblock %}
 
 {% block content %}
     {% if user.is_staff %}
         Информация только для админов: определившаяся параллель {{ entrance_level }}
     {% endif %}
-
-    <div class="alert alert-micro alert-danger alert-border-left">
-        <p class="fs13">
-            На этой странице появились задания для параллели <strong>A-ML</strong>.
-            Они доступны всем, но решать их необходимо только желающим поступить в группу A-ML июльской смены.
-        </p>
-    </div>
 
     {% if can_upgrade %}
         {% include 'entrance/_exam_upgrade.html' %}

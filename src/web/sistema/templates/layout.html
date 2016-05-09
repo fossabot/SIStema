@@ -1,11 +1,14 @@
 <!DOCTYPE html>
+
 {% load staticfiles %}
+{% load hijack_tags %}
+
 <html>
 <head>
     <meta charset="utf-8">
     <title>{% block title %}{% endblock %} &bull; SIStema</title>
     <meta name="keywords" content="{% block keywords %}Летняя компьютерная школа,ЛКШ,SIS{% endblock %}" />
-    <meta name="description" content="{% block description %}Летняя компьютерная школа — это летняя школа для учащихся 6-10 классов, увлечённых программированием. ЛКШ ориентирована в основном (но не только) на школьников, участвующих в олимпиадах по информатике - от начинающих до участников международных олимпиад.{% endblock %}">
+    <meta name="description" content="{% block description %}Летняя компьютерная школа — это летняя школа для учащихся 6-10 классов, увлечённых программированием. ЛКШ ориентирована в основном (но не только) на школьников, участвующих в олимпиадах по информатике — от начинающих до участников международных олимпиад.{% endblock %}">
     <meta name="author" content="SIStema authors">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,6 +21,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/skin/default_skin/css/theme.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/admin-forms/css/admin-forms.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}">
     {% block css %}
     {% endblock %}
 
@@ -31,6 +35,7 @@
 </head>
 
 <body class="{% block body_classes %}{% endblock %}">
+    {% hijack_notification %}
 
     {% block content_wrapper %}
         {% block content %}

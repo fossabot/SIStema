@@ -264,13 +264,68 @@ def check_user(request, user_for_checking, checking_group=None):
     file_tasks = list(filter(lambda t: hasattr(t, 'fileentranceexamtask'), tasks))
     program_tasks = list(filter(lambda t: hasattr(t, 'programentranceexamtask'), tasks))
 
-    parallels = request.school.parallels.all()
-    parallels = [(p.id, p.name) for p in parallels]
+    if request.method == 'POST':
+        file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks, data=request.POST)
+        recommendation_form = forms.EntranceRecommendationForm(request.school, data=request.POST)
 
-    file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks, initial={'user_id': user_for_checking.id})
-    recommendation_form = forms.EntranceRecommendationForm(parallels, initial={'user_id': user_for_checking.id})
+        if file_tasks_mark_form.is_valid() and recommendation_form.is_valid():
+            file_tasks_ids = [t.id for t in file_tasks]
+            # TODO: not update marks which are not modified from last saved score
+            for field_id, field in file_tasks_mark_form.fields.items():
+                if field.task_id in file_tasks_ids:
+                    task_score = file_tasks_mark_form.cleaned_data[field_id]
+                    last_solution = user_for_checking.entranceexamtasksolution_set.filter(task_id=field.task_id).order_by('-created_at').first()
+                    if task_score is not None and last_solution is not None:
+                        models.SolutionScore(
+                            solution=last_solution,
+                            scored_by=request.user,
+                            score=task_score,
+                        ).save()
+
+            comment = recommendation_form.cleaned_data['comment']
+            if comment != '':
+                models.CheckingComment(
+                    for_school=request.school,
+                    for_user=user_for_checking,
+                    commented_by=request.user,
+                    comment=comment,
+                ).save()
+
+            score = recommendation_form.cleaned_data['score']
+            recommended_parallel_id = recommendation_form.cleaned_data['recommended_parallel']
+            # TODO: not update score and parallel if it's equal to last saved ones
+            if recommended_parallel_id != recommendation_form.RECOMMENDED_PARALLEL_UNFILLED:
+                if recommended_parallel_id < 0:
+                    recommended_parallel_id = None
+
+                models.EntranceRecommendation(
+                    for_school=request.school,
+                    for_user=user_for_checking,
+                    checked_by=request.user,
+                    parallel_id=recommended_parallel_id,
+                    score=score,
+                ).save()
+
+            return redirect('.')
+    else:
+        file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks)
+        recommendation_form = forms.EntranceRecommendationForm(request.school)
+
+        last_recommendation = user_for_checking.entrance_recommendations.filter(for_school=request.school).order_by('-created_at').first()
+        if last_recommendation:
+            recommendation_form.fields['score'].initial = last_recommendation.score
+            recommendation_form.fields['recommended_parallel'].initial = last_recommendation.parallel_id
+
+        for file_task in file_tasks:
+            if file_task.last_solution is not None:
+                last_score = file_task.last_solution.scores.order_by('-created_at').first()
+                if last_score:
+                    file_task.last_mark = last_score.score
+                    file_tasks_mark_form.set_initial_mark(file_task.id, last_score.score)
 
     put_into_checking_group_form = forms.PutIntoCheckingGroupForm(request.school)
+
+    checking_comments = user_for_checking.checking_comments.filter(for_school=request.school).order_by('created_at')
 
     scores = None
     try:
@@ -286,12 +341,16 @@ def check_user(request, user_for_checking, checking_group=None):
         'user_for_checking': user_for_checking,
         'base_entrance_level': base_entrance_level,
         'level_upgrades': level_upgrades,
+
         'test_tasks': test_tasks,
         'file_tasks': file_tasks,
         'program_tasks': program_tasks,
+
+        'checking_comments': checking_comments,
         'file_tasks_mark_form': file_tasks_mark_form,
         'recommendation_form': recommendation_form,
         'put_into_checking_group_form': put_into_checking_group_form,
+
         'scores': scores,
         'user_summary': UserSummary.summary_for_user(user_for_checking),
     })
@@ -300,13 +359,8 @@ def check_user(request, user_for_checking, checking_group=None):
 @school_view
 @sistema.staff.only_staff
 def check_group(request, group_name):
-    qs = models.CheckingGroup.objects.filter(for_school=request.school, short_name=group_name)
-    if not qs.exists():
-        return Http404()
-
+    checking_group = get_object_or_404(models.CheckingGroup, for_school=request.school, short_name=group_name)
     _remove_old_checking_locks()
-
-    checking_group = qs.first()
 
     with transaction.atomic():
         already_check_user = models.CheckingLock.objects.filter(

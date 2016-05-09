@@ -6,32 +6,46 @@ from .. import models
 
 
 class FileEntranceExamTasksMarkForm(forms.Form):
-    user_id = forms.IntegerField(widget=forms.HiddenInput())
+    FIELD_ID_TEMPLATE = 'tasks__file__mark_%d'
 
     def __init__(self, tasks, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for task in tasks:
-            field_id = 'tasks__file__mark_%d' % task.id
+            field_id = self.FIELD_ID_TEMPLATE % task.id
             self.fields[field_id] = forms.IntegerField(min_value=0,
-                                                       max_value=5,
-                                                       widget=forms.HiddenInput(attrs={'id': field_id}))
+                                                       max_value=task.max_score,
+                                                       widget=forms.HiddenInput(attrs={'id': field_id}),
+                                                       required=False,
+                                                       )
+            self.fields[field_id].task_id = task.id
+
+    def set_initial_mark(self, task_id, mark):
+        field_id = self.FIELD_ID_TEMPLATE % task_id
+        self.fields[field_id].initial = mark
 
 
 class EntranceRecommendationForm(forms.Form):
-    user_id = forms.IntegerField(widget=forms.HiddenInput())
-
     comment = forms.CharField(widget=sistema.forms.TextInputWithFaIcon(attrs={'fa': 'comment'}),
-                              label='Комментарий')
+                              label='Комментарий',
+                              required=False)
 
     score = forms.IntegerField(label='Баллы', initial=0)
 
-    # TODO: choose school as a parameter
-    def __init__(self, parallels, *args, **kwargs):
+    RECOMMENDED_PARALLEL_UNFILLED = -2
+
+    recommended_parallel = forms.TypedChoiceField(widget=forms.Select(),
+                                                  label='Рекомендованная параллель',
+                                                  coerce=int,
+                                                  )
+
+    def __init__(self, school, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        available_parallels = [('-', 'Не зачислить')] + list(parallels)
-        self.fields['recommended_parallel'] = forms.ChoiceField(widget=forms.Select(),
-                                                                choices=available_parallels,
-                                                                label='Рекомендованная параллель')
+
+        parallels = school.parallels.all()
+        parallels = [(p.id, p.name) for p in parallels]
+
+        available_parallels = [(self.RECOMMENDED_PARALLEL_UNFILLED, 'Выберите параллель'), (-1, 'Не зачислить')] + list(parallels)
+        self.fields['recommended_parallel'].choices = available_parallels
 
 
 class PutIntoCheckingGroupForm(forms.Form):
@@ -41,4 +55,3 @@ class PutIntoCheckingGroupForm(forms.Form):
         groups = models.CheckingGroup.objects.filter(for_school=school)
         groups = [(g.id, g.name) for g in groups]
         self.fields['group_id'] = forms.ChoiceField(widget=forms.Select(), choices=list(groups))
-

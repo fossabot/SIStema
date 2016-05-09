@@ -136,7 +136,7 @@ admin.site.register(models.CheckingComment, CheckingCommentAdmin)
 
 
 class EntranceRecommendationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'checked_by', 'parallel', 'created_at')
+    list_display = ('id', 'for_school', 'for_user', 'checked_by', 'parallel', 'created_at', 'score')
     list_filter = ('for_school', ('checked_by', admin.RelatedOnlyFieldListFilter))
     search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
 

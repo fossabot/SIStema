@@ -221,8 +221,8 @@
                                     {% with max_score=file_task.max_score|add:1 %}
                                         {% mkrange max_score as marks_range %}
                                         {% for mark in marks_range %}
-                                            <label class="btn btn-xs btn-default fs10" >
-                                                <input type="radio" onClick="$('#{{ file_task.mark_field_id }}').val('{{ mark }}')">{{ mark }}
+                                            <label class="btn btn-xs btn-default {% if file_task.last_mark == mark %}active{% endif %} fs10" onClick="$('#{{ file_task.mark_field_id }}').val('{{ mark }}')">
+                                                <input type="radio">{{ mark }}
                                             </label>
                                         {% endfor %}
                                     {% endwith %}
@@ -240,7 +240,7 @@
             </div>
 
             <div class="admin-form">
-                <form method="POST" action="{% url 'school:entrance:check' request.school.short_name %}">
+                <form method="POST" action="">
                     {% csrf_token %}
                     {{ file_tasks_mark_form }}
 
@@ -250,6 +250,20 @@
                                 <label for="{{ field.id_for_label }}" class="field-label fs18">
                                     {{ field.label }}
                                 </label>
+
+                                {% if field.name == 'comment' %}
+                                    {% if checking_comments %}
+                                        <div class="checking-comments pl25">
+                                            {% for comment in checking_comments %}
+                                                <div class="checking-comments__comment mb10">
+                                                    <b title="{{ comment.created_at }}">{{ comment.commented_by.get_full_name }}:</b>
+                                                    <span title="{{ comment.comment }}">{{ comment.comment|truncatechars:100 }}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+
                                 {{ field }}
                                 {% if field.help_text %}
                                     <p class="help-block">{{ field.help_text }}</p>

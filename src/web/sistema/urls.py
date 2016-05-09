@@ -19,7 +19,7 @@ from django.contrib import admin
 from school.views import questionnaire
 
 urlpatterns = [
-    url(r'^$', include('home.urls')),
+    url(r'', include('home.urls')),
     url(r'^user/', include('user.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^questionnaire/', include('questionnaire.urls')),

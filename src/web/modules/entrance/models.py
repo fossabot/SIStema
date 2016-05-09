@@ -280,9 +280,9 @@ class CheckingLock(models.Model):
 
 
 class SolutionScore(models.Model):
-    solution = models.ForeignKey(EntranceExamTaskSolution)
+    solution = models.ForeignKey(EntranceExamTaskSolution, related_name='scores')
 
-    scored_by = models.ForeignKey(user.models.User)
+    scored_by = models.ForeignKey(user.models.User, related_name='+')
 
     score = models.PositiveIntegerField()
 
@@ -309,7 +309,13 @@ class EntranceRecommendation(models.Model):
 
     checked_by = models.ForeignKey(user.models.User, related_name='+')
 
-    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations')
+    # Null parallel means recommendation to not enroll user
+    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations',
+                                 blank=True,
+                                 null=True,
+                                 default=None)
+
+    score = models.PositiveIntegerField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 

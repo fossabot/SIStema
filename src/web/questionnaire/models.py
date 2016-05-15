@@ -19,8 +19,7 @@ class AbstractQuestionnaireQuestion(models.Model):
     short_name = models.CharField(max_length=100,
                                   help_text='Идентификатор. Лучше сделать из английских букв, цифр и подчёркивания')
 
-    text = models.CharField(max_length=100,
-                            help_text='Вопрос')
+    text = models.TextField(help_text='Вопрос')
 
     questionnaire = models.ForeignKey('Questionnaire',
                                       on_delete=models.CASCADE,
@@ -88,7 +87,7 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
 
 class ChoiceQuestionnaireQuestionVariant(models.Model):
-    text = models.CharField(max_length=100)
+    text = models.TextField()
 
     question = models.ForeignKey('ChoiceQuestionnaireQuestion',
                                  on_delete=models.CASCADE,

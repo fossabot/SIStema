@@ -91,7 +91,7 @@ def user(request):
         enrolled_questionnaire = Questionnaire.objects.filter(for_school=request.school, short_name='enrolled').first()
         arrival_questionnaire = Questionnaire.objects.filter(
             for_school=request.school,
-            short_name='arrival',
+            short_name__startswith='arrival',
             for_session=user_session
         ).first()
         enrolled_steps = [

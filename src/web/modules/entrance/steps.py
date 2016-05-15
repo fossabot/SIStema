@@ -2,6 +2,7 @@ from django.template import engines, Context
 
 
 class EntranceStep:
+    # TODO: replace previous_questionnaire to previous_step
     def __init__(self, school, previous_questionnaire=None):
         self.school = school
         self._template_factory = engines['django'].from_string

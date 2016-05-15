@@ -12,6 +12,26 @@ class UserStep:
     pass
 
 
+def build_user_steps(steps, user):
+    user_steps = []
+
+    for class_name, params in steps:
+        module_name, class_name = class_name.rsplit(".", 1)
+        klass = getattr(importlib.import_module(module_name), class_name)
+        step = klass(**params)
+
+        rendered_step = step.render(user)
+        # TODO: create custom model
+        user_step = UserStep()
+        user_step.is_available = step.is_available(user)
+        user_step.is_passed = step.is_passed(user)
+        user_step.rendered = rendered_step
+
+        user_steps.append(user_step)
+
+    return user_steps
+
+
 def user(request):
     steps = [
         (
@@ -44,21 +64,7 @@ def user(request):
         )
     ]
 
-    user_steps = []
-
-    for class_name, params in steps:
-        module_name, class_name = class_name.rsplit(".", 1)
-        klass = getattr(importlib.import_module(module_name), class_name)
-        step = klass(**params)
-
-        rendered_step = step.render(request.user)
-        # TODO: create custom model
-        user_step = UserStep()
-        user_step.is_available = step.is_available(request.user)
-        user_step.is_passed = step.is_passed(request.user)
-        user_step.rendered = rendered_step
-
-        user_steps.append(user_step)
+    user_steps = build_user_steps(steps, request.user)
 
     # TODO: usage of EntranceStatus is bad because entrance is a module, not a part of the core
     import modules.entrance.models as entrance_models
@@ -78,10 +84,49 @@ def user(request):
             if entrance_status.public_comment:
                 entrance_status.message += '.\nПричина: %s' % (entrance_status.public_comment,)
 
+    user_enrolled_steps = None
+    if entrance_status is not None and entrance_status.is_enrolled:
+        user_session = entrance_status.session
+
+        enrolled_questionnaire = Questionnaire.objects.filter(for_school=request.school, short_name='enrolled').first()
+        arrival_questionnaire = Questionnaire.objects.filter(
+            for_school=request.school,
+            short_name='arrival',
+            for_session=user_session
+        ).first()
+        enrolled_steps = [
+            (
+                'modules.entrance.steps.QuestionnaireEntranceStep', {
+                    'school': request.school,
+                    'questionnaire': enrolled_questionnaire,
+                    'message': 'Подтвердите своё участие — заполните анкету зачисленного',
+                    'button_text': 'Заполнить',
+                }
+            ),
+            (
+                'modules.entrance.steps.QuestionnaireEntranceStep', {
+                    'school': request.school,
+                    'questionnaire': arrival_questionnaire,
+                    'previous_questionnaire': enrolled_questionnaire,
+                    'message': 'Укажите информацию о приезде как только она станет известна',
+                    'button_text': 'Заполнить',
+                }
+            ),
+            (
+                'modules.enrolled_scans.entrance.steps.EnrolledScansEntranceStep', {
+                    'school': request.school,
+                    'previous_questionnaire': enrolled_questionnaire
+                }
+            )
+        ]
+
+        user_enrolled_steps = build_user_steps(enrolled_steps, request.user)
+
     return render(request, 'home/user.html', {
         'school': request.school,
         'steps': user_steps,
         'entrance_status': entrance_status,
+        'enrolled_steps': user_enrolled_steps,
     })
 
 

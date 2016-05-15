@@ -1,5 +1,6 @@
 .entrance-steps.past .admin-form .heading-border .panel-heading {
-    padding: 13px 25px 0;
+    line-height: 28px;
+    padding: 20px 25px 15px;
 }
 
 .entrance-steps.past .admin-form .panel-title {

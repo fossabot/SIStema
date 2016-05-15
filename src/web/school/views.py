@@ -13,26 +13,36 @@ class UserStep:
 
 
 def user(request):
-    steps = [('modules.entrance.steps.QuestionnaireEntranceStep', {
-        'school': request.school,
-        'questionnaire': Questionnaire.objects.filter(short_name='about').first()
-    }),
-             ('modules.entrance.steps.QuestionnaireEntranceStep', {
-                 'school': request.school,
-                 'questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
-                 'previous_questionnaire': Questionnaire.objects.filter(short_name='about').first(),
-                 'message': 'Заполните анкету поступающего для {{ school.name }}',
-                 'button_text': 'Поехали',
-             }),
-             ('modules.topics.entrance.steps.TopicQuestionnaireEntranceStep', {
-                 'school': request.school,
-                 'questionnaire': request.school.topicquestionnaire,
-                 'previous_questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
-             }),
-             ('modules.entrance.steps.ExamEntranceStep', {
-                 'school': request.school,
-                 'previous_questionnaire': request.school.topicquestionnaire,
-             })]
+    steps = [
+        (
+            'modules.entrance.steps.QuestionnaireEntranceStep', {
+                'school': request.school,
+                'questionnaire': Questionnaire.objects.filter(short_name='about').first()
+            }
+        ),
+        (
+            'modules.entrance.steps.QuestionnaireEntranceStep', {
+                'school': request.school,
+                'questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
+                'previous_questionnaire': Questionnaire.objects.filter(short_name='about').first(),
+                'message': 'Заполните анкету поступающего для {{ school.name }}',
+                'button_text': 'Поехали',
+            }
+        ),
+        (
+            'modules.topics.entrance.steps.TopicQuestionnaireEntranceStep', {
+                'school': request.school,
+                'questionnaire': request.school.topicquestionnaire,
+                'previous_questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
+            }
+        ),
+        (
+            'modules.entrance.steps.ExamEntranceStep', {
+                'school': request.school,
+                'previous_questionnaire': request.school.topicquestionnaire,
+            }
+        )
+    ]
 
     user_steps = []
 

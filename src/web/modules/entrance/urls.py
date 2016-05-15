@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from . import views
 from .staff import views as staff_views
 
@@ -9,6 +9,9 @@ urlpatterns = [
     url(r'^exam/upgrade/$', views.upgrade, name='upgrade'),
 
     url(r'^results/$', views.results, name='results'),
+
+    # Submodules
+    url(r'^scans/', include('modules.enrolled_scans.urls', namespace='enrolled_scans')),
 
     # Staff urls
     url(r'^enrolling/$', staff_views.enrolling, name='enrolling'),

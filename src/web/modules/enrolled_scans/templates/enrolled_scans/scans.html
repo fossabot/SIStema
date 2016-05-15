@@ -1,0 +1,43 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}Сканы документов{% endblock %}
+
+{% block content %}
+    <h1 class="mb40 mt10">Сканированные документы</h1>
+    <div class="alert alert-info alert-border-left alert-sm">
+        Отправляя документы, проследите, чтобы все надписи были <b>читабельны</b>.
+        Обратите внимание, что размер файлов не может быть больше <b>двух мегабайт</b>.
+    </div>
+    {% for requirement in requirements %}
+        <div class="panel {{ requirement.user_scan|yesno:'panel-success,' }}">
+            <div class="panel-heading heading-border">
+                <span class="panel-title">
+                    {% if requirement.user_scan %}
+                        <span class="glyphicon glyphicon-ok"></span>
+                    {% endif %}
+                    {{ requirement.name }}
+                </span>
+            </div>
+            <div class="panel-body">
+                {% if requirement.user_scan %}
+                    Вы уже
+                    <a href="{% url 'school:entrance:enrolled_scans:scan' request.school.short_name requirement.short_name %}">загрузили</a>
+                    {{ requirement.name_genitive|lower }}. Загрузка нового документа приведёт к <b>удалению</b> старого.
+                {% else %}
+                    Вы ещё <b>не загрузили</b> {{ requirement.name_genitive|lower }}. Сделайте это сейчас.
+                {% endif %}
+                <form method="POST" action="{% url 'school:entrance:enrolled_scans:scan' request.school.short_name requirement.short_name %}" enctype="multipart/form-data">
+                    <div class="row mt10">
+                        <div class="col-sm-3">
+                            {% csrf_token %}
+                            {{ requirement.form }}
+                        </div>
+                        <div class="col-sm-3">
+                            <input type="submit" class="btn btn-default" value="Загрузить">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

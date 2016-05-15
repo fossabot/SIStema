@@ -1,3 +1,6 @@
+import datetime
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
@@ -15,6 +18,8 @@ def save_questionnaire_answers(user, questionnaire, form):
         answer = form.cleaned_data[field]
         if isinstance(answer, (tuple, list)):
             answer_list = answer
+        elif isinstance(answer, (datetime.date, datetime.datetime)):
+            answer_list = [answer.strftime(settings.DATE_FORMAT)]
         else:
             answer_list = [answer]
 
@@ -44,6 +49,8 @@ def _get_user_questionnaire_answers(user, questionnaire):
             if answer.question_short_name not in result:
                 result[answer.question_short_name] = []
             result[answer.question_short_name].append(answer.answer)
+        elif isinstance(questions[answer.question_short_name], models.DateQuestionnaireQuestion):
+            result[answer.question_short_name] = datetime.datetime.strptime(answer.answer, settings.DATE_FORMAT).date()
         else:
             result[answer.question_short_name] = answer.answer
 

@@ -151,11 +151,11 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         return forms.DateField(required=self.is_required,
                                label=self.text,
                                help_text=self.help_text,
-                               input_formats=['%d.%m.%Y', '%d/%m/%Y'],
                                widget=forms.DateInput(attrs={
                                    'class': 'datetimepicker',
                                    'data-format': 'DD.MM.YYYY',
                                    'data-view-mode': 'years',
+                                   'data-pick-time': 'false',
                                    'placeholder': 'дд.мм.гггг',
                                })
                                )

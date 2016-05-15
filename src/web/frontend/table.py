@@ -127,6 +127,19 @@ class SimpleFuncColumn(Column):
         return self.func(obj)
 
 
+class IndexColumn(Column):
+    name = '№'
+
+    def __init__(self, start_from=1):
+        super().__init__()
+        self.counter = start_from
+
+    def get_cell_data(self, table, obj):
+        current_number = self.counter
+        self.counter += 1
+        return current_number
+
+
 class Table(abc.ABC):
     icon = None
 
@@ -135,6 +148,12 @@ class Table(abc.ABC):
     columns = tuple()
 
     identifiers = {}
+
+    # Replace with special search widget
+    search_enabled = True
+
+    # Set to 0 for unlimited page
+    page_size = 10
 
     def __init__(self, model, queryset):
         self.model = model
@@ -181,7 +200,9 @@ class Table(abc.ABC):
 
     @property
     def paged_queryset(self):
-        return self.queryset[:10]
+        if self.page_size == 0:
+            return self.queryset
+        return self.queryset[:self.page_size]
 
     def rows(self):
         for obj in self.paged_queryset:

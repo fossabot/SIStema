@@ -4,7 +4,7 @@ import datetime
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Count
-from django.http.response import Http404, HttpResponseNotFound, JsonResponse
+from django.http.response import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
@@ -19,10 +19,9 @@ import school.models
 import sistema.staff
 import modules.topics.models
 import user.models
-from sistema.local_settings import POSTMARK_API_KEY
 from . import forms
 from .. import models
-from ..views import get_base_entrance_level, get_entrance_tasks
+from .. import upgrades
 from sistema.helpers import group_by, respond_as_attachment
 
 
@@ -187,7 +186,6 @@ def check(request):
     })
 
 
-@school_view
 @sistema.staff.only_staff
 def results(request):
     return None
@@ -234,10 +232,10 @@ class UserSummary:
 
 def check_user(request, user_for_checking, checking_group=None):
     entrance_exam = models.EntranceExam.objects.filter(for_school=request.school).first()
-    base_entrance_level = get_base_entrance_level(request.school, user_for_checking)
+    base_entrance_level = upgrades.get_base_entrance_level(request.school, user_for_checking)
     level_upgrades = models.EntranceLevelUpgrade.objects.filter(upgraded_to__for_school=request.school,
                                                                 user=user_for_checking)
-    tasks = get_entrance_tasks(request.school, user_for_checking, base_entrance_level)
+    tasks = upgrades.get_entrance_tasks(request.school, user_for_checking, base_entrance_level)
     tasks_solutions = group_by(
             models.EntranceExamTaskSolution.objects.filter(task__exam=entrance_exam, user=user_for_checking).order_by(
                     '-created_at'),

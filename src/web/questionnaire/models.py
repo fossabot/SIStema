@@ -140,6 +140,27 @@ class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
                                       )
 
 
+class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    with_year = models.BooleanField(default=True)
+
+    min_year = models.PositiveIntegerField(null=True)
+
+    max_year = models.PositiveIntegerField(null=True)
+
+    def get_form_field(self, attrs=None):
+        return forms.DateField(required=self.is_required,
+                               label=self.text,
+                               help_text=self.help_text,
+                               input_formats=['%d.%m.%Y', '%d/%m/%Y'],
+                               widget=forms.DateInput(attrs={
+                                   'class': 'datetimepicker',
+                                   'data-format': 'DD.MM.YYYY',
+                                   'data-view-mode': 'years',
+                                   'placeholder': 'дд.мм.гггг',
+                               })
+                               )
+
+
 class Questionnaire(models.Model):
     title = models.CharField(max_length=100, help_text='Название анкеты')
 
@@ -153,6 +174,8 @@ class Questionnaire(models.Model):
     close_time = models.DateTimeField(blank=True, null=True, default=None)
 
     def __str__(self):
+        if self.for_school is not None:
+            return '%s. %s' % (self.for_school, self.title)
         return self.title
 
     # TODO: Extract to ModelWithCloseTime?
@@ -161,9 +184,11 @@ class Questionnaire(models.Model):
 
     @cached_property
     def questions(self):
+        # TODO: bad architecture?
         questions = chain(self.textquestionnairequestion_questions.all(),
                           self.choicequestionnairequestion_questions.all(),
-                          self.yesnoquestionnairequestion_questions.all())
+                          self.yesnoquestionnairequestion_questions.all(),
+                          self.datequestionnairequestion_questions.all())
         return sorted(questions, key=attrgetter('order'))
 
     def get_form_class(self, attrs=None):

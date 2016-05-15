@@ -158,11 +158,14 @@ class RestrictedFileField(forms.FileField):
 
 def add_classes_to_label(f, classes=''):
     def func_wrapper(self, *args, **kwargs):
-        # TODO: bug?
-        if 'attrs' in kwargs:
-            attrs = kwargs.pop('attrs', {})
-            attrs['class'] = attrs.get('class', '') + ' ' + classes
-            kwargs['attrs'] = attrs
+        if hasattr(self, 'attrs'):
+            self.attrs['class'] = self.attrs.get('class', '') + ' ' + classes
+        else:
+            # TODO: bug? What if kwargs['attrs'] is not defined?
+            if 'attrs' in kwargs:
+                attrs = kwargs.pop('attrs', {})
+                attrs['class'] = attrs.get('class', '') + ' ' + classes
+                kwargs['attrs'] = attrs
         return f(self, *args, **kwargs)
 
     func_wrapper.__name__ = f.__name__

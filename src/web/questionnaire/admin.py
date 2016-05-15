@@ -30,6 +30,7 @@ class AbstractQuestionnaireQuestionAdmin(admin.ModelAdmin):
 admin.site.register(models.ChoiceQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
 admin.site.register(models.TextQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
 admin.site.register(models.YesNoQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
+admin.site.register(models.DateQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
 
 
 class ChoiceQuestionnaireQuestionVariantAdmin(admin.ModelAdmin):

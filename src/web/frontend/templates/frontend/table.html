@@ -26,11 +26,13 @@
                 </div>
             </span>
             -->
-            <span class="pull-right">
-                <span class="input-group ib va-m">
-                    <input type="text" placeholder="Поиск по школьникам" class="table-filter form-control w200 onfocus-w400 h-30">
+            {% if table.search_enabled %}
+                <span class="pull-right">
+                    <span class="input-group ib va-m">
+                        <input type="text" placeholder="Поиск по школьникам" class="table-filter form-control w200 onfocus-w400 h-30">
+                    </span>
                 </span>
-            </span>
+            {% endif %}
         </div>
     </div>
     <div class="panel-body pn">

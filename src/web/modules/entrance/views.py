@@ -5,74 +5,70 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 import ipware.ip
+import operator
 
 import school.decorators
 import sistema.uploads
 import sistema.helpers
 import modules.topics.entrance.levels
-import modules.entrance.levels
 import modules.ejudge.queue
 from modules.entrance import forms
+import modules.entrance.levels
+import modules.entrance.staff.views as staff_views
 from . import models
+from . import upgrades
+import frontend.table
+import frontend.icons
 
 
-def get_base_entrance_level(school, user):
-    limiters = [modules.topics.entrance.levels.TopicsEntranceLevelLimiter,
-                modules.entrance.levels.AlreadyWasEntranceLevelLimiter,
-                modules.entrance.levels.AgeEntranceLevelLimiter
-                ]
+# TODO: Inherit of staff_views.EnrollingUsersTable seems to be a bad architecture idea
+class EntrancedUsersTable(staff_views.EnrollingUsersTable):
+    icon = frontend.icons.FaIcon('check')
 
-    current_limit = modules.entrance.levels.EntranceLevelLimit(None)
-    for limiter in limiters:
-        current_limit.update_with_other(limiter(school).get_limit(user))
+    search_enabled = False
 
-    return current_limit.min_level
+    # Unlimited page
+    page_size = 0
 
+    def __init__(self, school, users_ids):
+        super().__init__(school, users_ids)
+        self.title = 'Поступившие в ' + school.name
 
-def _get_maximum_issued_entrance_level(school, user, base_level):
-    user_upgrades = models.EntranceLevelUpgrade.objects.filter(user=user, upgraded_to__for_school=school)
-    maximum_upgrade = user_upgrades.order_by('-upgraded_to__order').first()
-    if maximum_upgrade is None:
-        return base_level
+        entrance_statuses = models.EntranceStatus.objects.filter(
+            for_school=school,
+            for_user_id__in=users_ids,
+            is_status_visible=True,
+        ).select_related('session', 'parallel').order_by('for_user__last_name', 'for_user__first_name')
+        self.status_by_user = sistema.helpers.group_by(entrance_statuses, operator.attrgetter('for_user_id'))
 
-    maximum_user_level = maximum_upgrade.upgraded_to
-    if maximum_user_level > base_level:
-        return maximum_user_level
-    return base_level
+        index_column = frontend.table.IndexColumn()
+        name_column = frontend.table.SimplePropertyColumn('get_full_name', 'Имя Фамилия')
+        session_column = frontend.table.SimpleFuncColumn(self.get_session, 'Смена')
+        parallel_column = frontend.table.SimpleFuncColumn(self.get_parallel, 'Параллель')
+        self.columns = (index_column, name_column) + self.columns[2:] + (session_column, parallel_column)
 
+    @classmethod
+    def create(cls, school):
+        entranced_users = models.EntranceStatus.objects.filter(
+            for_school=school,
+            status=models.EntranceStatus.Status.ENROLLED,
+            is_status_visible=True,
+        )
+        entranced_users_ids = entranced_users.values_list('for_user_id', flat=True)
 
-def _is_user_at_maximum_level(school, user, base_level):
-    max_user_level = _get_maximum_issued_entrance_level(school, user, base_level)
+        table = cls(school, entranced_users_ids)
+        table.after_filter_applying()
+        return table
 
-    return not models.EntranceLevel.objects.filter(order__gt=max_user_level.order).exists()
+    def get_session(self, user):
+        if user.id not in self.status_by_user:
+            return ''
+        return self.status_by_user[user.id][0].session.name
 
-
-# User can upgrade if he hasn't reached the maximum level yet and solved all
-# the required tasks.
-def _can_user_upgrade(school, user):
-    base_level = get_base_entrance_level(school, user)
-    issued_level = _get_maximum_issued_entrance_level(school, user, base_level)
-
-    if _is_user_at_maximum_level(school, user, base_level):
-        return False
-
-    requirements = models.EntranceLevelUpgradeRequirement.objects.filter(base_level=issued_level)
-
-    return all(requirement.get_child_object().is_met_by_user(user)
-               for requirement in requirements)
-
-
-def get_entrance_tasks(school, user, base_level):
-    maximum_level = _get_maximum_issued_entrance_level(school, user, base_level)
-
-    issued_levels = models.EntranceLevel.objects.filter(order__range=(base_level.order, maximum_level.order))
-
-    issued_tasks = set()
-    for level in issued_levels:
-        for task in level.tasks.all():
-            issued_tasks.add(task)
-
-    return list(issued_tasks)
+    def get_parallel(self, user):
+        if user.id not in self.status_by_user:
+            return ''
+        return self.status_by_user[user.id][0].parallel.name
 
 
 @login_required
@@ -81,8 +77,8 @@ def exam(request):
     entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
     is_closed = entrance_exam.is_closed()
 
-    base_level = get_base_entrance_level(request.school, request.user)
-    tasks = get_entrance_tasks(request.school, request.user, base_level)
+    base_level = upgrades.get_base_entrance_level(request.school, request.user)
+    tasks = upgrades.get_entrance_tasks(request.school, request.user, base_level)
 
     for task in tasks:
         qs = task.entranceexamtasksolution_set.filter(user=request.user).order_by('-created_at')
@@ -118,8 +114,8 @@ def exam(request):
         'test_tasks': test_tasks,
         'file_tasks': file_tasks,
         'program_tasks': program_tasks,
-        'is_user_at_maximum_level': _is_user_at_maximum_level(request.school, request.user, base_level),
-        'can_upgrade': _can_user_upgrade(request.school, request.user),
+        'is_user_at_maximum_level': upgrades.is_user_at_maximum_level(request.school, request.user, base_level),
+        'can_upgrade': upgrades.can_user_upgrade(request.school, request.user),
     })
 
 
@@ -222,14 +218,24 @@ def upgrade(request):
     if is_closed:
         return redirect('school:entrance:exam', school_name=request.school.short_name)
 
-    base_level = get_base_entrance_level(request.school, request.user)
+    base_level = upgrades.get_base_entrance_level(request.school, request.user)
 
     # We may need to upgrade several times because there are levels with
     # the same sets of tasks
-    while _can_user_upgrade(request.school, request.user):
-        maximum_level = _get_maximum_issued_entrance_level(request.school, request.user, base_level)
+    while upgrades.can_user_upgrade(request.school, request.user):
+        maximum_level = upgrades.get_maximum_issued_entrance_level(request.school, request.user, base_level)
         next_level = models.EntranceLevel.objects.filter(order__gt=maximum_level.order).order_by('order').first()
 
         models.EntranceLevelUpgrade(user=request.user, upgraded_to=next_level).save()
 
     return redirect('school:entrance:exam', school_name=request.school.short_name)
+
+
+@school.decorators.school_view
+def results(request):
+    table = EntrancedUsersTable.create(request.school)
+
+    return render(request, 'entrance/results.html', {
+        'table': table,
+        'school': request.school,
+    })

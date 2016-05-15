@@ -1,6 +1,17 @@
 {% extends 'user_layout.html' %}
 
+{% load staticfiles %}
+
 {% block title %}{{ questionnaire.title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/plugins/datepicker/css/bootstrap-datetimepicker.css' %}">
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'vendor/plugins/moment/moment.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/plugins/datepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 

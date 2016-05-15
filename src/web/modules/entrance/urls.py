@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^exam/submit/(?P<task_id>\d+)/', views.submit, name='submit'),
     url(r'^exam/upgrade/$', views.upgrade, name='upgrade'),
 
+    url(r'^results/$', views.results, name='results'),
 
     # Staff urls
     url(r'^enrolling/$', staff_views.enrolling, name='enrolling'),
@@ -19,8 +20,6 @@ urlpatterns = [
     url(r'^check/$', staff_views.check, name='check'),
     url(r'^check/(?P<group_name>[^/]+)/$', staff_views.check_group, name='check_group'),
     url(r'^solution/(?P<solution_id>\d+)/$', staff_views.solution, name='user_solution'),
-
-    url(r'^results/$', staff_views.results, name='results'),
 
     url(r'^initial/reset/$', staff_views.initial_reset, name='initial.reset'),
     url(r'^initial/auto_reject/$', staff_views.initial_auto_reject, name='initial.auto_reject'),

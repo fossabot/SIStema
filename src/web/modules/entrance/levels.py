@@ -76,7 +76,7 @@ class AgeEntranceLevelLimiter(EntranceLevelLimiter):
         answer = qs.first()
         try:
             _class = int(answer.answer)
-        except:
+        except ValueError:
             return EntranceLevelLimit(self._find_minimal_level())
 
         levels = models.EntranceLevel.objects.filter(for_school=self.school)

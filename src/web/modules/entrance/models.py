@@ -334,7 +334,7 @@ class EntranceStatus(models.Model):
     # created_by=None means system's auto creating
     created_by = models.ForeignKey(user.models.User, blank=True, null=True, default=None)
 
-    public_comment = models.TextField(help_text='Публичный комментарий. Может быть виден поступающему')
+    public_comment = models.TextField(help_text='Публичный комментарий. Может быть виден поступающему', blank=True)
 
     is_status_visible = models.BooleanField()
 

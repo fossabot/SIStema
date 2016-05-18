@@ -1,6 +1,7 @@
 import operator
 
 from django.contrib.auth.decorators import login_required
+from django.http.response import HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
 from modules.enrolled_scans import forms
@@ -55,5 +56,7 @@ def scan(request, requirement_name):
         # TODO: show error message
         return redirect('school:entrance:enrolled_scans:scans', school_name=request.school.short_name)
     else:
-        user_scan = get_object_or_404(models.EnrolledScan, requirement=requirement, for_user=request.user)
+        user_scan = models.EnrolledScan.objects.filter(requirement=requirement, for_user=request.user).first()
+        if user_scan is None:
+            return HttpResponseNotFound()
         return respond_as_attachment(request, user_scan.filename, user_scan.original_filename)

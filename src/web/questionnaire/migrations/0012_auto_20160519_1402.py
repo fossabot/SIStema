@@ -319,7 +319,7 @@ class Migration(migrations.Migration):
         # Restore foreign key for variants
         migrations.AddField(
             model_name='choicequestionnairequestionvariant',
-            name='question_id',
+            name='question',
             field=models.ForeignKey(to='questionnaire.ChoiceQuestionnaireQuestion', related_name='variants'),
         ),
 

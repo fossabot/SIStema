@@ -60,7 +60,7 @@ def _get_user_questionnaire_answers(user, questionnaire):
 def questionnaire_for_user(request, user, questionnaire_name):
     if hasattr(request, 'school'):
         qs = models.Questionnaire.objects.filter(for_school=request.school, short_name=questionnaire_name)
-        # If questionnaire with exact name exists for this school use it,
+        # If questionnaire with this name exists for the school, use it,
         # otherwise use common questionnaire (with for_school = None)
         if qs.exists():
             questionnaire = qs.first()
@@ -68,12 +68,10 @@ def questionnaire_for_user(request, user, questionnaire_name):
             questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
     else:
         questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
-    form_class = questionnaire.get_form_class(attrs={'class': 'gui-input'})
 
-    questionnaire_answers = _get_user_questionnaire_answers(user, questionnaire)
-    already_filled = len(questionnaire_answers) > 0
+    form_class = questionnaire.get_form_class()
 
-    # There are not closed questionnaires for staff users
+    # There are no closed questionnaires for staff users
     is_closed = questionnaire.is_closed() and not request.user.is_staff
 
     if request.method == 'POST':
@@ -83,16 +81,19 @@ def questionnaire_for_user(request, user, questionnaire_name):
         elif form.is_valid():
             save_questionnaire_answers(user, questionnaire, form)
             if questionnaire.for_school is not None:
-                return redirect('school:index', school_name=questionnaire.for_school.short_name)
-
-            return redirect('home')
+                return questionnaire.for_school.get_absolute_url()
+            else:
+                return redirect('home')
     else:
+        questionnaire_answers = _get_user_questionnaire_answers(user, questionnaire)
         if questionnaire_answers:
             form = form_class(initial=questionnaire_answers)
         else:
             form = form_class()
 
-    return render(request, 'questionnaire/form.html', {
+    already_filled = questionnaire.is_filled_by(user)
+
+    return render(request, 'questionnaire/questionnaire.html', {
         'questionnaire': questionnaire,
         'form': form,
         'already_filled': already_filled,

@@ -14,6 +14,18 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Questionnaire, QuestionnaireAdmin)
 
+class AbstractQuestionnaireBlockAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'short_name',
+        'questionnaire',
+        'order'
+    )
+    list_filter = ('questionnaire', )
+    ordering = ('order', )
+
+admin.site.register(models.MarkdownQuestionnaireBlock, AbstractQuestionnaireBlockAdmin)
+
 
 class AbstractQuestionnaireQuestionAdmin(admin.ModelAdmin):
     list_display = (

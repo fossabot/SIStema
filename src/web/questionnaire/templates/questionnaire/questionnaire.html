@@ -1,6 +1,7 @@
 {% extends 'user_layout.html' %}
 
 {% load staticfiles %}
+{% load dict_tags %}
 
 {% block title %}{{ questionnaire.title }}{% endblock %}
 
@@ -49,31 +50,16 @@
                                 </div>
                             {% endif %}
 
-                            <div class="section row">
-                                <div class="col-md-8">
-                                    {% for field in form %}
-                                        <div class="section mb40">
-                                            <div class="{{ field.errors|yesno:'state-error,'}}">
-                                                <label for="{{ field.id_for_label }}" class="field-label fs18">
-                                                    {{ field.label }}
-                                                    {% if field.field.required %}
-                                                        *
-                                                    {% endif %}
-                                                </label>
-                                                {{ field }}
-                                                {% if field.help_text %}
-                                                    <p class="help-block">{{ field.help_text }}</p>
-                                                {% endif %}
-                                            </div>
-                                            {% if field.errors %}
-                                                {% for error in field.errors %}
-                                                    <em>{{ error }}</em>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                            {% for block in questionnaire.blocks %}
+                                {% if block.is_question %}
+                                    {% include 'questionnaire/_question.html' with question=form|get_item:block.short_name %}
+                                {% else %}
+                                    {% with template_name='questionnaire/_block_'|add:block.template_name|add:'.html' %}
+                                        {% include template_name with block=block %}
+                                    {% endwith %}
+                                {% endif %}
+                            {% endfor %}
+
                         </div>
 
                         {% if not is_closed %}

@@ -1,15 +1,16 @@
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
+
 from . import views
 
-urlpatterns = patterns('',
-                       url(r'^login/$', views.login, name='login'),
-                       url(r'^logout/$', views.logout, name='logout'),
-                       url(r'^register/', views.register, name='register'),
-                       url(r'^complete/$', views.complete, name='complete'),
-                       url(r'^confirm/(?P<token>[^/]+)', views.confirm, name='confirm'),
+urlpatterns = [
+    url(r'^login/$', views.login, name='login'),
+    url(r'^logout/$', views.logout, name='logout'),
+    url(r'^register/', views.register, name='register'),
+    url(r'^complete/$', views.complete, name='complete'),
+    url(r'^confirm/(?P<token>[^/]+)', views.confirm, name='confirm'),
 
-                       url(r'^forget/$', views.forget, name='forget'),
-                       url(r'^recover/(?P<token>[^/]+)', views.recover, name='recover'),
+    url(r'^forget/$', views.forget, name='forget'),
+    url(r'^recover/(?P<token>[^/]+)', views.recover, name='recover'),
 
-                       url('', include('social.apps.django_app.urls', namespace='social')),
-                       )
+    url('', include('social.apps.django_app.urls', namespace='social')),
+]

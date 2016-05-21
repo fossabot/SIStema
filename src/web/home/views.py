@@ -12,4 +12,4 @@ def home(request):
 
     current_school = school.models.School.objects.last()
 
-    return redirect('school:index', school_name=current_school.short_name)
+    return redirect(current_school.get_absolute_url())

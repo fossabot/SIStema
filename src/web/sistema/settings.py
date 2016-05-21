@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'hijack_admin',
     'compat',
     'ipware',
+    'polymorphic',
 
     'sistema',
 
@@ -72,6 +73,7 @@ INSTALLED_APPS = (
     'modules.entrance',
     'modules.topics',
     'modules.exam_scorer_2016',
+    'modules.enrolled_scans',
 )
 
 MIDDLEWARE_CLASSES = (

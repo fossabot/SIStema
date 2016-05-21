@@ -53,7 +53,7 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
             for_school=school,
             status=models.EntranceStatus.Status.ENROLLED,
             is_status_visible=True,
-        )
+        ).order_by('parallel', 'session')
         entranced_users_ids = entranced_users.values_list('for_user_id', flat=True)
 
         table = cls(school, entranced_users_ids)

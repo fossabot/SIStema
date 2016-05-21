@@ -141,7 +141,7 @@ class Migration(migrations.Migration):
         # Drop variant's id because it's a foreign key to follow deleted question id
         migrations.RemoveField(
             model_name='choicequestionnairequestionvariant',
-            name='id',
+            name='question_id',
         ),
         migrations.RemoveField(
             model_name='choicequestionnairequestion',
@@ -319,8 +319,8 @@ class Migration(migrations.Migration):
         # Restore foreign key for variants
         migrations.AddField(
             model_name='choicequestionnairequestionvariant',
-            name='id',
-            field=('question', models.ForeignKey(to='questionnaire.ChoiceQuestionnaireQuestion', related_name='variants')),
+            name='question_id',
+            field=models.ForeignKey(to='questionnaire.ChoiceQuestionnaireQuestion', related_name='variants'),
         ),
 
         RunPython(restore_questions, backwards),

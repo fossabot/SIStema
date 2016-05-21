@@ -29,7 +29,7 @@ def save_questions_and_delete(apps, schema):
         qs.delete()
 
 
-def forwards(apps, schema):
+def restore_questions(apps, schema):
     global questions, question_models
 
     import questionnaire.models
@@ -52,12 +52,12 @@ def forwards(apps, schema):
             # For choice questions we need to return all variants
             if model_name == 'ChoiceQuestionnaireQuestion':
                 for variant in variants:
-                    variant_klass = getattr(questionnaire.models, 'ChoiceQuestionnaireQuestionVariant')
+                    variant_class = getattr(questionnaire.models, 'ChoiceQuestionnaireQuestionVariant')
                     variant_dict = variant.__dict__
                     del variant_dict['_state']
                     del variant_dict['_question_cache']
                     variant_dict['question_id'] = question.id
-                    variant_klass(**variant_dict).save()
+                    variant_class(**variant_dict).save()
 
 
 def backwards(apps, schema):
@@ -69,9 +69,8 @@ class Migration(migrations.Migration):
         ('contenttypes', '0002_remove_content_type_name'),
         ('questionnaire', '0011_auto_20160515_2339'),
     ]
-
     operations = [
-        RunPython(save_questions_and_delete, lambda a, s: None),
+        RunPython(save_questions_and_delete, backwards),
 
         migrations.CreateModel(
             name='AbstractQuestionnaireBlock',
@@ -138,6 +137,11 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
             bases=('questionnaire.abstractquestionnaireblock',),
+        ),
+        # Drop variant's id because it's a foreign key to follow deleted question id
+        migrations.RemoveField(
+            model_name='choicequestionnairequestionvariant',
+            name='id',
         ),
         migrations.RemoveField(
             model_name='choicequestionnairequestion',
@@ -312,6 +316,13 @@ class Migration(migrations.Migration):
             name='abstractquestionnaireblock',
             unique_together=set([('short_name', 'questionnaire'), ('questionnaire', 'order')]),
         ),
+        # Restore foreign key for variants
+        migrations.AddField(
+            model_name='choicequestionnairequestionvariant',
+            name='id',
+            field=('question', models.ForeignKey(to='questionnaire.ChoiceQuestionnaireQuestion', related_name='variants')),
+        ),
 
-        RunPython(forwards, backwards),
+        RunPython(restore_questions, backwards),
     ]
+

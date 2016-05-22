@@ -17,7 +17,7 @@ class ChoiceQuestionField(forms.Field):
 
     def update_with_initial(self, initial):
         # Disable question if user has checked variant which is marked as `disable_question_if_chosen`
-        if initial is not None:
+        if initial:
             if self.question.is_multiple:
                 qs = self.question.variants.filter(id__in=initial, disable_question_if_chosen=True)
             else:

@@ -2,11 +2,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import widgets
 from django.template.defaultfilters import filesizeformat
+from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.forms.forms import BoundField
 
 
 # TODO: move to the frontend application
+from django.utils.safestring import mark_safe
 
 
 class TextInputWithFaIcon(forms.TextInput):
@@ -60,11 +62,17 @@ class SistemaChoiceInput(widgets.ChoiceInput):
         attrs = dict(self.attrs, **attrs) if attrs else self.attrs
 
         block_or_online = 'inline' if 'inline' in attrs and attrs['inline'] else 'block'
+        label_classes = [block_or_online]
+
+        if 'disabled' in attrs and attrs['disabled']:
+            label_classes.append('option-disabled')
+        else:
+            label_classes.append('option-alert')
 
         return format_html(
-                '<label{} class="option option-alert {} mt5">{} <span class="{}"></span> {}</label>',
+                '<label{} class="option {} mt5">{} <span class="{}"></span> {}</label>',
                 label_for,
-                block_or_online,
+                ' '.join(label_classes),
                 self.tag(attrs),
                 self.input_type,
                 self.choice_label
@@ -106,16 +114,43 @@ class SistemaCheckboxChoiceInput(SistemaChoiceInput, widgets.CheckboxChoiceInput
     input_type = 'checkbox'
 
 
-class SistemaRadioFieldRenderer(widgets.RadioFieldRenderer):
+class SistemaChoiceFieldRendererWithDisabled(widgets.ChoiceFieldRenderer):
+    outer_html = '{content}'
+    inner_html = '{choice_value}'
+
+    def render(self):
+        """
+        To disable an option, pass a dict instead of a string for its label,
+        of the form: {'label': 'option label', 'disabled': True}
+
+        Based on django.forms.widgets.ChoiceFieldRenderer.render()
+        """
+        id_ = self.attrs.get('id')
+        output = []
+
+        for i, choice in enumerate(self.choices):
+            item_attrs = self.attrs.copy()
+            choice_value, choice_label = choice
+            if isinstance(choice_label, dict):
+                if 'disabled' in choice_label and choice_label['disabled']:
+                    item_attrs['disabled'] = choice_label['disabled']
+                choice_label = choice_label['label']
+
+            w = self.choice_input_class(self.name, self.value,
+                                        item_attrs, (choice_value, choice_label), i)
+            output.append(format_html(self.inner_html,
+                                      choice_value=force_text(w), sub_widgets=''))
+        return format_html(self.outer_html,
+                           id_attr=format_html(' id="{}"', id_) if id_ else '',
+                           content=mark_safe('\n'.join(output)))
+
+
+class SistemaRadioFieldRenderer(SistemaChoiceFieldRendererWithDisabled):
     choice_input_class = SistemaRadioChoiceInput
-    outer_html = '{content}'
-    inner_html = '{choice_value}'
 
 
-class SistemaCheckboxFieldRenderer(widgets.CheckboxFieldRenderer):
+class SistemaCheckboxFieldRenderer(SistemaChoiceFieldRendererWithDisabled):
     choice_input_class = SistemaCheckboxChoiceInput
-    outer_html = '{content}'
-    inner_html = '{choice_value}'
 
 
 class SistemaRadioSelect(forms.RadioSelect):

@@ -1,18 +1,19 @@
 import copy
-from itertools import chain
 import operator
 
+import djchoices
+import functools
 import polymorphic.models
 from cached_property import cached_property
 from django.core import urlresolvers
 from django.db import models
-from django import forms
+import django.forms
 import django.utils.timezone
-from djchoices import choices
 
 import school.models
 import user.models
 import sistema.forms
+from . import forms
 
 
 class AbstractQuestionnaireBlock(polymorphic.models.PolymorphicModel):
@@ -49,7 +50,7 @@ class AbstractQuestionnaireQuestion(AbstractQuestionnaireBlock):
                                  blank=True,
                                  help_text='Подсказка, помогающая ответить на вопрос')
 
-    def get_form_field(self, attrs=None, initial=None):
+    def get_form_field(self, attrs=None):
         raise NotImplementedError('Child must implement own method get_form_field()')
 
     def __str__(self):
@@ -66,7 +67,7 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
                           help_text='Имя иконки FontAwesome, которую нужно показать в поле',
                           blank=True)
 
-    def get_form_field(self, attrs=None, initial=None):
+    def get_form_field(self, attrs=None):
         if attrs is None:
             attrs = {}
 
@@ -87,16 +88,15 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
                 widget = sistema.forms.TextInputWithFaIcon(attrs)
         else:
             if self.is_multiline:
-                widget = forms.Textarea(attrs)
+                widget = django.forms.Textarea(attrs)
             else:
-                widget = forms.TextInput(attrs)
+                widget = django.forms.TextInput(attrs)
 
-        return forms.CharField(
+        return django.forms.CharField(
             required=self.is_required,
             help_text=self.help_text,
             label=self.text,
             widget=widget,
-            initial=initial,
         )
 
 
@@ -107,8 +107,14 @@ class ChoiceQuestionnaireQuestionVariant(models.Model):
                                  on_delete=models.CASCADE,
                                  related_name='variants')
 
+    # If variant is disabled it shows as gray and can't be selected
+    is_disabled = models.BooleanField(default=False)
+
+    # If this one is selected all options are disabled
+    disable_question_if_chosen = models.BooleanField(default=False)
+
     def __str__(self):
-        return 'Variant for {}: {}'.format(self.question.short_name, self.text)
+        return '{}: {}'.format(self.question, self.text)
 
 
 class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
@@ -116,44 +122,43 @@ class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
     is_inline = models.BooleanField()
 
-    def get_form_field(self, attrs=None, initial=None):
+    def get_form_field(self, attrs=None):
         if attrs is None:
             attrs = {}
 
-        choices = ((v.id, v.text) for v in self.variants.all())
+        choices = ((v.id, {'label': v.text, 'disabled': v.is_disabled}) for v in self.variants.all())
 
         attrs['inline'] = self.is_inline
         if self.is_multiple:
-            field_class = forms.TypedMultipleChoiceField
+            field_class = forms.TypedMultipleChoiceFieldForChoiceQuestion
             widget_class = sistema.forms.SistemaCheckboxSelect
         else:
-            field_class = forms.TypedChoiceField
+            field_class = forms.TypedChoiceFieldForChoiceQuestion
             widget_class = sistema.forms.SistemaRadioSelect
 
         return field_class(
+            question=self,
             required=self.is_required,
             coerce=int,
             choices=choices,
             widget=widget_class(attrs=attrs),
             label=self.text,
             help_text=self.help_text,
-            initial=initial,
         )
 
 
 class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
-    def get_form_field(self, attrs=None, initial=None):
+    def get_form_field(self, attrs=None):
         if attrs is None:
             attrs = {}
 
-        return forms.TypedChoiceField(
+        return django.forms.TypedChoiceField(
             required=self.is_required,
             coerce=lambda x: x == 'True',
             choices=((False, 'Нет'), (True, 'Да')),
             widget=sistema.forms.SistemaRadioSelect(attrs=attrs),
             label=self.text,
             help_text=self.help_text,
-            initial=initial,
         )
 
 
@@ -164,19 +169,18 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
     max_year = models.PositiveIntegerField(null=True)
 
-    def get_form_field(self, attrs=None, initial=None):
-        return forms.DateField(
+    def get_form_field(self, attrs=None):
+        return django.forms.DateField(
             required=self.is_required,
             label=self.text,
             help_text=self.help_text,
-            widget=forms.DateInput(attrs={
+            widget=django.forms.DateInput(attrs={
                 'class': 'datetimepicker',
                 'data-format': 'DD.MM.YYYY',
                 'data-view-mode': 'years',
                 'data-pick-time': 'false',
                 'placeholder': 'дд.мм.гггг',
             }),
-            initial=initial,
         )
 
 
@@ -225,7 +229,7 @@ class Questionnaire(models.Model):
 
             fields[question.short_name] = question.get_form_field(question_attrs)
 
-        form_class = type('%sForm' % self.short_name, (forms.Form,), fields)
+        form_class = type('%sForm' % self.short_name.title(), (forms.QuestionnaireForm,), fields)
         return form_class
 
     def get_absolute_url(self):
@@ -261,13 +265,7 @@ class QuestionnaireAnswer(models.Model):
 
     @property
     def question(self):
-        # TODO: bad idea :(
-        for question_type in ChoiceQuestionnaireQuestion, TextQuestionnaireQuestion, YesNoQuestionnaireQuestion:
-            qs = question_type.objects.filter(questionnaire=self.questionnaire, short_name=self.question_short_name)
-            if qs.exists():
-                return qs.get()
-
-        return None
+        return AbstractQuestionnaireQuestion.objects.filter(questionnaire=self.questionnaire, short_name=self.question_short_name).first()
 
     class Meta:
         index_together = ('questionnaire', 'user', 'question_short_name')
@@ -275,9 +273,9 @@ class QuestionnaireAnswer(models.Model):
 
 # TODO: may be extract base class for this and modules.topics.models.UserQuestionnaireStatus?
 class UserQuestionnaireStatus(models.Model):
-    class Status(choices.DjangoChoices):
-        NOT_FILLED = choices.ChoiceItem(1)
-        FILLED = choices.ChoiceItem(2)
+    class Status(djchoices.DjangoChoices):
+        NOT_FILLED = djchoices.ChoiceItem(1)
+        FILLED = djchoices.ChoiceItem(2)
 
     user = models.ForeignKey(user.models.User, related_name='+')
 

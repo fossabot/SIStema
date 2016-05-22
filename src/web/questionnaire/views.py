@@ -81,7 +81,7 @@ def questionnaire_for_user(request, user, questionnaire_name):
         elif form.is_valid():
             save_questionnaire_answers(user, questionnaire, form)
             if questionnaire.for_school is not None:
-                return questionnaire.for_school.get_absolute_url()
+                return redirect(questionnaire.for_school)
             else:
                 return redirect('home')
     else:

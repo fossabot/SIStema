@@ -32,30 +32,32 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
         considered_discounts = user_discounts.filter(amount=0)
 
         template = self._template_factory('''
+            {% load stringcase %}
+
             {% if payment_amount %}
                 <p>
                     Размер оргвзноса для вас с учётом скидок составляет <b>{{ payment_amount }} рублей</b>.
                 </p>
                 <p>
                     {% if actual_discounts %}
-                        <b>Предоставленные скидки: </b>
+                        <b>Предоставленн{{ actual_discounts.count|pluralize:'ая,ые' }} скидк{{ actual_discounts.count|pluralize:'а,и' }}: </b>
                         {% for discount in actual_discounts %}
                             {% if discount.public_comment %}
                                 {{ discount.public_comment }}
                             {% else %}
-                                {{ discount.type_name|lower }}
+                                {{ discount.type_name|lowerfirst }}
                             {% endif %}
                             в размере {{ discount.amount }} рублей{% if not forloop.last %},{% endif %}
                         {% endfor %}
                     {% endif %}
 
                     {% if considered_discounts %}
-                        Вы <b>рассматриваетесь</b> на получение скидок:
+                        Вы <b>рассматриваетесь</b> на получение скид{{ considered_discounts.count|pluralize:'ки,ок' }}:
                         {% for discount in considered_discounts %}
                             {% if discount.public_comment %}
                                 {{ discount.public_comment }}
                             {% else %}
-                                {{ discount.type }}
+                                {{ discount.type_name }}
                             {% endif %}
                             {% if not forloop.last %},{% endif %}
                         {% endfor %}

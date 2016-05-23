@@ -11,6 +11,7 @@ class Discount(models.Model):
     class Type(djchoices.DjangoChoices):
         SOCIAL = djchoices.ChoiceItem(1, 'Социальная скидка')
         PARTNER = djchoices.ChoiceItem(2, 'Скидка от партнёра')
+        STATE = djchoices.ChoiceItem(3, 'Скидка от государства')
 
     for_school = models.ForeignKey(school.models.School, related_name='+')
 
@@ -28,7 +29,6 @@ class Discount(models.Model):
     @property
     def type_name(self):
         return self.Type.values[self.type]
-
 
 
 class PaymentAmount(models.Model):

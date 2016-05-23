@@ -349,4 +349,5 @@ class EntranceStatus(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name_plural = 'User entrance statuses'
         unique_together = ['for_school', 'for_user']

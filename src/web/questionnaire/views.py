@@ -95,6 +95,8 @@ def questionnaire_for_user(request, user, questionnaire_name):
 
     return render(request, 'questionnaire/questionnaire.html', {
         'questionnaire': questionnaire,
+        # Need for dict() because a bug: https://code.djangoproject.com/ticket/16335
+        'show_conditions': dict(questionnaire.show_conditions),
         'form': form,
         'already_filled': already_filled,
         'is_closed': is_closed,

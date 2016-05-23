@@ -1,19 +1,20 @@
-<div class="section mb40">
-    <div class="{{ question.errors|yesno:'state-error,' }}">
-        <label for="{{ question.id_for_label }}" class="fs18 block mb5">
-            {{ question.label }}
-            {% if question.field.required %}
-                *
-            {% endif %}
-        </label>
-        {{ question }}
-        {% if question.help_text %}
-            <p class="help-block">{{ question.help_text }}</p>
+{% load dict_tags %}
+
+<div class="{{ question.errors|yesno:'state-error,' }}">
+    <label for="{{ question.id_for_label }}" class="fs18 block mb5">
+        {{ question.label }}
+        {% if question.field.required %}
+            *
         {% endif %}
-    </div>
-    {% if question.errors %}
-        {% for error in question.errors %}
-            <em>{{ error }}</em>
-        {% endfor %}
+    </label>
+    {{ question }}
+    {% if question.help_text %}
+        <p class="help-block">{{ question.help_text }}</p>
     {% endif %}
 </div>
+{% if question.errors %}
+    {% for error in question.errors %}
+        <em>{{ error }}</em>
+    {% endfor %}
+{% endif %}
+

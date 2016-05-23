@@ -12,6 +12,21 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static 'vendor/plugins/moment/moment.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'vendor/plugins/datepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'questionnaire/js/show-conditions.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            {% for block_id, options in show_conditions.items %}
+                $('#questionnaire__block__{{ options.0.block.short_name }}').showOnlyIfOptionChecked(
+                    {% for option in options %}
+                        {% if not forloop.first %}.add({% endif %}
+                        $('input[value={{ option.need_to_be_checked.id }}]', '#questionnaire__block__{{ option.need_to_be_checked.question.short_name }}')
+                        {% if not forloop.first %}){% endif %}
+                    {% endfor %}
+                );
+
+            {% endfor %}
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -51,13 +66,15 @@
                             {% endif %}
 
                             {% for block in questionnaire.blocks %}
-                                {% if block.is_question %}
-                                    {% include 'questionnaire/_question.html' with question=form|get_item:block.short_name %}
-                                {% else %}
-                                    {% with template_name='questionnaire/_block_'|add:block.template_name|add:'.html' %}
-                                        {% include template_name with block=block %}
-                                    {% endwith %}
-                                {% endif %}
+                                <div class="section mb40 questionnaire__block__{{ block.block_name }}" id="questionnaire__block__{{ block.short_name }}">
+                                    {% if block.is_question %}
+                                        {% include 'questionnaire/_question.html' with question=form|get_item:block.short_name %}
+                                    {% else %}
+                                        {% with template_name='questionnaire/_block_'|add:block.block_name|add:'.html' %}
+                                            {% include template_name with block=block %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
                             {% endfor %}
 
                         </div>

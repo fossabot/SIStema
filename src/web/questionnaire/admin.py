@@ -77,3 +77,10 @@ class QuestionnaireAnswerAdmin(admin.ModelAdmin):
     )
 
 admin.site.register(models.QuestionnaireAnswer, QuestionnaireAnswerAdmin)
+
+
+class QuestionnaireBlockShowConditionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'block', 'need_to_be_checked')
+    list_filter = ('block__questionnaire', )
+
+admin.site.register(models.QuestionnaireBlockShowCondition, QuestionnaireBlockShowConditionAdmin)

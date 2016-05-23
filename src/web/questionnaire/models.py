@@ -2,7 +2,6 @@ import copy
 import operator
 
 import djchoices
-import functools
 import polymorphic.models
 from cached_property import cached_property
 from django.core import urlresolvers
@@ -13,6 +12,7 @@ import django.utils.timezone
 import school.models
 import user.models
 import sistema.forms
+from sistema.helpers import group_by
 from . import forms
 
 
@@ -28,15 +28,21 @@ class AbstractQuestionnaireBlock(polymorphic.models.PolymorphicModel):
 
     is_question = False
 
+    def __str__(self):
+        return '%s. %s' % (self.questionnaire, self.short_name)
+
     class Meta:
         unique_together = [('short_name', 'questionnaire'), ('questionnaire', 'order')]
         ordering = ('questionnaire_id', 'order')
 
 
 class MarkdownQuestionnaireBlock(AbstractQuestionnaireBlock):
-    template_name = 'markdown'
+    block_name = 'markdown'
 
     markdown = models.TextField()
+
+    def __str__(self):
+        return self.markdown[:40]
 
 
 class AbstractQuestionnaireQuestion(AbstractQuestionnaireBlock):
@@ -58,6 +64,8 @@ class AbstractQuestionnaireQuestion(AbstractQuestionnaireBlock):
 
 
 class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    block_name = 'text_question'
+
     is_multiline = models.BooleanField()
 
     placeholder = models.TextField(help_text='Подсказка, показываемая в поле для ввода; пример',
@@ -118,6 +126,8 @@ class ChoiceQuestionnaireQuestionVariant(models.Model):
 
 
 class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    block_name = 'choice_question'
+
     is_multiple = models.BooleanField()
 
     is_inline = models.BooleanField()
@@ -148,6 +158,8 @@ class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
 
 class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    block_name = 'yesno_question'
+
     def get_form_field(self, attrs=None):
         if attrs is None:
             attrs = {}
@@ -163,6 +175,8 @@ class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
 
 class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    block_name = 'date_question'
+
     with_year = models.BooleanField(default=True)
 
     min_year = models.PositiveIntegerField(null=True)
@@ -213,6 +227,13 @@ class Questionnaire(models.Model):
     def questions(self):
         questions = self.abstractquestionnaireblock_set.instance_of(AbstractQuestionnaireQuestion)
         return sorted(questions, key=operator.attrgetter('order'))
+
+    @cached_property
+    def show_conditions(self):
+        return group_by(
+            QuestionnaireBlockShowCondition.objects.filter(block__questionnaire=self),
+            operator.attrgetter('block_id')
+        )
 
     def get_form_class(self, attrs=None):
         if attrs is None:
@@ -297,3 +318,6 @@ class QuestionnaireBlockShowCondition(models.Model):
     block = models.ForeignKey(AbstractQuestionnaireBlock, related_name='show_conditions')
 
     need_to_be_checked = models.ForeignKey(ChoiceQuestionnaireQuestionVariant, related_name='+')
+
+    def __str__(self):
+        return 'Show %s only if %s' % (self.block, self.need_to_be_checked)

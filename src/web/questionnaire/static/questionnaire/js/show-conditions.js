@@ -5,8 +5,8 @@ $(document).ready(function(){
             $block.show(200);
         else {
             $block.hide(200, function () {
-                $block.find('input[type=checkbox]').prop('checked', false);
-                $block.find('input[type=radio]').prop('checked', false);
+                $block.find('input[type=checkbox]').prop('checked', false).change();
+                $block.find('input[type=radio]').prop('checked', false).change();
                 $block.find('input[type=text]').val('');
                 $block.find('textarea').val('');
             });

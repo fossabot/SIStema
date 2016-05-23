@@ -43,7 +43,7 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
                         <b>Предоставленн{{ actual_discounts.count|pluralize:'ая,ые' }} скидк{{ actual_discounts.count|pluralize:'а,и' }}: </b>
                         {% for discount in actual_discounts %}
                             {% if discount.public_comment %}
-                                {{ discount.public_comment }}
+                                {{ discount.public_comment|lowerfirst }}
                             {% else %}
                                 {{ discount.type_name|lowerfirst }}
                             {% endif %}
@@ -55,9 +55,9 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
                         Вы <b>рассматриваетесь</b> на получение скид{{ considered_discounts.count|pluralize:'ки,ок' }}:
                         {% for discount in considered_discounts %}
                             {% if discount.public_comment %}
-                                {{ discount.public_comment }}
+                                {{ discount.public_comment|lowerfirst }}
                             {% else %}
-                                {{ discount.type_name }}
+                                {{ discount.type_name|lowerfirst }}
                             {% endif %}
                             {% if not forloop.last %},{% endif %}
                         {% endfor %}

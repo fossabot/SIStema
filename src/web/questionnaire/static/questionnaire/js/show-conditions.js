@@ -17,7 +17,15 @@ $(document).ready(function(){
         var $this = $(this);
 
         update_visibility($this, $options);
-        $options.change(function() {
+
+        /* We need to watch for all elements with the same name
+         * because there are radio buttons which hire `change` only for new selected items
+         */
+        var $watched_inputs = $options;
+        $options.each(function (i, el) {
+            $watched_inputs = $watched_inputs.add($('input[name=' + $(el).attr('name') + ']'));
+        });
+        $watched_inputs.change(function() {
             update_visibility($this, $options);
         });
     }

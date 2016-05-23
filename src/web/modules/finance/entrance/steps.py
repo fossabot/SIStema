@@ -49,6 +49,11 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
                             {% endif %}
                             в размере {{ discount.amount }} рублей{% if not forloop.last %},{% endif %}
                         {% endfor %}
+                        {% if actual_discounts.count > 1 %}
+                            <p>
+                                Обратите внимание, что скидки не суммируются: применяется большая из них.
+                            </p>
+                        {% endif %}
                     {% endif %}
 
                     {% if considered_discounts %}

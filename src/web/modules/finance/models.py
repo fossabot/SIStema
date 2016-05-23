@@ -49,10 +49,10 @@ class PaymentAmount(models.Model):
             return None
         amount = amount.amount
 
-        discounts = Discount.objects.filter(for_school=school, for_user=user)
-        for discount in discounts:
-            amount -= discount.amount
+        discounts = Discount.objects.filter(for_school=school, for_user=user).values_list('amount', flat=True)
+        max_discount = max(discounts)
 
+        amount -= max_discount
         if amount < 0:
             amount = 0
 

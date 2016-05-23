@@ -34,7 +34,7 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
         template = self._template_factory('''
             {% load stringcase %}
 
-            {% if payment_amount %}
+            {% if payment_amount != None %}
                 <p>
                     Размер оргвзноса для вас с учётом скидок составляет <b>{{ payment_amount }} рублей</b>.
                 </p>

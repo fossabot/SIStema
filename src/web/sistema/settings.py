@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'modules.topics',
     'modules.exam_scorer_2016',
     'modules.enrolled_scans',
+    'modules.finance',
 )
 
 MIDDLEWARE_CLASSES = (

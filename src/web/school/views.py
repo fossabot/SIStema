@@ -94,6 +94,7 @@ def user(request):
             short_name__startswith='arrival',
             for_session=user_session
         ).first()
+        payment_questionnaire = Questionnaire.objects.filter(for_school=request.school, short_name='payment').first()
         enrolled_steps = [
             (
                 'modules.entrance.steps.QuestionnaireEntranceStep', {
@@ -115,6 +116,13 @@ def user(request):
             (
                 'modules.enrolled_scans.entrance.steps.EnrolledScansEntranceStep', {
                     'school': request.school,
+                    'previous_questionnaire': enrolled_questionnaire
+                }
+            ),
+            (
+                'modules.finance.entrance.steps.PaymentInfoEntranceStep', {
+                    'school': request.school,
+                    'payment_questionnaire': payment_questionnaire,
                     'previous_questionnaire': enrolled_questionnaire
                 }
             )

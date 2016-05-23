@@ -12,7 +12,7 @@ class Discount(models.Model):
         SOCIAL = djchoices.ChoiceItem(1, 'Социальная скидка')
         PARTNER = djchoices.ChoiceItem(2, 'Скидка от партнёра')
         STATE = djchoices.ChoiceItem(3, 'Скидка от государства')
-        OLYMPIADS = djchoices.ChoiceItem(3, 'Олимпиадная скидка')
+        OLYMPIADS = djchoices.ChoiceItem(4, 'Олимпиадная скидка')
 
     for_school = models.ForeignKey(school.models.School, related_name='+')
 

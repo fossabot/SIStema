@@ -3,6 +3,7 @@ import datetime
 import re
 
 import djchoices
+import polymorphic.models
 from django.core import urlresolvers
 from django.conf import settings
 from django.db import models, transaction
@@ -351,3 +352,23 @@ class EntranceStatus(models.Model):
     class Meta:
         verbose_name_plural = 'User entrance statuses'
         unique_together = ['for_school', 'for_user']
+
+
+class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
+    for_school = models.ForeignKey(school.models.School, related_name='absences_reasons')
+
+    for_user = models.ForeignKey(user.models.User, related_name='absences_reasons')
+
+    created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class RejectionAbsenceReason(AbstractAbsenceReason):
+    def __str__(self):
+        return 'Отказался(лась) от участия'
+
+
+class NotConfirmedAbsenceReason(AbstractAbsenceReason):
+    def __str__(self):
+        return 'Участие не подтверждено'

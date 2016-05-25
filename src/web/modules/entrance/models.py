@@ -359,6 +359,10 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
 
     for_user = models.ForeignKey(user.models.User, related_name='absences_reasons')
 
+    private_comment = models.TextField(blank=True, help_text='Не показывается школьнику')
+
+    public_comment = models.TextField(blank=True, help_text='Показывается школьнику')
+
     created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

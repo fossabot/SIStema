@@ -35,6 +35,12 @@
                 </div>
             {% endif %}
 
+            {% if absence_reason %}
+                <div class="entrance-status alert alert-danger fs16 text-left">
+                    {{ absence_reason.public_comment|urlize|linebreaks }}
+                </div>
+            {% endif %}
+
             {% if entrance_status.is_enrolled %}
                 <div class="enrolled-steps">
                     {% comment %}

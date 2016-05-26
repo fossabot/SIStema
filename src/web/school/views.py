@@ -68,7 +68,8 @@ def user(request):
 
     # TODO: usage of EntranceStatus is bad because entrance is a module, not a part of the core
     import modules.entrance.models as entrance_models
-    qs = entrance_models.EntranceStatus.objects.filter(for_school=request.school, for_user=request.user,
+    qs = entrance_models.EntranceStatus.objects.filter(for_school=request.school,
+                                                       for_user=request.user,
                                                        is_status_visible=True)
     entrance_status = None
     if qs.exists():
@@ -130,11 +131,17 @@ def user(request):
 
         user_enrolled_steps = build_user_steps(enrolled_steps, request.user)
 
+    # TODO(citxx): usage of EntranceStatus is bad because entrance is a module, not a part of the
+    #              core
+    import modules.entrance.models as entrance_models
+    absence_reason = entrance_models.AbstractAbsenceReason.reason_for_user(request.user)
+
     return render(request, 'home/user.html', {
         'school': request.school,
         'steps': user_steps,
         'entrance_status': entrance_status,
         'enrolled_steps': user_enrolled_steps,
+        'absence_reason': absence_reason,
     })
 
 

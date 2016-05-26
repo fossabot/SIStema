@@ -363,9 +363,15 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
 
     public_comment = models.TextField(blank=True, help_text='Показывается школьнику')
 
-    created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None, blank=True)
+    created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None,
+                                   blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def reason_for_user(cls, user):
+        """Returns absence reason for specified user or None if user has not declined."""
+        return cls.objects.filter(for_user=user).first()
 
 
 class RejectionAbsenceReason(AbstractAbsenceReason):

@@ -369,9 +369,9 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def reason_for_user(cls, user):
+    def for_user_in_school(cls, user, school):
         """Returns absence reason for specified user or None if user has not declined."""
-        return cls.objects.filter(for_user=user).first()
+        return cls.objects.filter(for_user=user, for_school=school).first()
 
 
 class RejectionAbsenceReason(AbstractAbsenceReason):

@@ -134,7 +134,8 @@ def user(request):
     # TODO(citxx): usage of EntranceStatus is bad because entrance is a module, not a part of the
     #              core
     import modules.entrance.models as entrance_models
-    absence_reason = entrance_models.AbstractAbsenceReason.reason_for_user(request.user)
+    absence_reason = (entrance_models.AbstractAbsenceReason
+                                     .for_user_in_school(request.user, request.school))
 
     return render(request, 'home/user.html', {
         'school': request.school,

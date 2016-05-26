@@ -154,9 +154,11 @@ admin.site.register(models.EntranceStatus, EntranceStatusAdmin)
 
 
 class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment', 'created_at')
+    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment',
+                    'private_comment', 'created_at')
     list_filter = ('for_school', ('created_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username', 'public_comment')
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username',
+                     'public_comment')
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == 'for_user':

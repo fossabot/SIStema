@@ -100,9 +100,9 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
     def get_enrolled_status(self, user):
         if user.id not in self.absence_reason_by_user_id:
             if user.id in self.enrolled_questionnaire_answers_by_user_id:
-                return "Участие подтверждено"
+                return ''
             else:
-                return "Участие не подтверждено"
+                return 'Участие не подтверждено'
         return str(self.absence_reason_by_user_id[user.id][0])
 
 

@@ -12,6 +12,9 @@ class User(auth_models.AbstractUser):
 
     is_email_confirmed = models.BooleanField(default=False)
 
+    def __str__(self):
+        return '%s %s (%s)' % (self.last_name, self.first_name, self.email)
+
     class Meta(auth_models.AbstractUser.Meta):
         pass
 

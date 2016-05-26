@@ -3,6 +3,7 @@ import datetime
 import re
 
 import djchoices
+import polymorphic.models
 from django.core import urlresolvers
 from django.conf import settings
 from django.db import models, transaction
@@ -351,3 +352,42 @@ class EntranceStatus(models.Model):
     class Meta:
         verbose_name_plural = 'User entrance statuses'
         unique_together = ['for_school', 'for_user']
+
+
+class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
+    for_school = models.ForeignKey(school.models.School, related_name='absences_reasons')
+
+    for_user = models.ForeignKey(user.models.User, related_name='absences_reasons')
+
+    private_comment = models.TextField(blank=True, help_text='Не показывается школьнику')
+
+    public_comment = models.TextField(blank=True, help_text='Показывается школьнику')
+
+    created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None,
+                                   blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def for_user_in_school(cls, user, school):
+        """Returns absence reason for specified user or None if user has not declined."""
+        return cls.objects.filter(for_user=user, for_school=school).first()
+
+    def default_public_comment(self):
+        raise NotImplementedError()
+
+
+class RejectionAbsenceReason(AbstractAbsenceReason):
+    def __str__(self):
+        return 'Отказался(лась) от участия'
+
+    def default_public_comment(self):
+        return 'Вы отказались от участия в ЛКШ.'
+
+
+class NotConfirmedAbsenceReason(AbstractAbsenceReason):
+    def __str__(self):
+        return 'Участие не подтверждено'
+
+    def default_public_comment(self):
+        return 'Вы не подтвердили своё участие в ЛКШ.'

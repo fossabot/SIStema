@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 import ipware.ip
 import operator
 
+import questionnaire.models
 import school.decorators
 import sistema.uploads
 import sistema.helpers
@@ -28,24 +29,50 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
     search_enabled = False
 
     # Unlimited page
-    page_size = 0
+    page_size = None
 
     def __init__(self, school, users_ids):
         super().__init__(school, users_ids)
         self.title = 'Поступившие в ' + school.name
 
-        entrance_statuses = models.EntranceStatus.objects.filter(
-            for_school=school,
-            for_user_id__in=users_ids,
-            is_status_visible=True,
-        ).select_related('session', 'parallel').order_by('for_user__last_name', 'for_user__first_name')
-        self.status_by_user = sistema.helpers.group_by(entrance_statuses, operator.attrgetter('for_user_id'))
+        entrance_statuses = (
+            models.EntranceStatus.objects
+                  .filter(
+                      for_school=school,
+                      for_user_id__in=users_ids,
+                      is_status_visible=True)
+                  .select_related('session', 'parallel')
+                  .order_by('for_user__last_name', 'for_user__first_name'))
+        self.status_by_user = sistema.helpers.group_by(entrance_statuses,
+                                                       operator.attrgetter('for_user_id'))
+
+        absence_reasons = (
+            models.AbstractAbsenceReason.objects
+                  .filter(for_school=school, for_user_id__in=users_ids))
+        self.absence_reason_by_user_id = sistema.helpers.group_by(
+            absence_reasons,
+            operator.attrgetter('for_user_id')
+        )
+
+        enrolled_questionnaire = (questionnaire.models.Questionnaire.objects
+                                               .filter(short_name='enrolled')
+                                               .first())
+        self.enrolled_questionnaire_answers_by_user_id = sistema.helpers.group_by(
+            questionnaire.models.QuestionnaireAnswer.objects
+                         .filter(questionnaire=enrolled_questionnaire,
+                                 user__in=users_ids),
+            operator.attrgetter('user_id')
+        )
 
         index_column = frontend.table.IndexColumn()
         name_column = frontend.table.SimplePropertyColumn('get_full_name', 'Имя Фамилия')
         session_column = frontend.table.SimpleFuncColumn(self.get_session, 'Смена')
         parallel_column = frontend.table.SimpleFuncColumn(self.get_parallel, 'Параллель')
-        self.columns = (index_column, name_column) + self.columns[2:] + (session_column, parallel_column)
+        enrolled_status_column = frontend.table.SimpleFuncColumn(self.get_enrolled_status,
+                                                                 'Статус')
+        self.columns = ((index_column, name_column) +
+                        self.columns[2:] +
+                        (session_column, parallel_column, enrolled_status_column))
 
     @classmethod
     def create(cls, school):
@@ -69,6 +96,14 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
         if user.id not in self.status_by_user:
             return ''
         return self.status_by_user[user.id][0].parallel.name
+
+    def get_enrolled_status(self, user):
+        if user.id not in self.absence_reason_by_user_id:
+            if user.id in self.enrolled_questionnaire_answers_by_user_id:
+                return ''
+            else:
+                return 'Участие не подтверждено'
+        return str(self.absence_reason_by_user_id[user.id][0])
 
 
 @login_required

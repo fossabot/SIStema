@@ -76,7 +76,7 @@ class Column(abc.ABC):
 
     @abc.abstractmethod
     def get_cell_data(self, table, obj):
-        """ This method is called for extractint one cell for table """
+        """ This method is called for extracting one cell for table """
 
 
 class SimplePropertyColumn(Column):
@@ -128,7 +128,7 @@ class SimpleFuncColumn(Column):
 
 
 class IndexColumn(Column):
-    name = '№'
+    name = 'index'
 
     def __init__(self, start_from=1):
         super().__init__()
@@ -152,7 +152,7 @@ class Table(abc.ABC):
     # Replace with special search widget
     search_enabled = True
 
-    # Set to 0 for unlimited page
+    # Set to None for unlimited page
     page_size = 10
 
     def __init__(self, model, queryset):
@@ -200,7 +200,7 @@ class Table(abc.ABC):
 
     @property
     def paged_queryset(self):
-        if self.page_size == 0:
+        if self.page_size is None:
             return self.queryset
         return self.queryset[:self.page_size]
 

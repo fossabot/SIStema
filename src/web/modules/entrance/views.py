@@ -28,7 +28,7 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
     search_enabled = False
 
     # Unlimited page
-    page_size = 0
+    page_size = None
 
     def __init__(self, school, users_ids):
         super().__init__(school, users_ids)

@@ -2,6 +2,8 @@ from django.contrib import admin
 
 from . import models
 
+import user.models
+
 
 class EntranceExamTaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'exam')
@@ -145,7 +147,24 @@ admin.site.register(models.EntranceRecommendation, EntranceRecommendationAdmin)
 
 class EntranceStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
-    list_filter = ('status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+    list_filter = ('for_school', 'status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username', 'public_comment')
 
 admin.site.register(models.EntranceStatus, EntranceStatusAdmin)
+
+
+class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
+    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment', 'created_at')
+    list_filter = ('for_school', ('created_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username', 'public_comment')
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == 'for_user':
+            kwargs['queryset'] = (
+                user.models.User.objects.filter(
+                    entrance_statuses__status=models.EntranceStatus.Status.ENROLLED
+                ).order_by('last_name', 'first_name'))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+admin.site.register(models.RejectionAbsenceReason, AbstractAbsenceReasonAdmin)
+admin.site.register(models.NotConfirmedAbsenceReason, AbstractAbsenceReasonAdmin)

@@ -379,7 +379,7 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
 
 class RejectionAbsenceReason(AbstractAbsenceReason):
     def __str__(self):
-        return 'Отказался(лась) от участия'
+        return 'Отказ от участия'
 
     def default_public_comment(self):
         return 'Вы отказались от участия в ЛКШ.'

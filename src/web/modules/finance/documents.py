@@ -39,7 +39,7 @@ class DocumentGenerator:
         question = self.payment_questions[question_short_name]
 
         if isinstance(question, questionnaire.models.ChoiceQuestionnaireQuestion):
-            return self.questionnaire_choice_variants[int(user_answer.answer)]
+            return self.questionnaire_choice_variants[int(user_answer.answer)].text
 
         return user_answer.answer
 

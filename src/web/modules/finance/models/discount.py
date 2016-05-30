@@ -9,7 +9,7 @@ import polymorphic.models
 import relativefilepathfield.fields
 from cached_property import cached_property
 
-from .questionnaire.blocks import PaymentInfoQuestionnaireBlock
+from ..questionnaire.blocks import PaymentInfoQuestionnaireBlock
 import school.models
 import user.models
 import questionnaire.models

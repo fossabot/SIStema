@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.db import models
 import django.db.migrations.writer
 from django.conf import settings
@@ -28,7 +30,8 @@ class Discount(models.Model):
     type = models.PositiveIntegerField(choices=Type.choices, validators=[Type.validator])
 
     # If amount = 0, discount is considered now
-    amount = models.PositiveIntegerField(help_text='Размер скидки. Выберите ноль, чтобы скидка считалась «рассматриваемой»')
+    amount = models.PositiveIntegerField(
+            help_text='Размер скидки. Выберите ноль, чтобы скидка считалась «рассматриваемой»')
 
     private_comment = models.TextField(blank=True, help_text='Не показывается школьнику')
 

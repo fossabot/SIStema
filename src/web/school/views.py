@@ -125,7 +125,13 @@ def user(request):
                     'payment_questionnaire': payment_questionnaire,
                     'previous_questionnaire': enrolled_questionnaire
                 }
-            )
+            ),
+            (
+                'modules.finance.entrance.steps.DocumentsEntranceStep', {
+                    'school': request.school,
+                    'payment_questionnaire': payment_questionnaire,
+                }
+            ),
         ]
 
         user_enrolled_steps = build_user_steps(enrolled_steps, request.user)

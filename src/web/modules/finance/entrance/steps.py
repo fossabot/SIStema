@@ -1,4 +1,5 @@
 from modules.entrance import steps
+import questionnaire.models
 from .. import models
 
 
@@ -7,7 +8,8 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
         super().__init__(school, previous_questionnaire=previous_questionnaire)
         self.payment_questionnaire = payment_questionnaire
         if self.payment_questionnaire.for_school_id != self.school.id:
-            raise ValueError('topics.entrance.steps.TopicQuestionnaireEntranceStep: Questionnaire must be for this school')
+            raise ValueError(
+                'finance.entrance.steps.PaymentInfoEntranceStep: PaymentQuestionnaire must be for this school')
 
     def is_passed(self, user):
         return self.payment_questionnaire.is_filled_by(user) and super().is_passed(user)
@@ -30,6 +32,8 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
         user_discounts = models.Discount.objects.filter(for_school=self.school, for_user=user)
         actual_discounts = user_discounts.filter(amount__gt=0)
         considered_discounts = user_discounts.filter(amount=0)
+
+        already_filled = self.payment_questionnaire.is_filled_by(user)
 
         template = self._template_factory('''
             {% load stringcase %}
@@ -70,10 +74,14 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
                 </p>
             {% endif %}
             <p>
-                Заполните информацию об оплате до <b>20 июня</b>.
+                {% if already_filled %}
+                    Если вы собираетесь поменять способ оплаты или реквизиты, сделайте это до <b>20 июня</b>.
+                {% else %}
+                    Заполните информацию об оплате до <b>20 июня</b>.
+                {% endif %}
             </p>
             <div>
-                <a class="btn btn-alert" href="{{ questionnaire.get_absolute_url }}">Заполнить</a>
+                <a class="btn btn-{{ already_filled|yesno:'success,alert' }}" href="{{ questionnaire.get_absolute_url }}">Заполнить</a>
             </div>
             ''')
         body = template.render({
@@ -83,7 +91,130 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
             'payment_amount': payment_amount,
             'actual_discounts': actual_discounts,
             'considered_discounts': considered_discounts,
+            'already_filled': already_filled,
         })
 
-        return self.panel(self.payment_questionnaire.title, body, 'alert')
+        return self.panel(self.payment_questionnaire.title, body, 'success' if already_filled else 'alert')
+
+
+class DocumentsEntranceStep(steps.EntranceStep):
+    def __init__(self, school, payment_questionnaire):
+        super().__init__(school, previous_questionnaire=payment_questionnaire)
+        self.payment_questionnaire = payment_questionnaire
+        if self.payment_questionnaire.for_school_id != self.school.id:
+            raise ValueError(
+                'finance.entrance.steps.DocumentsEntranceStep: PaymentQuestionnaire must be for this school')
+
+    def _get_needed_document_types(self, user):
+        document_types = models.DocumentType.objects.filter(for_school=self.school)
+
+        needed_documents = []
+        for document_type in document_types:
+            if document_type.is_need_for_user(user):
+                needed_documents.append(document_type)
+        return needed_documents
+
+    # TODO: this should be implemented via required fields in questionnaire with show conditions
+    @staticmethod
+    def _get_required_payment_questionnaire_fields(document_type):
+        if document_type.short_name in ['contract_nccnse', 'contract_bp']:
+            return ['billing_person_name',
+                    'billing_person_sex',
+                    'billing_person_passport',
+                    'billing_person_passport_issuer',
+                    'billing_person_passport_unit_code',
+                    'billing_person_passport_issue_date',
+                    'billing_person_address',
+                    'billing_person_phone'
+                    ]
+
+    def _get_not_filled_required_payment_questionnaire_fields(self, user, document_type):
+        required_fields = self._get_required_payment_questionnaire_fields(document_type)
+        required_fields_full_names = {
+            q.short_name: q.text for q in
+            questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
+                questionnaire=self.payment_questionnaire,
+                short_name__in=required_fields
+            )
+        }
+
+        # TODO: set ForeignKey's related_name and replace with self.payment_questionnaire.answers
+        user_payment_questionnaire = questionnaire.models.QuestionnaireAnswer.objects.filter(
+            questionnaire=self.payment_questionnaire,
+            user=user
+        )
+        answered_questions = {a.question_short_name for a in user_payment_questionnaire if a.answer != ''}
+
+        not_filled_fields = []
+        for required_field in required_fields:
+            if required_field not in answered_questions:
+                not_filled_fields.append(required_field)
+
+        return list(filter(bool,
+                           [required_fields_full_names.get(field, None) for field in not_filled_fields]
+                           ))
+
+    def render(self, user):
+        if not self.is_available(user):
+            template = self._template_factory('''
+            <p>
+                После заполнения информации об оплате здесь можно будет скачать договор и акт.
+            </p>
+            ''')
+            body = template.render()
+            return self.panel('Документы', body, 'default')
+
+        document_types = self._get_needed_document_types(user)
+
+        if len(document_types) == 0:
+            template = self._template_factory('''
+                <p>
+                    Вы выбрали такой вариант оплаты, при котором договор и акт не нужны. Отлично! Это самый просто вариант.
+                </p>
+                ''')
+            body = template.render()
+            return self.panel('Документы', body, 'success')
+
+        body = ''
+        has_ready_document = False
+        for document_type in document_types:
+            not_filled_fields = self._get_not_filled_required_payment_questionnaire_fields(user, document_type)
+            if not not_filled_fields:
+                has_ready_document = True
+                template = self._template_factory('''
+                    {% load stringcase %}
+
+                    <p>
+                        Вы можете скачать подготовленный для вас
+                        <a href="{% url 'school:finance:download' school.short_name document_type.short_name%}">{{ document_type.name|lowerfirst }}</a>.
+                        {% if document_type.additional_information %}
+                            {{ document_type.additional_information }}
+                        {% endif %}
+                    </p>
+                    ''')
+                body += template.render({
+                    'school': self.school,
+                    'document_type': document_type,
+                })
+            else:
+                template = self._template_factory('''
+                    {% load stringcase %}
+
+                    <p>
+                        Чтобы скачать {{ document_type.name|lowerfirst }} укажите в
+                        <a href="{% url 'school:questionnaire' school.short_name payment_questionnaire.short_name %}">информации об оплате</a>
+                        {% for field in not_filled_fields %}<!--
+                         -->{% if not forloop.last and not forloop.first %},{% elif not forloop.first %} и {% endif %}
+                            {{ field|lowerfirst }}{% if forloop.last %}.{% endif %}<!--
+                     -->{% endfor %}
+                    </p>
+                    ''')
+                body += template.render({
+                    'school': self.school,
+                    'payment_questionnaire': self.payment_questionnaire,
+                    'document_type': document_type,
+                    'not_filled_fields': not_filled_fields
+                })
+
+        return self.panel('Документы', body, 'alert' if has_ready_document else 'danger')
 

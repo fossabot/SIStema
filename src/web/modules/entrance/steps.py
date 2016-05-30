@@ -1,4 +1,5 @@
 from django.template import engines, Context
+from django.utils.safestring import mark_safe
 
 
 class EntranceStep:
@@ -42,7 +43,7 @@ class EntranceStep:
         ''')
         return template.render(Context({
             'panel_title': panel_title,
-            'panel_body': panel_body,
+            'panel_body': mark_safe(panel_body),
             'panel_color': panel_color
         }))
 

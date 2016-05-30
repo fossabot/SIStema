@@ -74,6 +74,11 @@ class DocumentType(models.Model):
 
     name = models.TextField()
 
+    additional_information = models.TextField(
+        help_text='Показывается школьнику перед скачиванием.'
+                  'Например, «Распечатайте его в двух экземплярах, подпишите со своей стороны и привезите в ЛКШ»',
+        blank=True, default='')
+
     template = models.ForeignKey(generator.models.Document, related_name='+')
 
     class Meta:

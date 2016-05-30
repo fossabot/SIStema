@@ -93,7 +93,7 @@ class QuestionnaireVariantDocumentGenerationCondition(AbstractDocumentGeneration
         qs = questionnaire.models.QuestionnaireAnswer.objects.filter(
             questionnaire_id=self.question.questionnaire_id,
             question_short_name=self.question.short_name,
-            for_user=user,
+            user=user,
             answer=self.variant.id
         )
         return qs.exists()

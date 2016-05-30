@@ -1,3 +1,23 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.http.response import HttpResponse
+from django.shortcuts import render, get_object_or_404
 
-# Create your views here.
+from school.decorators import school_view
+
+from . import models
+from . import documents
+
+
+@login_required
+@school_view
+def download(request, document_type):
+    document_type = get_object_or_404(models.DocumentType, for_school=request.school, short_name=document_type)
+    document_generator = documents.DocumentGenerator(request.school)
+    document = document_generator.generate(document_type, request.user)
+
+    response = HttpResponse(content_type='application/pdf')
+    filename = '%s. %s' % (request.school.full_name, document_type.name)
+    response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % (filename, )
+    response.write(document)
+
+    return response

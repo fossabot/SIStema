@@ -1,11 +1,10 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import widgets
+from django.forms.forms import BoundField
 from django.template.defaultfilters import filesizeformat
 from django.utils.encoding import force_text
 from django.utils.html import format_html
-from django.forms.forms import BoundField
-
 
 # TODO: move to the frontend application
 from django.utils.safestring import mark_safe
@@ -70,12 +69,12 @@ class SistemaChoiceInput(widgets.ChoiceInput):
             label_classes.append('option-alert')
 
         return format_html(
-                '<label{} class="option {} mt5">{} <span class="{}"></span> {}</label>',
-                label_for,
-                ' '.join(label_classes),
-                self.tag(attrs),
-                self.input_type,
-                self.choice_label
+            '<label{} class="option {} mt5">{} <span class="{}"></span> {}</label>',
+            label_for,
+            ' '.join(label_classes),
+            self.tag(attrs),
+            self.input_type,
+            self.choice_label
         )
 
 
@@ -212,3 +211,5 @@ def add_classes_to_label(f, classes=''):
 BoundField.label_tag = add_classes_to_label(BoundField.label_tag, 'control-label')
 widgets.Input.render = add_classes_to_label(widgets.Input.render, 'form-control')
 widgets.Select.render = add_classes_to_label(widgets.Select.render, 'form-control')
+
+

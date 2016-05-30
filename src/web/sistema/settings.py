@@ -35,11 +35,7 @@ ALLOWED_HOSTS = []
 ADMINS = [('Андрей Гейн', 'andgein@yandex.ru')]
 
 SERVER_EMAIL = 'admin@sistema.lksh.ru'
-EMAIL_SUBJECT_PREFIX = '[SIStema] '
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-
+EMAIL_SUBJECT_PREFIX = '[Sistema] '
 
 # Application definition
 
@@ -68,6 +64,7 @@ INSTALLED_APPS = (
     'questionnaire',
     'home',
     'frontend',
+    'generator',
 
     'modules.ejudge',
     'modules.entrance',
@@ -149,7 +146,7 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 
@@ -189,6 +186,10 @@ else:
 
 SISTEMA_EJUDGE_BACKEND_ADDRESS = 'https://ejudge.andgein.ru'
 SISTEMA_ENTRANCE_CHECKING_TIMEOUT = datetime.timedelta(minutes=30)
+
+SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-fonts')
+
+SISTEMA_FINANCE_DOCUMENTS = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'finance-documents')
 
 HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_LOGIN_REDIRECT_URL = '/'

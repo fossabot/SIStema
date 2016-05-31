@@ -127,6 +127,7 @@ class DocumentsEntranceStep(steps.EntranceStep):
                     'billing_person_address',
                     'billing_person_phone'
                     ]
+        return []
 
     def _get_not_filled_required_payment_questionnaire_fields(self, user, document_type):
         required_fields = self._get_required_payment_questionnaire_fields(document_type)

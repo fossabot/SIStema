@@ -188,6 +188,8 @@ SISTEMA_EJUDGE_BACKEND_ADDRESS = 'https://ejudge.andgein.ru'
 SISTEMA_ENTRANCE_CHECKING_TIMEOUT = datetime.timedelta(minutes=30)
 
 SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-fonts')
+# I.e. for images used in generate documents
+SISTEMA_GENERATOR_ASSETS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-assets')
 
 SISTEMA_FINANCE_DOCUMENTS = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'finance-documents')
 

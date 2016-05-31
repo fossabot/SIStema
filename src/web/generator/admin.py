@@ -91,6 +91,7 @@ class AbstractDocumentBlockAdmin(admin.ModelAdmin):
 admin.site.register(models.Paragraph, AbstractDocumentBlockAdmin)
 admin.site.register(models.PageBreak, AbstractDocumentBlockAdmin)
 admin.site.register(models.Spacer, AbstractDocumentBlockAdmin)
+admin.site.register(models.Image, AbstractDocumentBlockAdmin)
 admin.site.register(models.Table, AbstractDocumentBlockAdmin)
 
 

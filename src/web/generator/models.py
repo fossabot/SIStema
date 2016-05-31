@@ -1,5 +1,6 @@
 import djchoices
 import polymorphic.models
+import relativefilepathfield.fields
 from django.db import models
 import django.db.migrations.writer
 from relativefilepathfield.fields import RelativeFilePathField
@@ -251,6 +252,26 @@ class Spacer(AbstractDocumentBlock):
 class PageBreak(AbstractDocumentBlock):
     def get_reportlab_block(self, visitor=None):
         return reportlab.platypus.PageBreak()
+
+
+class Image(AbstractDocumentBlock):
+    filename = relativefilepathfield.fields.RelativeFilePathField(
+        path=django.db.migrations.writer.SettingsReference(
+            settings.SISTEMA_GENERATOR_ASSETS_DIR,
+            'SISTEMA_GENERATOR_ASSETS_DIR'
+        ),
+        recursive=True
+    )
+
+    width = models.PositiveIntegerField(null=True, default=None, blank=True,
+                                        help_text='В пунктах. Оставьте пустым, чтобы взять размеры самой картинки')
+
+    height = models.PositiveIntegerField(null=True, default=None, blank=True,
+                                         help_text='В пунктах. Оставьте пустым, чтобы взять размеры самой картинки')
+
+    def get_reportlab_block(self, visitor=None):
+        self._process_by_visitor(visitor)
+        return reportlab.platypus.Image(self.get_filename_abspath(), width=self.width, height=self.height)
 
 
 class Table(AbstractDocumentBlock):

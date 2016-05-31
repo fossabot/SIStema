@@ -51,7 +51,7 @@ class EnrolledScansEntranceStep(steps.EntranceStep):
         template = self._template_factory('''
         <p>
             Загрузите отсканированные документы: паспорт и медицинский полис.
-            <b>Если поездку в ЛКШ оплачивает организация, загрузите скан квитанции об оплате.</b>
+            <b>Если вы оплачиваете поездку в ЛКШ безналичным платежом, загрузите скан квитанции об оплате.</b>
         </p>
         <div>
             <a class="btn btn-alert" href="{% url 'school:entrance:enrolled_scans:scans' school.short_name %}">Загрузить</a>

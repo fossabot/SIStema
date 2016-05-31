@@ -175,7 +175,7 @@ class DocumentsEntranceStep(steps.EntranceStep):
                 </p>
                 <p>
                     Если вы указали, что оргвзнос за вас оплачивает организация, то напишите нам на
-                    <a href="mailto:oplata@lksh.ru">oplata@lksh.ru</a> — мы вышлем вам все необходимые документы.
+                    <a href="mailto:oplata@lksh.ru">oplata@lksh.ru</a> — мы вышлем все необходимые документы.
                 </p>
                 ''')
             body = template.render()

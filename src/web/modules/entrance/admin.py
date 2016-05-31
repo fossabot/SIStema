@@ -166,6 +166,11 @@ class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
                 user.models.User.objects.filter(
                     entrance_statuses__status=models.EntranceStatus.Status.ENROLLED
                 ).order_by('last_name', 'first_name'))
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = (
+                user.models.User.objects.filter(
+                    is_staff=1
+                ).order_by('last_name', 'first_name'))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 admin.site.register(models.RejectionAbsenceReason, AbstractAbsenceReasonAdmin)

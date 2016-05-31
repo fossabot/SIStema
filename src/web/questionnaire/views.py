@@ -20,6 +20,8 @@ def save_questionnaire_answers(user, questionnaire, form):
             answer_list = answer
         elif isinstance(answer, (datetime.date, datetime.datetime)):
             answer_list = [answer.strftime(settings.DATE_FORMAT)]
+        elif answer is None: # For not-filled dates i.e.
+            answer_list = []
         else:
             answer_list = [answer]
 

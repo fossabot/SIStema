@@ -15,3 +15,11 @@ class EnrolledScanAdmin(admin.ModelAdmin):
     list_filter = ('requirement__for_school', 'requirement')
 
 admin.site.register(models.EnrolledScan, EnrolledScanAdmin)
+
+
+class QuestionnaireVariantEnrolledScanRequirementConditionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'requirement', 'variant')
+    list_filter = ('requirement__for_school', 'requirement')
+
+admin.site.register(models.QuestionnaireVariantEnrolledScanRequirementCondition,
+                    QuestionnaireVariantEnrolledScanRequirementConditionAdmin)

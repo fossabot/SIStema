@@ -14,7 +14,10 @@ from school.decorators import school_view
 @login_required
 @school_view
 def scans(request):
-    requirements = models.EnrolledScanRequirement.objects.filter(for_school=request.school)
+    requirements = list(models.EnrolledScanRequirement.objects.filter(for_school=request.school))
+    # Filter only needed for this user requirements
+    requirements = list(filter(lambda r: r.is_needed_for_user(request.user), requirements))
+
     user_scans = group_by(
         models.EnrolledScan.objects.filter(
             requirement__for_school=request.school,
@@ -27,7 +30,7 @@ def scans(request):
         if requirement.id in user_scans:
             requirement.user_scan = user_scans[requirement.id][0]
         else:
-            requirements.user_scan = None
+            requirement.user_scan = None
         requirement.form = forms.EnrolledScanForm()
 
     return render(request, 'enrolled_scans/scans.html', {

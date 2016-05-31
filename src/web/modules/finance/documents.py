@@ -38,6 +38,9 @@ class DocumentGenerator:
         question_short_name = user_answer.question_short_name
         question = self.payment_questions[question_short_name]
 
+        if user_answer.answer.strip() == '':
+            return ''
+
         if isinstance(question, questionnaire.models.ChoiceQuestionnaireQuestion):
             return self.questionnaire_choice_variants[int(user_answer.answer)].text
 

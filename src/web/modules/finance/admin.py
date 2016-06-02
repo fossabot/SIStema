@@ -2,6 +2,8 @@ from django.contrib import admin
 
 from . import models
 import questionnaire.admin
+import user.models
+import modules.entrance.models
 
 
 class PaymentAmountAdmin(admin.ModelAdmin):
@@ -18,6 +20,14 @@ class DiscountAdmin(admin.ModelAdmin):
     list_filter = ('for_school', 'type')
     search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username',
                      'private_comment', 'public_comment')
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == 'for_user':
+            kwargs['queryset'] = (
+                user.models.User.objects.filter(
+                    entrance_statuses__status=modules.entrance.models.EntranceStatus.Status.ENROLLED
+                ).order_by('last_name', 'first_name'))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 admin.site.register(models.Discount, DiscountAdmin)
 

@@ -192,7 +192,7 @@ class DocumentsEntranceStep(steps.EntranceStep):
 
                     <p>
                         Вы можете скачать подготовленный для вас
-                        <a href="{% url 'school:finance:download' school.short_name document_type.short_name%}">{{ document_type.name|lowerfirst }}</a>.
+                        <a href="{% url 'school:finance:download' school.short_name document_type.short_name%}"><b>{{ document_type.name|lowerfirst }}</b></a>.
                         {% if document_type.additional_information %}
                             {{ document_type.additional_information }}
                         {% endif %}
@@ -207,7 +207,7 @@ class DocumentsEntranceStep(steps.EntranceStep):
                     {% load stringcase %}
 
                     <p>
-                        Чтобы скачать {{ document_type.name|lowerfirst }} укажите в
+                        Чтобы скачать <b>{{ document_type.name|lowerfirst }}</b> укажите в
                         <a href="{% url 'school:questionnaire' school.short_name payment_questionnaire.short_name %}">информации об оплате</a>
                         {% for field in not_filled_fields %}<!--
                          -->{% if not forloop.last and not forloop.first %},{% elif not forloop.first %} и {% endif %}

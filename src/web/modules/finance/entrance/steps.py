@@ -117,7 +117,7 @@ class DocumentsEntranceStep(steps.EntranceStep):
     # TODO: this should be implemented via required fields in questionnaire with show conditions
     @staticmethod
     def _get_required_payment_questionnaire_fields(document_type):
-        if document_type.short_name in ['contract_nccnse', 'contract_bp']:
+        if document_type.short_name in ['contract_nccnse', 'contract_bp', 'instructions_nccnse']:
             return ['billing_person_name',
                     'billing_person_sex',
                     'billing_person_passport',

@@ -2,10 +2,12 @@
 
 <div class="{{ question.errors|yesno:'state-error,' }}">
     <label for="{{ question.id_for_label }}" class="fs18 block mb5">
-        {{ question.label }}
-        {% if question.field.required %}
-            *
-        {% endif %}
+        <span class="{{ question.field.disabled|yesno:'text-muted,' }}">
+            {{ question.label }}
+            {% if question.field.required %}
+                *
+            {% endif %}
+        </span>
     </label>
     {{ question }}
     {% if question.help_text %}

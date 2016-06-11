@@ -56,8 +56,16 @@ class AbstractQuestionnaireQuestion(AbstractQuestionnaireBlock):
                                  blank=True,
                                  help_text='Подсказка, помогающая ответить на вопрос')
 
+    is_disabled = models.BooleanField(default=False,
+                                      help_text='Выключена ли возможность ответить на вопрос. Не может быть отмечено одновременно с is_required')
+
     def get_form_field(self, attrs=None):
-        raise NotImplementedError('Child must implement own method get_form_field()')
+        raise NotImplementedError('Child should implement its own method get_form_field()')
+
+    def save(self, *args, **kwargs):
+        if self.is_disabled and self.is_required:
+            raise ValueError('questionnaire.AbstractQuestionnaireBlock: is_disabled can not be set with is_required')
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.text
@@ -102,6 +110,7 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
         return django.forms.CharField(
             required=self.is_required,
+            disabled=self.is_disabled,
             help_text=self.help_text,
             label=self.text,
             widget=widget,
@@ -149,6 +158,7 @@ class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         return field_class(
             question=self,
             required=self.is_required,
+            disabled=self.is_disabled,
             coerce=int,
             choices=choices,
             widget=widget_class(attrs=attrs),
@@ -166,6 +176,7 @@ class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
         return django.forms.TypedChoiceField(
             required=self.is_required,
+            disabled=self.is_disabled,
             coerce=lambda x: x == 'True',
             choices=((False, 'Нет'), (True, 'Да')),
             widget=sistema.forms.SistemaRadioSelect(attrs=attrs),
@@ -186,6 +197,7 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
     def get_form_field(self, attrs=None):
         return django.forms.DateField(
             required=self.is_required,
+            disabled=self.is_disabled,
             label=self.text,
             help_text=self.help_text,
             widget=django.forms.DateInput(attrs={

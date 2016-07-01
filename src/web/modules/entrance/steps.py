@@ -49,7 +49,7 @@ class EntranceStep:
 
 
 class QuestionnaireEntranceStep(EntranceStep):
-    def __init__(self, school, questionnaire, previous_questionnaire=None, message=None, button_text=None):
+    def __init__(self, school, questionnaire, previous_questionnaire=None, message=None, closed_message=None, button_text=None):
         super().__init__(school, previous_questionnaire=previous_questionnaire)
 
         self.questionnaire = questionnaire
@@ -59,6 +59,11 @@ class QuestionnaireEntranceStep(EntranceStep):
         self.message = message
         if self.message is None:
             self.message = '{{ user.first_name }}, чтобы подать заявку в {{ school.name }} нужно заполнить информацию о себе'
+
+        self.closed_message = closed_message
+        if self.closed_message is None:
+            self.closed_message = 'Вступительная работа завершена. Вы не можете вносить изменения в анкету, но можете её посмотреть.'
+
         self.button_text = button_text
         if self.button_text is None:
             self.button_text = 'Заполнить'
@@ -73,7 +78,7 @@ class QuestionnaireEntranceStep(EntranceStep):
         if self.is_available(user) and self.questionnaire.is_closed():
             template = self._template_factory('''
             <p>
-                Вступительная работа завершена. Вы не можете вносить изменения в анкету, но можете её посмотреть.
+                {{ closed_message }}
             </p>
             <div>
                 <a class="btn btn-default" href="{{ questionnaire.get_absolute_url }}">Посмотреть</a>
@@ -81,6 +86,7 @@ class QuestionnaireEntranceStep(EntranceStep):
             ''')
             body = template.render(Context({
                 'questionnaire': self.questionnaire,
+                'closed_message': self.closed_message,
             }))
             return self.panel(self.questionnaire.title, body, 'default')
 

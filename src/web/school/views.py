@@ -111,6 +111,7 @@ def user(request):
                     'questionnaire': arrival_questionnaire,
                     'previous_questionnaire': enrolled_questionnaire,
                     'message': 'Укажите информацию о приезде как только она станет известна',
+                    'closed_message': 'Вносить изменения в анкету о приезду больше нельзя.'
                     'button_text': 'Заполнить',
                 }
             ),

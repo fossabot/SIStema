@@ -8,7 +8,7 @@ import ipware.ip
 import operator
 
 import questionnaire.models
-import school.decorators
+import schools.decorators
 import sistema.uploads
 import sistema.helpers
 import modules.topics.entrance.levels
@@ -38,20 +38,20 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
         entrance_statuses = (
             models.EntranceStatus.objects
                   .filter(
-                      for_school=school,
-                      for_user_id__in=users_ids,
+                      school=school,
+                      user_id__in=users_ids,
                       is_status_visible=True)
                   .select_related('session', 'parallel')
-                  .order_by('for_user__last_name', 'for_user__first_name'))
+                  .order_by('user__last_name', 'user__first_name'))
         self.status_by_user = sistema.helpers.group_by(entrance_statuses,
-                                                       operator.attrgetter('for_user_id'))
+                                                       operator.attrgetter('user_id'))
 
         absence_reasons = (
             models.AbstractAbsenceReason.objects
-                  .filter(for_school=school, for_user_id__in=users_ids))
+                  .filter(school=school, user_id__in=users_ids))
         self.absence_reason_by_user_id = sistema.helpers.group_by(
             absence_reasons,
-            operator.attrgetter('for_user_id')
+            operator.attrgetter('user_id')
         )
 
         enrolled_questionnaire = (questionnaire.models.Questionnaire.objects
@@ -77,11 +77,11 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
     @classmethod
     def create(cls, school):
         entranced_users = models.EntranceStatus.objects.filter(
-            for_school=school,
+            school=school,
             status=models.EntranceStatus.Status.ENROLLED,
             is_status_visible=True,
         ).order_by('parallel', 'session')
-        entranced_users_ids = entranced_users.values_list('for_user_id', flat=True)
+        entranced_users_ids = entranced_users.values_list('user_id', flat=True)
 
         table = cls(school, entranced_users_ids)
         table.after_filter_applying()
@@ -107,9 +107,9 @@ class EntrancedUsersTable(staff_views.EnrollingUsersTable):
 
 
 @login_required
-@school.decorators.school_view
+@schools.decorators.school_view
 def exam(request):
-    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    entrance_exam = get_object_or_404(models.EntranceExam, school=request.school)
     is_closed = entrance_exam.is_closed()
 
     base_level = upgrades.get_base_entrance_level(request.school, request.user)
@@ -155,14 +155,14 @@ def exam(request):
 
 
 @login_required
-@school.decorators.school_view
+@schools.decorators.school_view
 @require_POST
 def submit(request, task_id):
-    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    entrance_exam = get_object_or_404(models.EntranceExam, school=request.school)
     is_closed = entrance_exam.is_closed()
 
     task = get_object_or_404(models.EntranceExamTask, pk=task_id)
-    if task.exam.for_school != request.school:
+    if task.exam.school != request.school:
         return HttpResponseNotFound()
 
     child_task = task.get_child_object()
@@ -228,7 +228,7 @@ def submit(request, task_id):
 
 
 @login_required
-@school.decorators.school_view
+@schools.decorators.school_view
 def solution(request, solution_id):
     solution = get_object_or_404(models.EntranceExamTaskSolution, id=solution_id)
 
@@ -243,10 +243,10 @@ def solution(request, solution_id):
 
 @require_POST
 @login_required
-@school.decorators.school_view
+@schools.decorators.school_view
 @transaction.atomic
 def upgrade(request):
-    entrance_exam = get_object_or_404(models.EntranceExam, for_school=request.school)
+    entrance_exam = get_object_or_404(models.EntranceExam, school=request.school)
     is_closed = entrance_exam.is_closed()
 
     # Not allow to upgrade if exam has been finished already
@@ -266,7 +266,7 @@ def upgrade(request):
     return redirect('school:entrance:exam', school_name=request.school.short_name)
 
 
-@school.decorators.school_view
+@schools.decorators.school_view
 def results(request):
     table = EntrancedUsersTable.create(request.school)
 

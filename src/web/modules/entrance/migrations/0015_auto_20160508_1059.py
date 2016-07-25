@@ -9,7 +9,7 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0004_auto_20160508_1059'),
+        ('schools', '0004_auto_20160508_1059'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('entrance', '0014_auto_20160507_1540'),
     ]
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('comment', models.TextField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('commented_by', models.ForeignKey(related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('for_school', models.ForeignKey(related_name='+', to='school.School')),
+                ('for_school', models.ForeignKey(related_name='+', to='schools.School')),
                 ('for_user', models.ForeignKey(related_name='checking_comments', to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -32,9 +32,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', auto_created=True, primary_key=True, serialize=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('checked_by', models.ForeignKey(related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('for_school', models.ForeignKey(related_name='+', to='school.School')),
+                ('for_school', models.ForeignKey(related_name='+', to='schools.School')),
                 ('for_user', models.ForeignKey(related_name='entrance_recommendations', to=settings.AUTH_USER_MODEL)),
-                ('parallel', models.ForeignKey(related_name='entrance_recommendations', to='school.Parallel')),
+                ('parallel', models.ForeignKey(related_name='entrance_recommendations', to='schools.Parallel')),
             ],
         ),
         migrations.CreateModel(
@@ -47,10 +47,10 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('created_by', models.ForeignKey(null=True, blank=True, to=settings.AUTH_USER_MODEL, default=None)),
-                ('for_school', models.ForeignKey(related_name='entrance_statuses', to='school.School')),
+                ('for_school', models.ForeignKey(related_name='entrance_statuses', to='schools.School')),
                 ('for_user', models.ForeignKey(related_name='entrance_statuses', to=settings.AUTH_USER_MODEL)),
-                ('parallel', models.ForeignKey(null=True, blank=True, to='school.Parallel', default=None)),
-                ('session', models.ForeignKey(null=True, blank=True, to='school.Session', default=None)),
+                ('parallel', models.ForeignKey(null=True, blank=True, to='schools.Parallel', default=None)),
+                ('session', models.ForeignKey(null=True, blank=True, to='schools.Session', default=None)),
             ],
         ),
         migrations.AlterUniqueTogether(

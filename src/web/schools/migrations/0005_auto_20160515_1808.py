@@ -9,14 +9,14 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0004_auto_20160508_1059'),
+        ('schools', '0004_auto_20160508_1059'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='parallel',
             name='school',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parallels', to='school.School'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parallels', to='schools.School'),
         ),
         migrations.AlterField(
             model_name='parallel',

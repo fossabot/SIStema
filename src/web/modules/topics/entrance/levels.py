@@ -68,7 +68,7 @@ class TopicsEntranceLevelLimiter(levels.EntranceLevelLimiter):
                     max_marks_for_requirements[requirement.id] += scale_in_topic.scale.max_mark
 
         # Если всё плохо, самый просто уровень считаем выполненным — иначе нечего будет решать
-        maximum_satisfied_level = entrance_models.EntranceLevel.objects.filter(for_school=self.school)\
+        maximum_satisfied_level = entrance_models.EntranceLevel.objects.filter(school=self.school)\
             .order_by('order').first()
         for level, requirements_for_level in requirements_by_level.items():
             all_satisfied = True

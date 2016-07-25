@@ -43,7 +43,7 @@ def user(request):
         (
             'modules.entrance.steps.QuestionnaireEntranceStep', {
                 'school': request.school,
-                'questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
+                'questionnaire': Questionnaire.objects.filter(school=request.school).first(),
                 'previous_questionnaire': Questionnaire.objects.filter(short_name='about').first(),
                 'message': 'Заполните анкету поступающего для {{ school.name }}',
                 'button_text': 'Поехали',
@@ -53,7 +53,7 @@ def user(request):
             'modules.topics.entrance.steps.TopicQuestionnaireEntranceStep', {
                 'school': request.school,
                 'questionnaire': request.school.topicquestionnaire,
-                'previous_questionnaire': Questionnaire.objects.filter(for_school=request.school).first(),
+                'previous_questionnaire': Questionnaire.objects.filter(school=request.school).first(),
             }
         ),
         (
@@ -68,8 +68,8 @@ def user(request):
 
     # TODO: usage of EntranceStatus is bad because entrance is a module, not a part of the core
     import modules.entrance.models as entrance_models
-    qs = entrance_models.EntranceStatus.objects.filter(for_school=request.school,
-                                                       for_user=request.user,
+    qs = entrance_models.EntranceStatus.objects.filter(school=request.school,
+                                                       user=request.user,
                                                        is_status_visible=True)
     entrance_status = None
     if qs.exists():
@@ -89,13 +89,13 @@ def user(request):
     if entrance_status is not None and entrance_status.is_enrolled:
         user_session = entrance_status.session
 
-        enrolled_questionnaire = Questionnaire.objects.filter(for_school=request.school, short_name='enrolled').first()
+        enrolled_questionnaire = Questionnaire.objects.filter(school=request.school, short_name='enrolled').first()
         arrival_questionnaire = Questionnaire.objects.filter(
-            for_school=request.school,
+            school=request.school,
             short_name__startswith='arrival',
             for_session=user_session
         ).first()
-        payment_questionnaire = Questionnaire.objects.filter(for_school=request.school, short_name='payment').first()
+        payment_questionnaire = Questionnaire.objects.filter(school=request.school, short_name='payment').first()
         enrolled_steps = [
             (
                 'modules.entrance.steps.QuestionnaireEntranceStep', {

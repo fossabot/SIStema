@@ -10,8 +10,8 @@ class EntranceStep:
 
         self.previous_questionnaire = previous_questionnaire
         if self.previous_questionnaire is not None \
-                and self.previous_questionnaire.for_school is not None \
-                and self.previous_questionnaire.for_school_id != self.school.id:
+                and self.previous_questionnaire.school is not None \
+                and self.previous_questionnaire.school_id != self.school.id:
             raise ValueError('entrance.steps.EntranceStep: Previous questionnaire must be for this school')
 
     def is_passed(self, user):
@@ -53,7 +53,7 @@ class QuestionnaireEntranceStep(EntranceStep):
         super().__init__(school, previous_questionnaire=previous_questionnaire)
 
         self.questionnaire = questionnaire
-        if self.questionnaire.for_school is not None and self.questionnaire.for_school_id != self.school.id:
+        if self.questionnaire.school is not None and self.questionnaire.school_id != self.school.id:
             raise ValueError('entrance.steps.QuestionnaireEntranceStep: Questionnaire must be for this school')
 
         self.message = message

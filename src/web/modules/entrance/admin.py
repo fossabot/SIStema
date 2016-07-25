@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from . import models
 
-import user.models
+import users.models
 
 
 class EntranceExamTaskAdmin(admin.ModelAdmin):
@@ -35,7 +35,7 @@ class EntranceLevelAdmin(admin.ModelAdmin):
         'short_name',
         'name',
         'order',
-        'for_school',
+        'school',
     )
 
 admin.site.register(models.EntranceLevel, EntranceLevelAdmin)
@@ -88,7 +88,7 @@ class EntranceLevelUpgradeAdmin(admin.ModelAdmin):
     )
 
     def get_school(self, obj):
-        return obj.upgraded_to.for_school
+        return obj.upgraded_to.school
 
 admin.site.register(models.EntranceLevelUpgrade, EntranceLevelUpgradeAdmin)
 
@@ -102,8 +102,8 @@ admin.site.register(models.SolveTaskEntranceLevelUpgradeRequirement,
 
 
 class CheckingGroupAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'short_name', 'name')
-    list_filter = ('for_school', )
+    list_display = ('id', 'school', 'short_name', 'name')
+    list_filter = ('school', )
 
 admin.site.register(models.CheckingGroup, CheckingGroupAdmin)
 
@@ -130,45 +130,45 @@ admin.site.register(models.SolutionScore, SolutionScoreAdmin)
 
 
 class CheckingCommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'commented_by', 'comment', 'created_at')
-    list_filter = ('for_school', ('commented_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+    list_display = ('id', 'school', 'user', 'commented_by', 'comment', 'created_at')
+    list_filter = ('school', ('commented_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('user__first_name', 'user__last_name', 'user__username')
 
 admin.site.register(models.CheckingComment, CheckingCommentAdmin)
 
 
 class EntranceRecommendationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'checked_by', 'parallel', 'created_at', 'score')
-    list_filter = ('for_school', ('checked_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username')
+    list_display = ('id', 'school', 'user', 'checked_by', 'parallel', 'created_at', 'score')
+    list_filter = ('school', ('checked_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('user__first_name', 'user__last_name', 'user__username')
 
 admin.site.register(models.EntranceRecommendation, EntranceRecommendationAdmin)
 
 
 class EntranceStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
-    list_filter = ('for_school', 'status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username', 'public_comment')
+    list_display = ('id', 'school', 'user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
+    list_filter = ('school', 'status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('user__first_name', 'user__last_name', 'user__username', 'public_comment')
 
 admin.site.register(models.EntranceStatus, EntranceStatusAdmin)
 
 
 class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
-    list_display = ('id', 'for_school', 'for_user', 'created_by', 'public_comment',
+    list_display = ('id', 'school', 'user', 'created_by', 'public_comment',
                     'private_comment', 'created_at')
-    list_filter = ('for_school', ('created_by', admin.RelatedOnlyFieldListFilter))
-    search_fields = ('for_user__first_name', 'for_user__last_name', 'for_user__username',
+    list_filter = ('school', ('created_by', admin.RelatedOnlyFieldListFilter))
+    search_fields = ('user__first_name', 'user__last_name', 'user__username',
                      'public_comment')
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        if db_field.name == 'for_user':
+        if db_field.name == 'user':
             kwargs['queryset'] = (
-                user.models.User.objects.filter(
+                users.models.User.objects.filter(
                     entrance_statuses__status=models.EntranceStatus.Status.ENROLLED
                 ).order_by('last_name', 'first_name'))
         if db_field.name == 'created_by':
             kwargs['queryset'] = (
-                user.models.User.objects.filter(
+                users.models.User.objects.filter(
                     is_staff=1
                 ).order_by('last_name', 'first_name'))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

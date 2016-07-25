@@ -4,27 +4,27 @@ from django.db import models
 from django.forms import widgets
 import django.utils.timezone
 
-import school.models
-import user.models
+import schools.models
+import users.models
 
 from djchoices import choices
 
 
 class TopicQuestionnaire(models.Model):
-    for_school = models.OneToOneField(school.models.School)
+    school = models.OneToOneField(schools.models.School)
 
     title = models.CharField(max_length=100)
 
     close_time = models.DateTimeField(blank=True, null=True, default=None)
 
     def __str__(self):
-        return '%s. %s' % (self.for_school.name, self.title)
+        return '%s. %s' % (self.school.name, self.title)
 
     def is_closed(self):
         return self.close_time is not None and django.utils.timezone.now() >= self.close_time
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('school:topics:index', kwargs={'school_name': self.for_school.short_name})
+        return urlresolvers.reverse('school:topics:index', kwargs={'school_name': self.school.short_name})
 
     def get_status(self, user):
         qs = self.statuses.filter(user=user)
@@ -291,7 +291,7 @@ class UserQuestionnaireStatus(models.Model):
         CORRECTING = choices.ChoiceItem(3)
         FINISHED = choices.ChoiceItem(4)
 
-    user = models.ForeignKey(user.models.User, related_name='+')
+    user = models.ForeignKey(users.models.User, related_name='+')
 
     questionnaire = models.ForeignKey(TopicQuestionnaire, related_name='statuses')
 
@@ -306,7 +306,7 @@ class UserQuestionnaireStatus(models.Model):
 
 
 class BaseMark(models.Model):
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     scale_in_topic = models.ForeignKey(ScaleInTopic)
 
@@ -340,7 +340,7 @@ class BackupUserMark(BaseMark):
 
 
 class TopicIssue(models.Model):
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     topic = models.ForeignKey(Topic)
 

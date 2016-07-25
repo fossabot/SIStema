@@ -4,7 +4,7 @@ from django.db import transaction
 from django.http.response import HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 
-from school.decorators import school_view
+from schools.decorators import school_view
 
 from . import models
 from . import issuer
@@ -37,7 +37,7 @@ def topic_questionnaire_view(view):
         if request.school is None:
             return HttpResponseNotFound()
 
-        request.questionnaire = get_object_or_404(models.TopicQuestionnaire, for_school=request.school)
+        request.questionnaire = get_object_or_404(models.TopicQuestionnaire, school=request.school)
         return view(request, *args, **kwargs)
 
     func_wrapper.__name__ = view.__name__

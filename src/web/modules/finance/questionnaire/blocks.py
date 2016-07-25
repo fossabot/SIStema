@@ -7,7 +7,7 @@ class PaymentInfoQuestionnaireBlock(questionnaire.models.MarkdownQuestionnaireBl
     block_name = 'payment_info'
 
     def fill_for_user(self, user):
-        school = self.questionnaire.for_school
+        school = self.questionnaire.school
         if school is None:
             raise ValueError('modules.finance.questionnaire.PaymentInfoQuestionnaireBlock can be ' +
                              'inserted only in school-related questionnaire')

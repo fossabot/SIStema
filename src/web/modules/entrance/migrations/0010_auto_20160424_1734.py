@@ -9,7 +9,7 @@ import modules.entrance.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0003_school_full_name'),
+        ('schools', '0003_school_full_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('entrance', '0009_entranceexamtasksolution_ip'),
     ]
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
                 ('short_name', models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')),
                 ('name', models.CharField(max_length=100)),
-                ('for_school', models.ForeignKey(to='school.School')),
+                ('for_school', models.ForeignKey(to='schools.School')),
             ],
         ),
         migrations.CreateModel(

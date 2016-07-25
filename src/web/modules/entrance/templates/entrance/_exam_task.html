@@ -50,7 +50,7 @@
                 {% block user_solutions %}
                 {% endblock %}
             {% endif %}
-            <div class="entrance-exam__task entrance-exam__task__{{ task.form.task_type }} col-md-3 col-sm-6 col-xs-12 form-group has-inf" data-submit-url="{% url 'school:entrance:submit' task.exam.for_school.short_name task.id%}">
+            <div class="entrance-exam__task entrance-exam__task__{{ task.form.task_type }} col-md-3 col-sm-6 col-xs-12 form-group has-inf" data-submit-url="{% url 'school:entrance:submit' task.exam.school.short_name task.id%}">
                 {% block answer_form %}
                     Произошла какая-то ошибка, обновите страницу или напишите <a href="mailto:lksh@lksh.ru">нам</a>.
                 {% endblock %}

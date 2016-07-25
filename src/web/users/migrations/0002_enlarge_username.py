@@ -9,7 +9,7 @@ import djchoices.choices
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user', '0001_initial'),
+        ('users', '0001_initial'),
     ]
 
     operations = [

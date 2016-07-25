@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0002_auto_20160320_1808'),
+        ('schools', '0002_auto_20160320_1808'),
     ]
 
     operations = [
@@ -41,8 +41,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
                 ('short_name', models.CharField(help_text='Используется для урлов. Лучше обойтись латинскими букваи, цифрами и подчёркиванием', max_length=100)),
                 ('title', models.CharField(help_text='Название анкеты', max_length=100)),
-                ('for_school', models.ForeignKey(to='school.School', blank=True)),
-                ('for_session', models.ForeignKey(to='school.Session', blank=True)),
+                ('for_school', models.ForeignKey(to='schools.School', blank=True)),
+                ('for_session', models.ForeignKey(to='schools.Session', blank=True)),
             ],
         ),
         migrations.CreateModel(

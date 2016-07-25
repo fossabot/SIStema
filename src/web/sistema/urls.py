@@ -16,14 +16,14 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from school.views import questionnaire
+from schools.views import questionnaire
 
 urlpatterns = [
     url(r'', include('home.urls')),
-    url(r'^user/', include('user.urls')),
+    url(r'^user/', include('users.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^questionnaire/', include('questionnaire.urls')),
     url(r'^frontend/', include('frontend.urls', namespace='frontend')),
-    url(r'^(?P<school_name>[^/]+)/', include('school.urls', namespace='school')),
+    url(r'^(?P<school_name>[^/]+)/', include('schools.urls', namespace='school')),
     url(r'^hijack/', include('hijack.urls')),
 ]

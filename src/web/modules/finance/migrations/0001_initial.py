@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('school', '0006_auto_20160523_2147'),
+        ('schools', '0006_auto_20160523_2147'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('amount', models.PositiveIntegerField(help_text='Размер скидки')),
                 ('private_comment', models.TextField(blank=True, help_text='Не показывается школьнику')),
                 ('public_comment', models.TextField(blank=True, help_text='Показывается школьнику')),
-                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='school.School')),
+                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='schools.School')),
                 ('for_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='discounts', to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('amount', models.PositiveIntegerField(help_text='Сумма к оплате')),
-                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='school.School')),
+                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='schools.School')),
                 ('for_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL)),
             ],
         ),

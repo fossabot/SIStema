@@ -3,8 +3,8 @@
 import djchoices
 from django.db import models
 
-import school.models
-import user.models
+import schools.models
+import users.models
 
 
 class Discount(models.Model):
@@ -14,9 +14,9 @@ class Discount(models.Model):
         STATE = djchoices.ChoiceItem(3, 'Скидка от государства')
         OLYMPIADS = djchoices.ChoiceItem(4, 'Олимпиадная скидка')
 
-    for_school = models.ForeignKey(school.models.School, related_name='+')
+    school = models.ForeignKey(schools.models.School, related_name='+')
 
-    for_user = models.ForeignKey(user.models.User, related_name='discounts')
+    user = models.ForeignKey(users.models.User, related_name='discounts')
 
     type = models.PositiveIntegerField(choices=Type.choices, validators=[Type.validator])
 

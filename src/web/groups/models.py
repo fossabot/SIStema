@@ -1,12 +1,12 @@
 from django.db import models
-import school.models
-import user.models
+import schools.models
+import users.models
 
 
 class Group(models.Model):
-    for_school = models.ForeignKey(school.models.School, null=True, blank=True, related_name='groups')
+    school = models.ForeignKey(schools.models.School, null=True, blank=True, related_name='groups')
 
-    owner = models.ForeignKey(user.models.User, related_name='owned_groups')
+    owner = models.ForeignKey(users.models.User, related_name='owned_groups')
 
     short_name = models.CharField(max_length=100,
                                   help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
@@ -54,4 +54,4 @@ class GroupInGroupMembership(GroupMembership):
 
 
 class UserInGroupMembership(GroupMembership):
-    member = models.ForeignKey(user.models.User, related_name='member_in_groups')
+    member = models.ForeignKey(users.models.User, related_name='member_in_groups')

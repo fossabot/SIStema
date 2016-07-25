@@ -10,7 +10,7 @@ import djchoices.choices
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0003_school_full_name'),
+        ('schools', '0003_school_full_name'),
         ('entrance', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -149,7 +149,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=100)),
-                ('for_school', models.OneToOneField(to='school.School')),
+                ('for_school', models.OneToOneField(to='schools.School')),
             ],
         ),
         migrations.CreateModel(

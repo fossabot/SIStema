@@ -5,7 +5,7 @@ from .entrance import levels
 
 
 class TopicQuestionnaireAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'for_school')
+    list_display = ('id', 'title', 'school')
 
 admin.site.register(models.TopicQuestionnaire, TopicQuestionnaireAdmin)
 

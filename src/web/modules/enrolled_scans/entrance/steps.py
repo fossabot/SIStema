@@ -9,12 +9,12 @@ from .. import models
 
 class EnrolledScansEntranceStep(steps.EntranceStep):
     def is_passed(self, user):
-        requirements = list(models.EnrolledScanRequirement.objects.filter(for_school=self.school))
+        requirements = list(models.EnrolledScanRequirement.objects.filter(school=self.school))
         # TODO: refactor: extract follow line to models.EnrolledScanRequirement
         requirements = list(filter(lambda r: r.is_needed_for_user(user), requirements))
 
         scans = group_by(
-            models.EnrolledScan.objects.filter(requirement__for_school=self.school, for_user=user),
+            models.EnrolledScan.objects.filter(requirement__school=self.school, user=user),
             operator.attrgetter('requirement_id')
         )
 

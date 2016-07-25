@@ -17,7 +17,7 @@ def get_base_entrance_level(school, user):
 
 
 def get_maximum_issued_entrance_level(school, user, base_level):
-    user_upgrades = models.EntranceLevelUpgrade.objects.filter(user=user, upgraded_to__for_school=school)
+    user_upgrades = models.EntranceLevelUpgrade.objects.filter(user=user, upgraded_to__school=school)
     maximum_upgrade = user_upgrades.order_by('-upgraded_to__order').first()
     if maximum_upgrade is None:
         return base_level

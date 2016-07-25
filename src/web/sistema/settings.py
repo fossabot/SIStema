@@ -59,8 +59,8 @@ INSTALLED_APPS = (
 
     'sistema',
 
-    'school',
-    'user',
+    'schools',
+    'users',
     'questionnaire',
     'home',
     'frontend',
@@ -87,7 +87,7 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'sistema.urls'
 
-AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = 'users.User'
 
 TEMPLATES = [
     {
@@ -138,7 +138,7 @@ SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db-prod-copy.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '..', '..', 'db-prod-copy.sqlite3'),
     }
 }
 

@@ -14,11 +14,11 @@ import questionnaire.models
 import questionnaire.views
 import modules.topics.views as topics_views
 from modules.ejudge.models import SolutionCheckingResult, CheckingResult
-from school.decorators import school_view
-import school.models
+from schools.decorators import school_view
+import schools.models
 import sistema.staff
 import modules.topics.models
-import user.models
+import users.models
 from . import forms
 from .. import models
 from .. import upgrades
@@ -31,13 +31,13 @@ class EnrollingUsersTable(frontend.table.Table):
     title = 'Подавшие заявку'
 
     def __init__(self, school, users_ids):
-        super().__init__(user.models.User, user.models.User.objects.filter(id__in=users_ids))
+        super().__init__(users.models.User, users.models.User.objects.filter(id__in=users_ids))
         self.school = school
         self.identifiers = {'school_name': school.short_name}
 
         self.about_questionnaire = questionnaire.models.Questionnaire.objects.filter(short_name='about').first()
         self.enrollee_questionnaire = questionnaire.models.Questionnaire.objects.filter(
-                for_school=self.school,
+                school=self.school,
                 short_name='enrollee'
         ).first()
 
@@ -96,7 +96,7 @@ class EnrollingUsersTable(frontend.table.Table):
     @classmethod
     def restore(cls, identifiers):
         school_name = identifiers['school_name'][0]
-        school_qs = school.models.School.objects.filter(short_name=school_name)
+        school_qs = schools.models.School.objects.filter(short_name=school_name)
         if not school_qs.exists():
             raise NameError('Bad school name')
         _school = school_qs.first()
@@ -129,7 +129,7 @@ class EnrollingUsersTable(frontend.table.Table):
 
 def get_enrolling_users_ids(school):
     # TODO: get not first TopicQuestionnaire, but defined in settings
-    topic_questionnaire = modules.topics.models.TopicQuestionnaire.objects.filter(for_school=school).first()
+    topic_questionnaire = modules.topics.models.TopicQuestionnaire.objects.filter(school=school).first()
     return topic_questionnaire.get_filled_users_ids()
 
 
@@ -143,9 +143,9 @@ def enrolling(request):
 @school_view
 @sistema.staff.only_staff
 def user_questionnaire(request, user_id, questionnaire_name):
-    _user = get_object_or_404(user.models.User, id=user_id)
+    user = get_object_or_404(users.models.User, id=user_id)
     # TODO: use staff interface for showing questionnaire (here and in user_topics)
-    return questionnaire.views.questionnaire_for_user(request, _user, questionnaire_name)
+    return questionnaire.views.questionnaire_for_user(request, user, questionnaire_name)
 
 
 @school_view
@@ -153,22 +153,22 @@ def user_questionnaire(request, user_id, questionnaire_name):
 @topics_views.topic_questionnaire_view
 def user_topics(request, user_id):
     # TODO: check that status of topics questionnaire for this user is FINISHED
-    _user = get_object_or_404(user.models.User, id=user_id)
-    return topics_views.show_final_answers(request, _user)
+    user = get_object_or_404(users.models.User, id=user_id)
+    return topics_views.show_final_answers(request, user)
 
 
 @school_view
 @sistema.staff.only_staff
 @require_POST
 def change_group(request, user_id):
-    _user = get_object_or_404(user.models.User, id=user_id)
+    user = get_object_or_404(users.models.User, id=user_id)
     form = forms.PutIntoCheckingGroupForm(request.school, data=request.POST)
 
     if form.is_valid():
-        group = get_object_or_404(models.CheckingGroup, for_school=request.school, id=form.cleaned_data.get('group_id'))
-        models.UserInCheckingGroup.put_user_into_group(_user, group)
+        group = get_object_or_404(models.CheckingGroup, school=request.school, id=form.cleaned_data.get('group_id'))
+        models.UserInCheckingGroup.put_user_into_group(user, group)
 
-    return redirect('school:entrance:enrolling_user', school_name=request.school.short_name, user_id=_user.id)
+    return redirect('school:entrance:enrolling_user', school_name=request.school.short_name, user_id=user.id)
 
 
 def _remove_old_checking_locks():
@@ -179,7 +179,7 @@ def _remove_old_checking_locks():
 @sistema.staff.only_staff
 def check(request):
     _remove_old_checking_locks()
-    checking_groups = models.CheckingGroup.objects.filter(for_school=request.school) \
+    checking_groups = models.CheckingGroup.objects.filter(school=request.school) \
         .annotate(users_count=Count('userincheckinggroup'))
     return render(request, 'entrance/staff/check.html', {
         'checking_groups': checking_groups,
@@ -231,9 +231,9 @@ class UserSummary:
 
 
 def check_user(request, user_for_checking, checking_group=None):
-    entrance_exam = models.EntranceExam.objects.filter(for_school=request.school).first()
+    entrance_exam = models.EntranceExam.objects.filter(school=request.school).first()
     base_entrance_level = upgrades.get_base_entrance_level(request.school, user_for_checking)
-    level_upgrades = models.EntranceLevelUpgrade.objects.filter(upgraded_to__for_school=request.school,
+    level_upgrades = models.EntranceLevelUpgrade.objects.filter(upgraded_to__school=request.school,
                                                                 user=user_for_checking)
     tasks = upgrades.get_entrance_tasks(request.school, user_for_checking, base_entrance_level)
     tasks_solutions = group_by(
@@ -283,8 +283,8 @@ def check_user(request, user_for_checking, checking_group=None):
             comment = recommendation_form.cleaned_data['comment']
             if comment != '':
                 models.CheckingComment(
-                    for_school=request.school,
-                    for_user=user_for_checking,
+                    school=request.school,
+                    user=user_for_checking,
                     commented_by=request.user,
                     comment=comment,
                 ).save()
@@ -297,8 +297,8 @@ def check_user(request, user_for_checking, checking_group=None):
                     recommended_parallel_id = None
 
                 models.EntranceRecommendation(
-                    for_school=request.school,
-                    for_user=user_for_checking,
+                    school=request.school,
+                    user=user_for_checking,
                     checked_by=request.user,
                     parallel_id=recommended_parallel_id,
                     score=score,
@@ -309,7 +309,7 @@ def check_user(request, user_for_checking, checking_group=None):
         file_tasks_mark_form = forms.FileEntranceExamTasksMarkForm(file_tasks)
         recommendation_form = forms.EntranceRecommendationForm(request.school)
 
-        last_recommendation = user_for_checking.entrance_recommendations.filter(for_school=request.school).order_by('-created_at').first()
+        last_recommendation = user_for_checking.entrance_recommendations.filter(school=request.school).order_by('-created_at').first()
         if last_recommendation:
             recommendation_form.fields['score'].initial = last_recommendation.score
             recommendation_form.fields['recommended_parallel'].initial = last_recommendation.parallel_id
@@ -323,7 +323,7 @@ def check_user(request, user_for_checking, checking_group=None):
 
     put_into_checking_group_form = forms.PutIntoCheckingGroupForm(request.school)
 
-    checking_comments = user_for_checking.checking_comments.filter(for_school=request.school).order_by('created_at')
+    checking_comments = user_for_checking.checking_comments.filter(school=request.school).order_by('created_at')
 
     scores = None
     try:
@@ -357,7 +357,7 @@ def check_user(request, user_for_checking, checking_group=None):
 @school_view
 @sistema.staff.only_staff
 def check_group(request, group_name):
-    checking_group = get_object_or_404(models.CheckingGroup, for_school=request.school, short_name=group_name)
+    checking_group = get_object_or_404(models.CheckingGroup, school=request.school, short_name=group_name)
     _remove_old_checking_locks()
 
     with transaction.atomic():
@@ -384,7 +384,7 @@ def check_group(request, group_name):
 @school_view
 @sistema.staff.only_staff
 def enrolling_user(request, user_id):
-    user_for_checking = get_object_or_404(user.models.User, id=user_id)
+    user_for_checking = get_object_or_404(users.models.User, id=user_id)
     _remove_old_checking_locks()
     # TODO: check for locks by current user, add button «Unlock»
 
@@ -428,14 +428,14 @@ def initial_auto_reject(request):
 
     program_solutions = group_by(
             models.ProgramEntranceExamTaskSolution.objects.filter(
-                    task__exam__for_school=request.school,
+                    task__exam__school=request.school,
                     user_id__in=users_ids,
                     ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
             ),
             operator.attrgetter('user_id')
     )
     file_solutions = group_by(
-            models.FileEntranceExamTaskSolution.objects.filter(task__exam__for_school=request.school,
+            models.FileEntranceExamTaskSolution.objects.filter(task__exam__school=request.school,
                                                                user_id__in=users_ids),
             operator.attrgetter('user_id')
     )
@@ -448,8 +448,8 @@ def initial_auto_reject(request):
             reason = 'Не сдано ни одной теоретический задачи'
         if reason is not None:
             models.EntranceStatus.objects.update_or_create(
-                for_school=request.school,
-                for_user_id=user_id,
+                school=request.school,
+                user_id=user_id,
                 defaults={
                     'public_comment': reason,
                     'is_status_visible': True,
@@ -458,7 +458,7 @@ def initial_auto_reject(request):
 
     return JsonResponse({
         'rejected': [s.__dict__ for s in models.EntranceStatus.objects.filter(
-                for_school=request.school,
+                school=request.school,
                 status=models.EntranceStatus.Status.AUTO_REJECTED
         )]
     })

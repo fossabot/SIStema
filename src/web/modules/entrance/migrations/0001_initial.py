@@ -8,7 +8,7 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('school', '0003_school_full_name'),
+        ('schools', '0003_school_full_name'),
         ('ejudge', '0007_auto_20160329_2040'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='EntranceExam',
             fields=[
                 ('id', models.AutoField(primary_key=True, auto_created=True, serialize=False, verbose_name='ID')),
-                ('for_school', models.OneToOneField(to='school.School')),
+                ('for_school', models.OneToOneField(to='schools.School')),
             ],
         ),
         migrations.CreateModel(
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                 ('short_name', models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')),
                 ('name', models.CharField(max_length=100)),
                 ('order', models.IntegerField(default=0)),
-                ('for_school', models.ForeignKey(to='school.School')),
+                ('for_school', models.ForeignKey(to='schools.School')),
             ],
             options={
                 'ordering': ['for_school_id', 'order'],
@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
                 ('class_name', models.CharField(max_length=100, help_text='Путь до класса, описывающий шаг')),
                 ('params', models.TextField(help_text='Параметры для шага')),
                 ('order', models.IntegerField()),
-                ('for_school', models.ForeignKey(to='school.School', related_name='entrance_steps')),
+                ('for_school', models.ForeignKey(to='schools.School', related_name='entrance_steps')),
             ],
             options={
                 'ordering': ['order'],

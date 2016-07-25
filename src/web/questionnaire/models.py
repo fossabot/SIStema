@@ -9,8 +9,8 @@ from django.db import models
 import django.forms
 import django.utils.timezone
 
-import school.models
-import user.models
+import schools.models
+import users.models
 import sistema.forms
 from sistema.helpers import group_by
 from . import forms
@@ -216,15 +216,15 @@ class Questionnaire(models.Model):
     short_name = models.CharField(max_length=100,
                                   help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
 
-    for_school = models.ForeignKey(school.models.School, blank=True, null=True)
+    school = models.ForeignKey(schools.models.School, blank=True, null=True)
 
-    for_session = models.ForeignKey(school.models.Session, blank=True, null=True)
+    session = models.ForeignKey(schools.models.Session, blank=True, null=True)
 
     close_time = models.DateTimeField(blank=True, null=True, default=None)
 
     def __str__(self):
-        if self.for_school is not None:
-            return '%s. %s' % (self.for_school, self.title)
+        if self.school is not None:
+            return '%s. %s' % (self.school, self.title)
         return self.title
 
     # TODO: Extract to ModelWithCloseTime?
@@ -266,27 +266,27 @@ class Questionnaire(models.Model):
         return form_class
 
     def get_absolute_url(self):
-        if self.for_school is None:
+        if self.school is None:
             return urlresolvers.reverse('questionnaire', kwargs={'questionnaire_name': self.short_name})
         else:
             return urlresolvers.reverse('school:questionnaire', kwargs={'questionnaire_name': self.short_name,
-                                                                        'school_name': self.for_school.short_name})
+                                                                        'school_name': self.school.short_name})
 
     def is_filled_by(self, user):
-        qs = self.statuses.filter(user=user)
-        if not qs.exists():
+        user_status = self.statuses.filter(user=user).first()
+        if user_status is None:
             return False
 
-        return qs.get().status == UserQuestionnaireStatus.Status.FILLED
+        return user_status.status == UserQuestionnaireStatus.Status.FILLED
 
     class Meta:
-        unique_together = ['for_school', 'short_name']
+        unique_together = ('school', 'short_name')
 
 
 class QuestionnaireAnswer(models.Model):
     questionnaire = models.ForeignKey(Questionnaire)
 
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     # TODO: may be ForeignKey is better?
     question_short_name = models.CharField(max_length=100)
@@ -310,7 +310,7 @@ class UserQuestionnaireStatus(models.Model):
         NOT_FILLED = djchoices.ChoiceItem(1)
         FILLED = djchoices.ChoiceItem(2)
 
-    user = models.ForeignKey(user.models.User, related_name='+')
+    user = models.ForeignKey(users.models.User, related_name='+')
 
     questionnaire = models.ForeignKey(Questionnaire, related_name='statuses')
 

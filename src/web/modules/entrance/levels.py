@@ -7,7 +7,7 @@ class EntranceLevelLimiter:
         self.school = school
 
     def _find_minimal_level(self):
-        return models.EntranceLevel.objects.filter(for_school=self.school).order_by('order').first()
+        return models.EntranceLevel.objects.filter(school=self.school).order_by('order').first()
 
     def get_limit(self, user):
         raise NotImplementedError('modules.entrance.levels.EntranceLevelLimiter: Child must implement get_limit()')
@@ -32,7 +32,7 @@ class AlreadyWasEntranceLevelLimiter(EntranceLevelLimiter):
     question_short_name = 'previous_parallels'
 
     def get_limit(self, user):
-        qs = QuestionnaireAnswer.objects.filter(questionnaire__for_school=self.school,
+        qs = QuestionnaireAnswer.objects.filter(questionnaire__school=self.school,
                                                 user=user,
                                                 question_short_name=self.question_short_name)
         if not qs.exists():
@@ -40,12 +40,12 @@ class AlreadyWasEntranceLevelLimiter(EntranceLevelLimiter):
 
         answers = list(qs)
         variants = list(
-            ChoiceQuestionnaireQuestionVariant.objects.filter(question__questionnaire__for_school=self.school,
+            ChoiceQuestionnaireQuestionVariant.objects.filter(question__questionnaire__school=self.school,
                                                               question__short_name=self.question_short_name))
         answers = [a.answer for a in answers]
         variants = [v.text for v in variants if str(v.id) in answers]
 
-        levels = models.EntranceLevel.objects.filter(for_school=self.school)
+        levels = models.EntranceLevel.objects.filter(school=self.school)
         if 'A' in variants or 'AS' in variants or 'AA' in variants or 'A\'' in variants or 'AY' in variants:
             return EntranceLevelLimit(levels.filter(short_name='a').get())
         if 'B' in variants or 'P' in variants:
@@ -67,7 +67,7 @@ class AgeEntranceLevelLimiter(EntranceLevelLimiter):
     question_short_name = 'class'
 
     def get_limit(self, user):
-        qs = QuestionnaireAnswer.objects.filter(questionnaire__for_school=self.school,
+        qs = QuestionnaireAnswer.objects.filter(questionnaire__school=self.school,
                                                 user=user,
                                                 question_short_name=self.question_short_name)
         if not qs.exists():
@@ -79,7 +79,7 @@ class AgeEntranceLevelLimiter(EntranceLevelLimiter):
         except ValueError:
             return EntranceLevelLimit(self._find_minimal_level())
 
-        levels = models.EntranceLevel.objects.filter(for_school=self.school)
+        levels = models.EntranceLevel.objects.filter(school=self.school)
 
         if _class >= 10:
             return EntranceLevelLimit(levels.filter(short_name='b_prime').get())

@@ -7,7 +7,7 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
     def __init__(self, school, payment_questionnaire, previous_questionnaire=None):
         super().__init__(school, previous_questionnaire=previous_questionnaire)
         self.payment_questionnaire = payment_questionnaire
-        if self.payment_questionnaire.for_school_id != self.school.id:
+        if self.payment_questionnaire.school_id != self.school.id:
             raise ValueError(
                 'finance.entrance.steps.PaymentInfoEntranceStep: PaymentQuestionnaire must be for this school')
 
@@ -29,7 +29,7 @@ class PaymentInfoEntranceStep(steps.EntranceStep):
 
         payment_amount = models.PaymentAmount.get_amount_for_user(self.school, user)
 
-        user_discounts = models.Discount.objects.filter(for_school=self.school, for_user=user)
+        user_discounts = models.Discount.objects.filter(school=self.school, user=user)
         actual_discounts = user_discounts.filter(amount__gt=0)
         considered_discounts = user_discounts.filter(amount=0)
 
@@ -101,12 +101,12 @@ class DocumentsEntranceStep(steps.EntranceStep):
     def __init__(self, school, payment_questionnaire):
         super().__init__(school, previous_questionnaire=payment_questionnaire)
         self.payment_questionnaire = payment_questionnaire
-        if self.payment_questionnaire.for_school_id != self.school.id:
+        if self.payment_questionnaire.school_id != self.school.id:
             raise ValueError(
                 'finance.entrance.steps.DocumentsEntranceStep: PaymentQuestionnaire must be for this school')
 
     def _get_needed_document_types(self, user):
-        document_types = models.DocumentType.objects.filter(for_school=self.school)
+        document_types = models.DocumentType.objects.filter(school=self.school)
 
         needed_documents = []
         for document_type in document_types:

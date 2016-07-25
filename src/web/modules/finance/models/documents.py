@@ -6,9 +6,9 @@ from cached_property import cached_property
 import relativefilepathfield.fields
 import polymorphic.models
 
-import school.models
+import schools.models
 import generator.models
-import user.models
+import users.models
 import questionnaire.models
 
 
@@ -23,7 +23,7 @@ class DocumentType(models.Model):
     short_name = models.CharField(max_length=100,
                                   help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
 
-    for_school = models.ForeignKey(school.models.School)
+    school = models.ForeignKey(schools.models.School)
 
     name = models.TextField()
 
@@ -35,7 +35,7 @@ class DocumentType(models.Model):
     template = models.ForeignKey(generator.models.Document, related_name='+')
 
     class Meta:
-        unique_together = ('for_school', 'short_name')
+        unique_together = ('school', 'short_name')
 
     def __str__(self):
         return self.name
@@ -55,9 +55,9 @@ class DocumentType(models.Model):
 
 
 class Document(models.Model):
-    for_school = models.ForeignKey(school.models.School)
+    school = models.ForeignKey(schools.models.School)
 
-    for_users = models.ManyToManyField(user.models.User)
+    users = models.ManyToManyField(users.models.User)
 
     type = models.ForeignKey(DocumentType, related_name='generated_documents')
 
@@ -72,7 +72,7 @@ class Document(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def _users_list(self):
-        return ', '.join(str(u) for u in self.for_users)
+        return ', '.join(str(u) for u in self.users)
 
 
 class AbstractDocumentGenerationCondition(polymorphic.models.PolymorphicModel):

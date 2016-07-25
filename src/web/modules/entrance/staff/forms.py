@@ -52,6 +52,6 @@ class PutIntoCheckingGroupForm(forms.Form):
     def __init__(self, school, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        groups = models.CheckingGroup.objects.filter(for_school=school)
+        groups = models.CheckingGroup.objects.filter(school=school)
         groups = [(g.id, g.name) for g in groups]
         self.fields['group_id'] = forms.ChoiceField(widget=forms.Select(), choices=list(groups))

@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('school', '0005_auto_20160515_1808'),
+        ('schools', '0005_auto_20160515_1808'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('short_name', models.CharField(help_text='Используется в урлах. Лучше обойтись маленькими буквами, цифрами и подчёркиванием', max_length=100)),
                 ('name', models.TextField(help_text='Например, «Квитанция об оплате»')),
                 ('name_genitive', models.TextField(help_text='Например, «квитанцию об оплате»')),
-                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='school.School')),
+                ('for_school', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='schools.School')),
             ],
         ),
         migrations.AddField(

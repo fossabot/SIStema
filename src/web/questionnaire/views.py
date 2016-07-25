@@ -61,15 +61,15 @@ def _get_user_questionnaire_answers(user, questionnaire):
 
 def questionnaire_for_user(request, user, questionnaire_name):
     if hasattr(request, 'school'):
-        qs = models.Questionnaire.objects.filter(for_school=request.school, short_name=questionnaire_name)
+        qs = models.Questionnaire.objects.filter(school=request.school, short_name=questionnaire_name)
         # If questionnaire with this name exists for the school, use it,
-        # otherwise use common questionnaire (with for_school = None)
+        # otherwise use common questionnaire (with school = None)
         if qs.exists():
             questionnaire = qs.first()
         else:
-            questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
+            questionnaire = get_object_or_404(models.Questionnaire, school__isnull=True, short_name=questionnaire_name)
     else:
-        questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
+        questionnaire = get_object_or_404(models.Questionnaire, school__isnull=True, short_name=questionnaire_name)
 
     form_class = questionnaire.get_form_class()
 
@@ -82,8 +82,8 @@ def questionnaire_for_user(request, user, questionnaire_name):
             form.add_error(None, 'Время заполнения анкеты вышло')
         elif form.is_valid():
             save_questionnaire_answers(user, questionnaire, form)
-            if questionnaire.for_school is not None:
-                return redirect(questionnaire.for_school)
+            if questionnaire.school is not None:
+                return redirect(questionnaire.school)
             else:
                 return redirect('home')
     else:
@@ -112,7 +112,7 @@ def questionnaire(request, questionnaire_name):
 
 @login_required
 def reset(request, questionnaire_name):
-    questionnaire = get_object_or_404(models.Questionnaire, for_school__isnull=True, short_name=questionnaire_name)
+    questionnaire = get_object_or_404(models.Questionnaire, school__isnull=True, short_name=questionnaire_name)
 
     models.QuestionnaireAnswer.objects.filter(user=request.user, questionnaire=questionnaire).delete()
     models.UserQuestionnaireStatus.objects.update_or_create(questionnaire=questionnaire,

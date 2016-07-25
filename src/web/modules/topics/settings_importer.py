@@ -54,7 +54,7 @@ class SettingsImporter:
         models.Tag.objects.filter(questionnaire=self.questionnaire).delete()
 
         # DANGEROUS: remove all entrance levels
-        modules.entrance.models.EntranceLevel.objects.filter(for_school=self.questionnaire.for_school).delete()
+        modules.entrance.models.EntranceLevel.objects.filter(school=self.questionnaire.school).delete()
 
 
 # Importer for config files form topic-questionnaire-system prototype by Artem Tabolin and Irina Brovar
@@ -249,7 +249,7 @@ class CitxxSettingsImporter(SettingsImporter):
         order = 0
         for entrance_level, requirements in result_module.group_requirements:
             order += 1
-            level = modules.entrance.models.EntranceLevel(for_school=self.questionnaire.for_school,
+            level = modules.entrance.models.EntranceLevel(school=self.questionnaire.school,
                                                           short_name=entrance_level.lower(),
                                                           name=entrance_level,
                                                           order=order)

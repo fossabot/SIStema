@@ -1,6 +1,6 @@
 from . import models
 import generator.models
-import school.models
+import schools.models
 import questionnaire.models
 from modules.entrance.models import EntranceStatus
 from generator import generator
@@ -11,12 +11,12 @@ class DocumentGenerator:
     def __init__(self, school):
         self.school = school
         self.payment_questionnaire = questionnaire.models.Questionnaire.objects.filter(
-            for_school=self.school,
+            school=self.school,
             short_name='payment'
         ).first()
 
         self.enrolled_questionnaire = questionnaire.models.Questionnaire.objects.filter(
-            for_school=self.school,
+            school=self.school,
             short_name='enrolled'
         ).first()
 
@@ -77,8 +77,8 @@ class DocumentGenerator:
         user.middle_name = user_enrolled_questionnaire['middle_name']
 
         entrance_status = EntranceStatus.objects.filter(
-            for_school=self.school,
-            for_user=user,
+            school=self.school,
+            user=user,
         ).first()
         if entrance_status is None or entrance_status.status != EntranceStatus.Status.ENROLLED:
             raise ValueError('User has not enrolled')

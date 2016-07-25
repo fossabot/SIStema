@@ -8,7 +8,7 @@ class TopicQuestionnaireEntranceStep(steps.EntranceStep):
     def __init__(self, school, questionnaire, previous_questionnaire=None):
         super().__init__(school, previous_questionnaire=previous_questionnaire)
         self.questionnaire = questionnaire
-        if self.questionnaire.for_school_id != self.school.id:
+        if self.questionnaire.school_id != self.school.id:
             raise ValueError('topics.entrance.steps.TopicQuestionnaireEntranceStep: Questionnaire must be for this school')
 
     def is_passed(self, user):

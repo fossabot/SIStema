@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('school', '0006_auto_20160523_2147'),
+        ('schools', '0006_auto_20160523_2147'),
         ('contenttypes', '0002_remove_content_type_name'),
         ('entrance', '0019_auto_20160515_1808'),
     ]
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='abstractabsencereason',
             name='for_school',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='absences_reasons', to='school.School'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='absences_reasons', to='schools.School'),
         ),
         migrations.AddField(
             model_name='abstractabsencereason',

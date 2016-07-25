@@ -4,40 +4,26 @@ from . import models
 
 
 class QuestionnaireAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'short_name',
-        'title',
-        'for_school',
-        'for_session',
-    )
+    list_display = ('id', 'short_name', 'title', 'school', 'session')
+
 
 admin.site.register(models.Questionnaire, QuestionnaireAdmin)
 
+
 class AbstractQuestionnaireBlockAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'short_name',
-        'questionnaire',
-        'order'
-    )
-    list_filter = ('questionnaire', )
-    ordering = ('order', )
+    list_display = ('id', 'short_name', 'questionnaire', 'order')
+    list_filter = ('questionnaire',)
+    ordering = ('order',)
+
 
 admin.site.register(models.MarkdownQuestionnaireBlock, AbstractQuestionnaireBlockAdmin)
 
 
 class AbstractQuestionnaireQuestionAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'short_name',
-        'is_required',
-        'questionnaire',
-        'order',
-    )
-
+    list_display = ('id', 'short_name', 'is_required', 'questionnaire', 'order')
     list_filter = ('questionnaire', 'is_required')
     ordering = ('order',)
+
 
 admin.site.register(models.ChoiceQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
 admin.site.register(models.TextQuestionnaireQuestion, AbstractQuestionnaireQuestionAdmin)
@@ -48,6 +34,7 @@ admin.site.register(models.DateQuestionnaireQuestion, AbstractQuestionnaireQuest
 class ChoiceQuestionnaireQuestionVariantAdmin(admin.ModelAdmin):
     list_display = ('id', 'question', 'text')
     list_filter = ('question',)
+
 
 admin.site.register(models.ChoiceQuestionnaireQuestionVariant,
                     ChoiceQuestionnaireQuestionVariantAdmin)
@@ -63,6 +50,7 @@ class UserQuestionnaireStatusAdmin(admin.ModelAdmin):
         '=user__last_name',
     )
 
+
 admin.site.register(models.UserQuestionnaireStatus, UserQuestionnaireStatusAdmin)
 
 
@@ -76,11 +64,13 @@ class QuestionnaireAnswerAdmin(admin.ModelAdmin):
         '=user__last_name',
     )
 
+
 admin.site.register(models.QuestionnaireAnswer, QuestionnaireAnswerAdmin)
 
 
 class QuestionnaireBlockShowConditionAdmin(admin.ModelAdmin):
     list_display = ('id', 'block', 'need_to_be_checked')
-    list_filter = ('block__questionnaire', )
+    list_filter = ('block__questionnaire',)
+
 
 admin.site.register(models.QuestionnaireBlockShowCondition, QuestionnaireBlockShowConditionAdmin)

@@ -9,9 +9,9 @@ from django.conf import settings
 from django.db import models, transaction
 import django.utils.timezone
 
-import school.models
+import schools.models
 import modules.ejudge.models
-import user.models
+import users.models
 
 
 class EntranceExamTask(models.Model):
@@ -86,22 +86,22 @@ class ProgramEntranceExamTask(EntranceExamTask):
 
 
 class EntranceExam(models.Model):
-    for_school = models.OneToOneField(school.models.School)
+    school = models.OneToOneField(schools.models.School)
 
     close_time = models.DateTimeField(blank=True, default=None, null=True)
 
     def __str__(self):
-        return 'Вступительная работа для %s' % self.for_school
+        return 'Вступительная работа для %s' % self.school
 
     def is_closed(self):
         return self.close_time is not None and django.utils.timezone.now() >= self.close_time
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('school:entrance:exam', kwargs={ 'school_name': self.for_school.short_name })
+        return urlresolvers.reverse('school:entrance:exam', kwargs={ 'school_name': self.school.short_name})
 
 
 class EntranceStep(models.Model):
-    for_school = models.ForeignKey(school.models.School, related_name='entrance_steps')
+    school = models.ForeignKey(schools.models.School, related_name='entrance_steps')
 
     class_name = models.CharField(max_length=100, help_text='Путь до класса, описывающий шаг')
 
@@ -110,7 +110,7 @@ class EntranceStep(models.Model):
     order = models.IntegerField()
 
     def __str__(self):
-        return 'Шаг %s используется для %s' % (self.class_name, self.for_school)
+        return 'Шаг %s используется для %s' % (self.class_name, self.school)
 
     class Meta:
         ordering = ['order']
@@ -123,7 +123,7 @@ class EntranceLevel(models.Model):
     Уровень школьника определяется с помощью EntranceLevelLimiter'ов (например, на основе тематической анкеты
     из модуля topics или прошлой учёбы в других параллелях)
     """
-    for_school = models.ForeignKey(school.models.School)
+    school = models.ForeignKey(schools.models.School)
 
     short_name = models.CharField(max_length=100,
                                   help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
@@ -135,7 +135,7 @@ class EntranceLevel(models.Model):
     tasks = models.ManyToManyField(EntranceExamTask, blank=True)
 
     def __str__(self):
-        return 'Уровень «%s» для %s' % (self.name, self.for_school)
+        return 'Уровень «%s» для %s' % (self.name, self.school)
 
     def __gt__(self, other):
         return self.order > other.order
@@ -150,13 +150,13 @@ class EntranceLevel(models.Model):
         return self.order <= other.order
 
     class Meta:
-        ordering = ['for_school_id', 'order']
+        ordering = ('school_id', 'order')
 
 
 class EntranceExamTaskSolution(models.Model):
     task = models.ForeignKey(EntranceExamTask)
 
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     solution = models.TextField()
 
@@ -196,7 +196,7 @@ class ProgramEntranceExamTaskSolution(EntranceExamTaskSolution):
 
 
 class EntranceLevelUpgrade(models.Model):
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     upgraded_to = models.ForeignKey(EntranceLevel, related_name='+')
 
@@ -230,7 +230,7 @@ class SolveTaskEntranceLevelUpgradeRequirement(EntranceLevelUpgradeRequirement):
 
 
 class CheckingGroup(models.Model):
-    for_school = models.ForeignKey(school.models.School)
+    school = models.ForeignKey(schools.models.School)
 
     short_name = models.CharField(max_length=100,
                                   help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
@@ -238,14 +238,14 @@ class CheckingGroup(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return 'Группа проверки %s для %s' % (self.name, self.for_school)
+        return 'Группа проверки %s для %s' % (self.name, self.school)
 
     class Meta:
-        unique_together = ('for_school', 'short_name')
+        unique_together = ('school', 'short_name')
 
 
 class UserInCheckingGroup(models.Model):
-    user = models.ForeignKey(user.models.User)
+    user = models.ForeignKey(users.models.User)
 
     group = models.ForeignKey(CheckingGroup)
 
@@ -262,7 +262,7 @@ class UserInCheckingGroup(models.Model):
     @classmethod
     @transaction.atomic
     def put_user_into_group(cls, user, group):
-        for instance in cls.objects.filter(group__for_school=group.for_school, user=user):
+        for instance in cls.objects.filter(group__school=group.school, user=user):
             instance.is_actual = False
             instance.save()
         cls(user=user, group=group).save()
@@ -273,9 +273,9 @@ def get_locked_timeout():
 
 
 class CheckingLock(models.Model):
-    locked_user = models.ForeignKey(user.models.User, related_name='checking_locked')
+    locked_user = models.ForeignKey(users.models.User, related_name='checking_locked')
 
-    locked_by = models.ForeignKey(user.models.User, related_name='checking_lock')
+    locked_by = models.ForeignKey(users.models.User, related_name='checking_lock')
 
     locked_until = models.DateTimeField(default=get_locked_timeout)
 
@@ -283,7 +283,7 @@ class CheckingLock(models.Model):
 class SolutionScore(models.Model):
     solution = models.ForeignKey(EntranceExamTaskSolution, related_name='scores')
 
-    scored_by = models.ForeignKey(user.models.User, related_name='+')
+    scored_by = models.ForeignKey(users.models.User, related_name='+')
 
     score = models.PositiveIntegerField()
 
@@ -291,11 +291,11 @@ class SolutionScore(models.Model):
 
 
 class CheckingComment(models.Model):
-    for_school = models.ForeignKey(school.models.School, related_name='+')
+    school = models.ForeignKey(schools.models.School, related_name='+')
 
-    for_user = models.ForeignKey(user.models.User, related_name='checking_comments')
+    user = models.ForeignKey(users.models.User, related_name='checking_comments')
 
-    commented_by = models.ForeignKey(user.models.User, related_name='+')
+    commented_by = models.ForeignKey(users.models.User, related_name='+')
 
     comment = models.TextField()
 
@@ -304,14 +304,14 @@ class CheckingComment(models.Model):
 
 # Рекомендации от проверяющего по поступлению в определённую параллель
 class EntranceRecommendation(models.Model):
-    for_school = models.ForeignKey(school.models.School, related_name='+')
+    school = models.ForeignKey(schools.models.School, related_name='+')
 
-    for_user = models.ForeignKey(user.models.User, related_name='entrance_recommendations')
+    user = models.ForeignKey(users.models.User, related_name='entrance_recommendations')
 
-    checked_by = models.ForeignKey(user.models.User, related_name='+')
+    checked_by = models.ForeignKey(users.models.User, related_name='+')
 
     # Null parallel means recommendation to not enroll user
-    parallel = models.ForeignKey(school.models.Parallel, related_name='entrance_recommendations',
+    parallel = models.ForeignKey(schools.models.Parallel, related_name='entrance_recommendations',
                                  blank=True,
                                  null=True,
                                  default=None)
@@ -328,12 +328,12 @@ class EntranceStatus(models.Model):
         NOT_ENROLLED = djchoices.ChoiceItem(3, 'Не прошёл по конкурсу')
         ENROLLED = djchoices.ChoiceItem(4, 'Поступил')
 
-    for_school = models.ForeignKey(school.models.School, related_name='entrance_statuses')
+    school = models.ForeignKey(schools.models.School, related_name='entrance_statuses')
 
-    for_user = models.ForeignKey(user.models.User, related_name='entrance_statuses')
+    user = models.ForeignKey(users.models.User, related_name='entrance_statuses')
 
     # created_by=None means system's auto creating
-    created_by = models.ForeignKey(user.models.User, blank=True, null=True, default=None)
+    created_by = models.ForeignKey(users.models.User, blank=True, null=True, default=None)
 
     public_comment = models.TextField(help_text='Публичный комментарий. Может быть виден поступающему', blank=True)
 
@@ -341,9 +341,9 @@ class EntranceStatus(models.Model):
 
     status = models.IntegerField(choices=Status.choices, validators=[Status.validator])
 
-    session = models.ForeignKey(school.models.Session, blank=True, null=True, default=None)
+    session = models.ForeignKey(schools.models.Session, blank=True, null=True, default=None)
 
-    parallel = models.ForeignKey(school.models.Parallel, blank=True, null=True, default=None)
+    parallel = models.ForeignKey(schools.models.Parallel, blank=True, null=True, default=None)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -351,19 +351,19 @@ class EntranceStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'User entrance statuses'
-        unique_together = ['for_school', 'for_user']
+        unique_together = ('school', 'user')
 
 
 class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
-    for_school = models.ForeignKey(school.models.School, related_name='absences_reasons')
+    school = models.ForeignKey(schools.models.School, related_name='absences_reasons')
 
-    for_user = models.ForeignKey(user.models.User, related_name='absences_reasons')
+    user = models.ForeignKey(users.models.User, related_name='absences_reasons')
 
     private_comment = models.TextField(blank=True, help_text='Не показывается школьнику')
 
     public_comment = models.TextField(blank=True, help_text='Показывается школьнику')
 
-    created_by = models.ForeignKey(user.models.User, related_name='+', null=True, default=None,
+    created_by = models.ForeignKey(users.models.User, related_name='+', null=True, default=None,
                                    blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -371,7 +371,7 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
     @classmethod
     def for_user_in_school(cls, user, school):
         """Returns absence reason for specified user or None if user has not declined."""
-        return cls.objects.filter(for_user=user, for_school=school).first()
+        return cls.objects.filter(user=user, school=school).first()
 
     def default_public_comment(self):
         raise NotImplementedError()

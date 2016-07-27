@@ -1,7 +1,6 @@
 from django import forms
 
-import sistema.forms
-
+import frontend.forms
 from .. import models
 
 
@@ -25,7 +24,7 @@ class FileEntranceExamTasksMarkForm(forms.Form):
 
 
 class EntranceRecommendationForm(forms.Form):
-    comment = forms.CharField(widget=sistema.forms.TextInputWithFaIcon(attrs={'fa': 'comment'}),
+    comment = forms.CharField(widget=frontend.forms.TextInputWithFaIcon(attrs={'fa': 'comment'}),
                               label='Комментарий',
                               required=False)
 

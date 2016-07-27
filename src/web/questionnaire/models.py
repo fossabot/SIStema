@@ -1,17 +1,17 @@
 import copy
 import operator
 
+import django.forms
+import django.utils.timezone
 import djchoices
 import polymorphic.models
 from cached_property import cached_property
 from django.core import urlresolvers
 from django.db import models
-import django.forms
-import django.utils.timezone
 
+import frontend.forms
 import schools.models
 import users.models
-import sistema.forms
 from sistema.helpers import group_by
 from . import forms
 
@@ -99,9 +99,9 @@ class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
             if 'fa' not in attrs:
                 attrs['fa'] = self.fa
             if self.is_multiline:
-                widget = sistema.forms.TextareaWithFaIcon(attrs)
+                widget = frontend.forms.TextareaWithFaIcon(attrs)
             else:
-                widget = sistema.forms.TextInputWithFaIcon(attrs)
+                widget = frontend.forms.TextInputWithFaIcon(attrs)
         else:
             if self.is_multiline:
                 widget = django.forms.Textarea(attrs)
@@ -150,10 +150,10 @@ class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         attrs['inline'] = self.is_inline
         if self.is_multiple:
             field_class = forms.TypedMultipleChoiceFieldForChoiceQuestion
-            widget_class = sistema.forms.SistemaCheckboxSelect
+            widget_class = frontend.forms.SistemaCheckboxSelect
         else:
             field_class = forms.TypedChoiceFieldForChoiceQuestion
-            widget_class = sistema.forms.SistemaRadioSelect
+            widget_class = frontend.forms.SistemaRadioSelect
 
         return field_class(
             question=self,
@@ -179,7 +179,7 @@ class YesNoQuestionnaireQuestion(AbstractQuestionnaireQuestion):
             disabled=self.is_disabled,
             coerce=lambda x: x == 'True',
             choices=((False, 'Нет'), (True, 'Да')),
-            widget=sistema.forms.SistemaRadioSelect(attrs=attrs),
+            widget=frontend.forms.SistemaRadioSelect(attrs=attrs),
             label=self.text,
             help_text=self.help_text,
         )

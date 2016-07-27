@@ -1,6 +1,6 @@
 from django import forms
 
-from sistema.forms import TextInputWithFaIcon, PasswordInputWithFaIcon
+from frontend.forms import TextInputWithFaIcon, PasswordInputWithFaIcon
 
 
 class CenteredForm(forms.Form):

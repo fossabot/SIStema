@@ -1,13 +1,16 @@
 import mimetypes
 import os
 import urllib.parse
-
 import collections
+
 from django.http import HttpResponse
+from django.http.response import HttpResponseNotFound
 
 
 def respond_as_attachment(request, file_path, original_filename):
-    # TODO: check if file_path exists, otherwise return 404
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return HttpResponseNotFound()
+
     with open(file_path, 'rb') as fp:
         response = HttpResponse(fp.read())
 

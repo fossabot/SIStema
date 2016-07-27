@@ -43,7 +43,7 @@ class Session(models.Model):
     finish_date = models.DateField(help_text='Последний день смены')
 
     class Meta:
-        unique_together = ['school', 'short_name']
+        unique_together = ('school', 'short_name')
 
     def __str__(self):
         return '%s.%s' % (self.school.name, self.name)
@@ -77,7 +77,7 @@ class Parallel(models.Model):
     sessions = models.ManyToManyField(Session)
 
     class Meta:
-        unique_together = ['school', 'short_name']
+        unique_together = ('school', 'short_name')
 
     def __str__(self):
         return '%s.%s' % (self.school.name, self.name)

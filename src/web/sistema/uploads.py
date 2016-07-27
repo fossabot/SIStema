@@ -10,7 +10,7 @@ def _ensure_directory_exists(path):
         os.mkdir(path)
     else:
         if not os.path.isdir(path):
-            raise Exception('sistema: %s is not a directory' % path)
+            raise FileNotFoundError('sistema: %s is not a directory' % path)
 
 
 def _generate_random_name(length=10, alphabet=string.hexdigits):

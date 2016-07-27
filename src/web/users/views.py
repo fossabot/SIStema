@@ -1,13 +1,12 @@
-from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import auth
+from django.contrib.auth.decorators import login_required
 from django.core import mail, urlresolvers
-import decorators
-from sistema import settings
+from django.db import transaction
+from django.shortcuts import redirect, get_object_or_404
 
-from . import models
+from sistema import settings, decorators
 from . import forms
+from . import models
 
 
 def get_email_confirmation_link(request, user):

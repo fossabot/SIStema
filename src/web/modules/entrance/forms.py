@@ -1,6 +1,7 @@
 from django import forms
+
+import frontend.forms
 import modules.ejudge.models
-import sistema.forms
 
 
 class EntranceTaskForm(forms.Form):
@@ -22,10 +23,10 @@ class TestEntranceTaskForm(EntranceTaskForm):
 class FileEntranceTaskForm(EntranceTaskForm):
     task_type = 'file'
 
-    solution = sistema.forms.RestrictedFileField(max_upload_size=5*1024*1024,
-                                                 required=True,
-                                                 label='Выберите файл с решением',
-                                                 label_suffix='')
+    solution = frontend.forms.RestrictedFileField(max_upload_size=5 * 1024 * 1024,
+                                                  required=True,
+                                                  label='Выберите файл с решением',
+                                                  label_suffix='')
 
 
 class ProgramEntranceTaskForm(EntranceTaskForm):
@@ -38,7 +39,7 @@ class ProgramEntranceTaskForm(EntranceTaskForm):
                                       label='Язык программирования',
                                       label_suffix='')
 
-    solution = sistema.forms.RestrictedFileField(max_upload_size=512*1024,
-                                                 required=True,
-                                                 label='Выберите файл с программой',
-                                                 label_suffix='')
+    solution = frontend.forms.RestrictedFileField(max_upload_size=512 * 1024,
+                                                  required=True,
+                                                  label='Выберите файл с программой',
+                                                  label_suffix='')

@@ -137,7 +137,7 @@ SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, '..', '..', 'db-prod-copy.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '..', '..', 'db.sqlite3'),
     }
 }
 

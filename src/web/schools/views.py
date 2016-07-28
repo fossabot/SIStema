@@ -93,7 +93,7 @@ def user(request):
         arrival_questionnaire = Questionnaire.objects.filter(
             school=request.school,
             short_name__startswith='arrival',
-            for_session=user_session
+            session=user_session
         ).first()
         payment_questionnaire = Questionnaire.objects.filter(school=request.school, short_name='payment').first()
         enrolled_steps = [

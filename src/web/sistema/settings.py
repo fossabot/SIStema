@@ -40,7 +40,6 @@ EMAIL_SUBJECT_PREFIX = '[Sistema] '
 # Application definition
 
 INSTALLED_APPS = (
-    'hacks',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

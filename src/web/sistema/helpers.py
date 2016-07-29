@@ -38,7 +38,6 @@ def respond_as_attachment(request, file_path, original_filename):
 
 
 # TODO: if extract_key_function is str, make extract_key_function from operator.attrgetter
-# TODO: Replace with itertools.groupby?
 def group_by(collection, extract_key_function, extract_value_function=None):
     if extract_value_function is None:
         def extract_value_function(x):

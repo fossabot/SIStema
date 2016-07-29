@@ -137,7 +137,7 @@ SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, '..', '..', 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '..', 'db.sqlite3'),
     }
 }
 
@@ -166,8 +166,6 @@ STATICFILES_DIRS = [
 ]
 
 
-EMAIL_BACKEND = "postmark.django_backend.EmailBackend"
-
 DATE_INPUT_FORMATS = (
     '%d.%m.%Y', '%d.%m.%Y', '%d.%m.%y',  # '25.10.2006', '25.10.2006', '25.10.06'
     '%d-%m-%Y', '%d/%m/%Y', '%d/%m/%y',  # '25-10-2006', '25/10/2006', '25/10/06'
@@ -191,6 +189,8 @@ SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-
 SISTEMA_GENERATOR_ASSETS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-assets')
 
 SISTEMA_FINANCE_DOCUMENTS = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'finance-documents')
+
+SISTEMA_SEND_CONFIRMATION_EMAILS = False
 
 HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_LOGIN_REDIRECT_URL = '/'

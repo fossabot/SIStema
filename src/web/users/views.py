@@ -79,7 +79,9 @@ def register(request, form):
                                            )
 
     user.save()
-    send_confirmation_email(request, user)
+
+    if settings.SISTEMA_SEND_CONFIRMATION_EMAILS:
+        send_confirmation_email(request, user)
 
     return redirect('home')
 

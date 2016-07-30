@@ -114,7 +114,8 @@ def complete(request, form):
     request.user.set_password(form.cleaned_data['password'])
     request.user.save()
 
-    send_confirmation_email(request, request.user)
+    if settings.SISTEMA_SEND_CONFIRMATION_EMAILS:
+        send_confirmation_email(request, request.user)
     return redirect('home')
 
 

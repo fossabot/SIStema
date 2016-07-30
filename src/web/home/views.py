@@ -5,10 +5,10 @@ import schools.models
 
 def home(request):
     if not request.user.is_authenticated():
-        return redirect('login')
+        return redirect('users:login')
 
     if not request.user.is_email_confirmed:
-        return redirect('complete')
+        return redirect('users:complete')
 
     current_school = schools.models.School.objects.last()
 

@@ -5,9 +5,9 @@
 {% block right_links %}
     <div class="col-xs-6 text-right va-b pr5">
         <div class="login-links">
-            <a href="{% url 'login' %}" class="active" title="Вход">Вход</a>
+            <a href="{% url 'users:login' %}" class="active" title="Вход">Вход</a>
             <span class="text-white"> | </span>
-            <a href="{% url 'register' %}" class="" title="Регистрация">Регистрация</a>
+            <a href="{% url 'users:register' %}" class="" title="Регистрация">Регистрация</a>
         </div>
     </div>
 {% endblock %}

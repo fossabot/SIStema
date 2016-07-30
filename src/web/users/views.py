@@ -27,7 +27,7 @@ def send_confirmation_email(request, user):
 
 
 def get_password_recovery_link(request, recovery):
-    return request.build_absolute_uri(urlresolvers.reverse('recover', args=[recovery.recovery_token]))
+    return request.build_absolute_uri(urlresolvers.reverse('users:recover', args=[recovery.recovery_token]))
 
 
 def send_password_recovery_email(request, recovery):
@@ -77,7 +77,7 @@ def register(request, form):
                                            first_name=first_name,
                                            last_name=last_name,
                                            )
-
+    user.is_email_confirmed = not settings.SISTEMA_SEND_CONFIRMATION_EMAILS
     user.save()
 
     if settings.SISTEMA_SEND_CONFIRMATION_EMAILS:
@@ -88,7 +88,7 @@ def register(request, form):
 
 def fill_complete_form(request):
     if not request.user.is_authenticated():
-        return redirect('login')
+        return redirect('users:login')
     return {'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
@@ -112,10 +112,12 @@ def complete(request, form):
     request.user.first_name = form.cleaned_data['first_name']
     request.user.last_name = form.cleaned_data['last_name']
     request.user.set_password(form.cleaned_data['password'])
+    request.user.is_email_confirmed = not settings.SISTEMA_SEND_CONFIRMATION_EMAILS
     request.user.save()
 
     if settings.SISTEMA_SEND_CONFIRMATION_EMAILS:
         send_confirmation_email(request, request.user)
+
     return redirect('home')
 
 

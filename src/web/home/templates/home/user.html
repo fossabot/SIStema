@@ -15,54 +15,9 @@
                 {{ school.full_name }}
             </div>
 
-            <div class="entrance-steps past">
-                <div class="row">
-                    {% for step in steps %}
-                        {% if forloop.counter0|divisibleby:4 %}
-                            </div>
-                            <div class="row">
-                        {% endif %}
-                        <div class="col-sm-3">
-                            {{ step.rendered|safe }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            {% if entrance_status %}
-                <div class="entrance-status alert alert-{{ entrance_status.is_enrolled|yesno:'success,danger' }} fs16 text-left">
-                    {{ entrance_status.message|urlize|linebreaks }}
-                </div>
-            {% endif %}
-
-            {% if absence_reason %}
-                <div class="entrance-status alert alert-danger fs16 text-left">
-                    {% if absence_reason.public_comment %}
-                        {{ absence_reason.public_comment|urlize|linebreaks }}
-                    {% else %}
-                        {{ absence_reason.default_public_comment|urlize|linebreaks }}
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            {% if entrance_status.is_enrolled and absence_reason == None %}
-                <div class="enrolled-steps">
-                    {% comment %}
-                        TODO: copy-paste
-                    {% endcomment %}
-                    <div class="row">
-                        {% for step in enrolled_steps %}
-                            {% if forloop.counter0|divisibleby:3 %}
-                                </div>
-                                <div class="row">
-                            {% endif %}
-                            <div class="col-sm-4">
-                                {{ step.rendered|safe }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
+            {% for block in blocks %}
+                {% include block.template_name with block=block %}
+            {% endfor %}
 
         </div>
     </div>

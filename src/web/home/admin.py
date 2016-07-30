@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+
+class AbstractHomePageBlockAdmin(admin.ModelAdmin):
+    list_display = ('id', 'school', 'order')
+    list_filter = ('school', )

@@ -13,6 +13,8 @@ import schools.models
 import modules.ejudge.models
 import users.models
 
+from .home.blocks import *
+
 
 class EntranceExamTask(models.Model):
     title = models.CharField(max_length=100, help_text='Название')

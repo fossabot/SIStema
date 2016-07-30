@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from home.admin import AbstractHomePageBlockAdmin
 from . import models
 
 import users.models
@@ -175,3 +176,9 @@ class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
 
 admin.site.register(models.RejectionAbsenceReason, AbstractAbsenceReasonAdmin)
 admin.site.register(models.NotConfirmedAbsenceReason, AbstractAbsenceReasonAdmin)
+
+
+admin.site.register(models.EntranceStepsHomePageBlock, AbstractHomePageBlockAdmin)
+admin.site.register(models.EnrolledStepsHomePageBlock, AbstractHomePageBlockAdmin)
+admin.site.register(models.AbsenceReasonHomePageBlock, AbstractHomePageBlockAdmin)
+admin.site.register(models.EntranceStatusHomePageBlock, AbstractHomePageBlockAdmin)

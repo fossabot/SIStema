@@ -83,6 +83,14 @@ class EntranceStepsHomePageBlock(AbstractHomePageBlock):
 
         self.steps = build_user_steps(steps, request.user)
 
+    @property
+    def columns_count(self):
+        return 4 if self.is_past else 2
+
+    @property
+    def bootstrap_column_width(self):
+        return 3 if self.is_past else 6
+
 
 class EnrolledStepsHomePageBlock(AbstractHomePageBlock):
     def build(self, request):

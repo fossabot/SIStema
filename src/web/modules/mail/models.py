@@ -53,3 +53,14 @@ class EmailMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     headers = models.TextField()
+
+
+class ContactList(models.Model):
+    owner = models.ForeignKey(SisEmailUser)
+
+
+class ContactRecord(models.Model):
+
+    person = models.ForeignKey(EmailUser)
+
+    contact_list = models.ForeignKey(ContactList)

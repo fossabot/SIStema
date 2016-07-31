@@ -62,4 +62,4 @@ class ContactList(models.Model):
 class ContactRecord(models.Model):
     contact_list = models.ForeignKey(ContactList, related_name='contacts')
 
-    person = models.ForeignKey(EmailUser)
+    person = models.ForeignKey(EmailUser, related_name='+')

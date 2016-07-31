@@ -36,6 +36,9 @@ class Group(models.Model):
 
     description = models.TextField(blank=True)
 
+    def __str__(self):
+        return self.display_name
+
 
 class SettingsItem(PolymorphicModel):
     short_name = models.CharField(
@@ -53,7 +56,7 @@ class SettingsItem(PolymorphicModel):
 
     app = models.CharField(max_length=50)
 
-    group = models.ForeignKey(Group, null=True)
+    group = models.ForeignKey(Group, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.school_id is not None and self.session_id is not None:

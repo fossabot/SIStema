@@ -15,11 +15,17 @@ class EmailUser(PolymorphicModel):
 class SisEmailUser(EmailUser):
     user = models.ForeignKey(User, related_name='email_user')
 
+    def __str__(self):
+        return '%s %s %s' % (self.user.first_name, self.user.last_name, self.user.email)
+
 
 class ExternalEmailUser(EmailUser):
     display_name = models.TextField()
 
     email = models.EmailField()
+
+    def __str__(self):
+        return '%s %s' % (self.display_name, self.email)
 
 
 class Attachment(models.Model):

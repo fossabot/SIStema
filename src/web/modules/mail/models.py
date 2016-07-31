@@ -57,12 +57,12 @@ class EmailMessage(models.Model):
 
 
 class PersonalEmail(models.Model):
-    hash = models.PositiveIntegerField()
+    email_name = models.CharField(max_length=100, help_text='Например, ivanov-ivan')
 
-    name = models.CharField(max_length=100)
+    hash = models.CharField(max_length=20, help_text='Добавляется к email-name для идентификации пользователя')
 
     is_active = models.BooleanField(default=True)
 
     owner = models.ForeignKey(SisEmailUser)
 
-    session = models.ManyToManyField(Session)
+    sessions = models.ManyToManyField(Session)

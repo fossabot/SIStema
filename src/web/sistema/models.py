@@ -27,20 +27,23 @@ class DjangoSettingsReference(object):
 
 
 class SettingsItem(PolymorphicModel):
-    name = models.CharField(max_length=100)
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием'
+    )
 
     display_name = models.CharField(max_length=100)
 
     description = models.TextField(blank=True)
 
-    school = models.ForeignKey(School, null=True, blank=True, default=None)
+    school = models.ForeignKey(School, null=True, blank=True, default=None, related_name='settings')
 
-    session = models.ForeignKey(Session, null=True, blank=True, default=None)
+    session = models.ForeignKey(Session, null=True, blank=True, default=None, related_name='settings')
 
     def save(self, *args, **kwargs):
         if self.school is not None and self.session is not None:
             if self.school_id != self.session.school_id:
-                raise ValueError("sistema.models: session field value contadicts school field value")
+                raise ValueError("sistema.models.SettingsItem: session field value contradicts school field value")
 
         super().save()
 

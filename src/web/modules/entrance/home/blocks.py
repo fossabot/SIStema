@@ -4,7 +4,6 @@ from home.models import AbstractHomePageBlock
 from django.db import models
 
 from questionnaire.models import Questionnaire
-from .. import models as entrance_models
 
 __all__ = ['EntranceStepsHomePageBlock',
            'EnrolledStepsHomePageBlock',
@@ -38,6 +37,7 @@ def build_user_steps(steps, user):
 
 
 def get_visible_entrance_status(school, user):
+    from .. import models as entrance_models
     qs = entrance_models.EntranceStatus.objects.filter(school=school, user=user, is_status_visible=True)
     entrance_status = None
     if qs.exists():
@@ -94,6 +94,7 @@ class EntranceStepsHomePageBlock(AbstractHomePageBlock):
 
 class EnrolledStepsHomePageBlock(AbstractHomePageBlock):
     def build(self, request):
+        from .. import models as entrance_models
         self.steps = None
         self.entrance_status = get_visible_entrance_status(request.school, request.user)
         self.absence_reason = entrance_models.AbstractAbsenceReason.for_user_in_school(request.user, request.school)

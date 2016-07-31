@@ -6,6 +6,7 @@ from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
 
 from users.models import User
+from schools.models import Session
 
 
 class EmailUser(PolymorphicModel):
@@ -53,3 +54,15 @@ class EmailMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     headers = models.TextField()
+
+
+class PersonalEmail(models.Model):
+    hash = models.PositiveIntegerField()
+
+    name = models.CharField(max_length=100)
+
+    is_active = models.BooleanField(default=True)
+
+    owner = models.ForeignKey(SisEmailUser)
+
+    session = models.ManyToManyField(Session)

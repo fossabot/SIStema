@@ -41,9 +41,8 @@ class SettingsItem(PolymorphicModel):
     session = models.ForeignKey(Session, null=True, blank=True, default=None, related_name='settings')
 
     def save(self, *args, **kwargs):
-        if self.school is not None and self.session is not None:
-            if self.school_id != self.session.school_id:
-                raise ValueError("sistema.models.SettingsItem: session field value contradicts school field value")
+        if self.school_id is not None and self.session_id is not None:
+            raise ValueError("sistema.models.SettingsItem: session field value contradicts school field value")
 
         super().save()
 

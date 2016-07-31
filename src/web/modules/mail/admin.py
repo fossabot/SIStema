@@ -1,3 +1,12 @@
 from django.contrib import admin
 
-# Register your models here.
+from . import models
+
+
+class PersonalEmailAdmin(admin.ModelAdmin):
+    list_display = ('id', 'email-name', 'hash', 'is_active', 'owner', 'sessions')
+
+
+admin.site.register(models.PersonalEmail, PersonalEmailAdmin)
+
+

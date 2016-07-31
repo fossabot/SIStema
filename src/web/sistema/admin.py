@@ -9,8 +9,19 @@ class SettingsItemAdmin(admin.ModelAdmin):
         'display_name',
         'description',
         'school',
-        'session'
+        'session',
+        'value'
     )
+
+
+class GroupAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'short_name',
+        'display_name',
+        'description'
+    )
+
 
 admin.site.register(models.IntegerSettingsItem, SettingsItemAdmin)
 admin.site.register(models.BigIntegerSettingsItem, SettingsItemAdmin)
@@ -18,3 +29,4 @@ admin.site.register(models.DateSettingsItem, SettingsItemAdmin)
 admin.site.register(models.DateTimeSettingsItem, SettingsItemAdmin)
 admin.site.register(models.CharSettingsItem, SettingsItemAdmin)
 admin.site.register(models.TextSettingsItem, SettingsItemAdmin)
+admin.site.register(models.Group, GroupAdmin)

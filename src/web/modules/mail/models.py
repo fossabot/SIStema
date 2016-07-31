@@ -57,9 +57,13 @@ class EmailMessage(models.Model):
 
 
 class PersonalEmail(models.Model):
-    email_name = models.CharField(max_length=100, help_text='Например, ivanov-ivan')
+    email_name = models.CharField(max_length=100, help_text='Например, ivan-ivanov')
 
-    hash = models.CharField(max_length=20, help_text='Добавляется к email-name для идентификации пользователя')
+    hash = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text='Добавляется к email-name для идентификации пользователя'
+    )
 
     is_active = models.BooleanField(default=True)
 

@@ -26,6 +26,17 @@ class DjangoSettingsReference(object):
         return "%s.%s" % (__name__, self.__class__.__name__), (self.name,), {}
 
 
+class Group(models.Model):
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием'
+    )
+
+    display_name = models.CharField(max_length=100)
+
+    description = models.TextField(blank=True)
+
+
 class SettingsItem(PolymorphicModel):
     short_name = models.CharField(
         max_length=100,
@@ -39,6 +50,10 @@ class SettingsItem(PolymorphicModel):
     school = models.ForeignKey(School, null=True, blank=True, default=None, related_name='settings')
 
     session = models.ForeignKey(Session, null=True, blank=True, default=None, related_name='settings')
+
+    app = models.CharField(max_length=50)
+
+    group = models.ForeignKey(Group, null=True)
 
     def save(self, *args, **kwargs):
         if self.school_id is not None and self.session_id is not None:

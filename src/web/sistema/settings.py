@@ -71,6 +71,7 @@ INSTALLED_APPS = (
     'modules.exam_scorer_2016',
     'modules.enrolled_scans',
     'modules.finance',
+    'modules.mail',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -191,6 +192,8 @@ SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-
 SISTEMA_GENERATOR_ASSETS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-assets')
 
 SISTEMA_FINANCE_DOCUMENTS = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'finance-documents')
+
+SISTEMA_MAIL_ATTACHMENTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'mail-attachments')
 
 SISTEMA_SEND_CONFIRMATION_EMAILS = False
 

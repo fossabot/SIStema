@@ -5,7 +5,8 @@
 {% block content %}
     {% for email in ordered_inbox_email_list %}
         <div>
-            {{ email.subject }}
+            {{ email.sender.display_name }} {{ email.subject }} — {{ email.html_text|truncatechars:100 }}
+            {{ email.created_at }}
         </div>
     {% endfor %}
 {% endblock %}

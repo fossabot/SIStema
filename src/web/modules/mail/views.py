@@ -1,31 +1,36 @@
 from django.contrib.auth.decorators import login_required
-from django.http.response import JsonResponse
+from django.http import HttpResponse
+from django.db.models import Q
+from django.shortcuts import render
 
 from . import models
 
 
 @login_required
 def compose(request):
-    pass
+    return render(request, 'mail/compose.html')
 
 
 @login_required
 def contacts(request):
     search_request = request.GET['search']
-    user_id = request.user.pk
+    user_id = request.user.id
     email_user = models.SisEmailUser.objects.get(user=user_id)
-    user_contact_list = models.ContactList.objects.get(owner=email_user.pk)
-    records = models.ContactRecord.objects.filter(contact_list=user_contact_list.pk)
-    filtered = {'users': []}
+    user_contact_list = models.ContactList.objects.get(owner=email_user.id)
+    records = models.ContactRecord.objects.filter(
+        Q(contact_list=user_contact_list.id) & (
+            Q(person__sisemailuser__user__email__contains=search_request) |
+            Q(person__sisemailuser__user__first_name__contains=search_request) |
+            Q(person__sisemailuser__user__last_name__contains=search_request) |
+            Q(person__externalemailuser__display_name__contains=search_request) |
+            Q(person__externalemailuser__email__contains=search_request)
+        )
+    )
+    json = []
     for rec in records:
-        if isinstance(rec.person, models.SisEmailUser):
-            user_display_name = ' '.join((rec.person.user.first_name, rec.person.user.last_name,
-                                          rec.person.user.email))
-            owner_user_full_name = user_display_name
-            if search_request in owner_user_full_name:
-                filtered['users'].append({'display_name': user_display_name})
+        if isinstance(rec.person, models.ExternalEmailUser):
+            json.append({'email': rec.person.email, 'display_name': rec.person.display_name})
         else:
-            user_display_name = ' '.join((rec.person.display_name, rec.person.email))
-            if search_request in user_display_name:
-                filtered['users'].append({'display_name': user_display_name})
-    return JsonResponse(filtered)
+            json.append({'email': rec.person.user.email,
+                         'display_name': rec.person.user.first_name + ' ' + rec.person.user.last_name})
+    return HttpResponse({'records': json}) 

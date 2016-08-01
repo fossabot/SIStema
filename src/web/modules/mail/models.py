@@ -21,6 +21,10 @@ class SisEmailUser(EmailUser):
     def display_name(self):
         return self.user.first_name + " " + self.user.last_name
 
+    @property
+    def email(self):
+        return self.user.email  # TODO figure out what email to return
+
     def __str__(self):
         return '%s %s %s' % (self.user.first_name, self.user.last_name, self.user.email)
 

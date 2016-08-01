@@ -10,7 +10,8 @@ from schools.models import Session
 
 
 class EmailUser(PolymorphicModel):
-    pass
+    def __str__(self):
+        return str(self.get_real_instance())
 
 
 class SisEmailUser(EmailUser):

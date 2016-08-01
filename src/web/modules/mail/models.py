@@ -67,7 +67,7 @@ class ContactList(models.Model):
     owner = models.ForeignKey(SisEmailUser)
 
     def __str__(self):
-        return 'List of user ' + self.owner.__str__()
+        return 'List of user ' + str(self.owner)
 
 
 class ContactRecord(models.Model):
@@ -76,7 +76,7 @@ class ContactRecord(models.Model):
     person = models.ForeignKey(EmailUser)
 
     def __str__(self):
-        return self.person.__str__()
+        return str(self.person)
 
 
 class PersonalEmail(models.Model):

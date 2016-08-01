@@ -9,6 +9,8 @@ class ContactListAdmin(admin.ModelAdmin):
         'owner',
     )
 
+admin.site.register(models.ContactList, ContactListAdmin)
+
 
 class ContactRecordAdmin(admin.ModelAdmin):
     list_display = (
@@ -21,12 +23,16 @@ class ContactRecordAdmin(admin.ModelAdmin):
         'contact_list',
     )
 
+admin.site.register(models.ContactRecord, ContactRecordAdmin)
+
 
 class SisEmailUserAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'user',
     )
+
+admin.site.register(models.SisEmailUser, SisEmailUserAdmin)
 
 
 class ExternalEmailUserAdmin(admin.ModelAdmin):
@@ -36,8 +42,13 @@ class ExternalEmailUserAdmin(admin.ModelAdmin):
         'email',
     )
 
-
-admin.site.register(models.SisEmailUser, SisEmailUserAdmin)
 admin.site.register(models.ExternalEmailUser, ExternalEmailUserAdmin)
-admin.site.register(models.ContactList, ContactListAdmin)
-admin.site.register(models.ContactRecord, ContactRecordAdmin)
+
+
+class PersonalEmailAdmin(admin.ModelAdmin):
+    list_display = ('id', 'email_name', 'hash', 'is_active', 'owner')
+
+
+admin.site.register(models.PersonalEmail, PersonalEmailAdmin)
+
+

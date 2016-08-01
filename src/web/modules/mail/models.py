@@ -6,6 +6,7 @@ from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
 
 from users.models import User
+from schools.models import Session
 
 
 class EmailUser(PolymorphicModel):
@@ -75,3 +76,19 @@ class ContactRecord(models.Model):
 
     def __str__(self):
         return self.person.__str__()
+
+
+class PersonalEmail(models.Model):
+    email_name = models.CharField(max_length=100, help_text='Например, ivan-ivanov')
+
+    hash = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text='Добавляется к email-name для идентификации пользователя'
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    owner = models.ForeignKey(SisEmailUser)
+
+    sessions = models.ManyToManyField(Session)

@@ -1,0 +1,28 @@
+{% extends 'staff_layout.html' %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block topbar %}{% endblock %}
+
+{% block content %}
+    {% if area == 'global' %}
+        <h4>Глобальные настройки</h4>
+    {% elif area == 'school' %}
+        <h4>Настройки для школы {{ school_name }}</h4>
+    {% elif area == 'session' %}
+        <h4>Настройки для смены {{ session_name }}</h4>
+    {% endif %}
+    
+    {% for group in settings_groups %}
+        <div class="group">
+            <h5> {{ group.display_name }} </h5>
+            {% for item in group.items %}
+                <div class="item">
+                    <strong>{{ item.display_name }}</strong>
+                    <p>{{ item.value }}</p>
+                </div>
+            {% endfor %}
+            <hr>
+        </div>
+    {% endfor %}
+{% endblock %}

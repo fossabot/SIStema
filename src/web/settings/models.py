@@ -34,7 +34,7 @@ class SettingsItem(PolymorphicModel):
 
     app = models.CharField(max_length=50)
 
-    group = models.ForeignKey(Group, null=True, blank=True)
+    group = models.ForeignKey(Group, null=True, blank=True, related_name='items')
 
     def save(self, *args, **kwargs):
         if self.school_id is not None and self.session_id is not None:

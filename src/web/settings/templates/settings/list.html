@@ -1,5 +1,7 @@
 {% extends 'staff_layout.html' %}
 
+{% load dict_tags %}
+
 {% block title %}Настройки{% endblock %}
 
 {% block topbar %}{% endblock %}
@@ -12,17 +14,31 @@
     {% elif area == 'session' %}
         <h4>Настройки для смены {{ session_name }}</h4>
     {% endif %}
-    
-    {% for group in settings_groups %}
-        <div class="group">
-            <h5> {{ group.display_name }} </h5>
-            {% for item in group.items %}
+
+    {% for app in apps %}
+        <h5>{{ app }}</h5>
+        {% if apps|get_item:app.groups %}
+            {% for group in apps|get_item:app.groups %}
+                 <div class="group">
+                     <h5> {{ group.display_name }} </h5>
+                     {% for item in group.items %}
+                         <div class="item">
+                             <strong>{{ item.display_name }}</strong>
+                             <p>{{ item.value }}</p>
+                         </div>
+                     {% endfor %}
+                     <hr>
+                 </div>
+            {% endfor %}
+        {% endif %}
+        <br>
+        {% if apps|get_item:app.non_groups %}
+            {% for item in apps|get_item:app.non_groups %}
                 <div class="item">
                     <strong>{{ item.display_name }}</strong>
                     <p>{{ item.value }}</p>
                 </div>
             {% endfor %}
-            <hr>
-        </div>
+        {% endif %}
     {% endfor %}
 {% endblock %}

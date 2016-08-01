@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^questionnaire/', include('questionnaire.urls')),
     url(r'^frontend/', include('frontend.urls', namespace='frontend')),
+    url(r'^settings/', include('settings.urls', namespace='settings')),
     url(r'^(?P<school_name>[^/]+)/', include('schools.urls', namespace='school')),
     url(r'^hijack/', include('hijack.urls')),
 ]

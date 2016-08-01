@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'home',
     'frontend',
     'generator',
+    'settings',
 
     'modules.ejudge',
     'modules.entrance',

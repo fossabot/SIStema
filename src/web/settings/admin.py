@@ -1,5 +1,5 @@
 from django.contrib import admin
-from sistema import models
+from settings import models
 
 
 class SettingsItemAdmin(admin.ModelAdmin):

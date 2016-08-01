@@ -9,6 +9,7 @@ class ContactListAdmin(admin.ModelAdmin):
         'owner',
     )
 
+
 admin.site.register(models.ContactList, ContactListAdmin)
 
 
@@ -23,6 +24,7 @@ class ContactRecordAdmin(admin.ModelAdmin):
         'contact_list',
     )
 
+
 admin.site.register(models.ContactRecord, ContactRecordAdmin)
 
 
@@ -31,6 +33,7 @@ class SisEmailUserAdmin(admin.ModelAdmin):
         'id',
         'user',
     )
+
 
 admin.site.register(models.SisEmailUser, SisEmailUserAdmin)
 
@@ -50,5 +53,12 @@ class PersonalEmailAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.PersonalEmail, PersonalEmailAdmin)
+
+
+class EmailMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'sender', 'subject', 'created_at')
+
+
+admin.site.register(models.EmailMessage, EmailMessageAdmin)
 
 

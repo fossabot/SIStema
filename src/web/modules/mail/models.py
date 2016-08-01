@@ -10,7 +10,8 @@ from schools.models import Session
 
 
 class EmailUser(PolymorphicModel):
-    pass
+    def __str__(self):
+        return str(self.get_real_instance())
 
 
 class SisEmailUser(EmailUser):
@@ -45,21 +46,21 @@ class Attachment(models.Model):
 class EmailMessage(models.Model):
     sender = models.ForeignKey(EmailUser, related_name='sent_emails')
 
-    recipients = models.ManyToManyField(EmailUser, related_name='received_emails')
+    recipients = models.ManyToManyField(EmailUser, related_name='received_emails', blank=True)
 
-    cc_recipients = models.ManyToManyField(EmailUser, related_name='cc_received_emails')
+    cc_recipients = models.ManyToManyField(EmailUser, related_name='cc_received_emails', blank=True)
 
-    reply_to = models.ForeignKey(EmailUser, related_name='+')
+    reply_to = models.ForeignKey(EmailUser, related_name='+', blank=True, null=True, default=None)
 
-    subject = models.TextField()
+    subject = models.TextField(blank=True)
 
-    html_text = models.TextField()
+    html_text = models.TextField(blank=True)
 
-    attachments = models.ManyToManyField(Attachment)
+    attachments = models.ManyToManyField(Attachment, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    headers = models.TextField()
+    headers = models.TextField(blank=True)
 
 
 class ContactList(models.Model):

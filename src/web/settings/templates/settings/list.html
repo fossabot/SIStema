@@ -8,35 +8,37 @@
 
 {% block content %}
     {% if area == 'global' %}
-        <h4>Глобальные настройки</h4>
+        <h2>Глобальные настройки</h2>
     {% elif area == 'school' %}
-        <h4>Настройки для школы {{ school_name }}</h4>
+        <h2>Настройки для школы {{ school_name }}</h2>
     {% elif area == 'session' %}
-        <h4>Настройки для смены {{ session_name }}</h4>
+        <h2>Настройки для смены {{ session_name }}</h2>
     {% endif %}
 
     {% for app in apps %}
-        <h5>{{ app }}</h5>
-        {% if apps|get_item:app.groups %}
-            {% for group in apps|get_item:app.groups %}
-                 <div class="group">
-                     <h5> {{ group.display_name }} </h5>
-                     {% for item in group.items %}
-                         <div class="item">
-                             <strong>{{ item.display_name }}</strong>
-                             <p>{{ item.value }}</p>
-                         </div>
-                     {% endfor %}
-                     <hr>
-                 </div>
+        <h3>{{ app }}</h3>
+        {% if apps|get_item:app|get_item:'groups' %}
+            {% for group in apps|get_item:app|get_item:'groups' %}
+                <div class="group">
+                    <h5> {{ group.display_name }} </h5>
+                    {% for item in group.items %}
+                        <div class="item">
+                            <strong>{{ item.display_name }}</strong>
+                            <p class="lead">{{ item.value }}</p>
+                        <button class="btn">edit</button>
+                        </div>
+                    {% endfor %}
+                    <hr>
+                </div>
             {% endfor %}
+            <br>
         {% endif %}
-        <br>
-        {% if apps|get_item:app.non_groups %}
-            {% for item in apps|get_item:app.non_groups %}
+        {% if apps|get_item:app|get_item:'non_groups' %}
+            {% for item in apps|get_item:app|get_item:'non_groups' %}
                 <div class="item">
                     <strong>{{ item.display_name }}</strong>
-                    <p>{{ item.value }}</p>
+                    <p class="lead">{{ item.value }}</p>
+                    <button class="btn">edit</button>
                 </div>
             {% endfor %}
         {% endif %}

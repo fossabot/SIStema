@@ -25,16 +25,16 @@ def global_settings_list(request):
     print(settings_list)
     groups = groups_list_from_settings_list(settings_list)
     print(groups)
-    return render(request, 'settings/list.html', {'groups': groups, 'area': 'global'})
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'global'})
 
 
 def school_settings_list(request, school_name):
     settings_list = models.SettingsItem.objects.filter(school__isnull=False, session__isnull=True)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'groups': groups, 'area': 'school', 'name': school_name})
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school_name})
 
 
 def session_settings_list(request, school_name, session_name):
     settings_list = models.SettingsItem.objects.filter(school__isnull=True, session__isnull=False)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'groups': groups, 'area': 'session', 'name': session_name})
+    return render(request, 'settings/list.html', {'apps ': groups, 'area': 'session', 'name': session_name})

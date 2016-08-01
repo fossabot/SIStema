@@ -1,12 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.http.response import JsonResponse
+from django.shortcuts import render
 
 from . import models
 
 
 @login_required
 def compose(request):
-    pass
+    return render(request, 'mail/compose.html')
 
 
 @login_required

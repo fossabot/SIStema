@@ -6,7 +6,7 @@
 
 {% block content %}
     <div class="email-recipient-container">
-        <input type="text" class="email-recipient" data-submit-url="/mail/contacts">
+        <input type="text" class="email-recipient" data-submit-url="{% url 'mail:contacts' %}">
         <div class="contact-hints"></div>
     </div>
 {% endblock %}

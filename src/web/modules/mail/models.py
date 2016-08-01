@@ -64,8 +64,14 @@ class EmailMessage(models.Model):
 class ContactList(models.Model):
     owner = models.ForeignKey(SisEmailUser)
 
+    def __str__(self):
+        return 'List of user ' + self.owner.__str__()
+
 
 class ContactRecord(models.Model):
     contact_list = models.ForeignKey(ContactList, related_name='contacts')
 
     person = models.ForeignKey(EmailUser)
+
+    def __str__(self):
+        return self.person.__str__()

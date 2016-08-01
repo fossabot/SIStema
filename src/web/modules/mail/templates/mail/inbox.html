@@ -1,0 +1,11 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}Почта{% endblock %}
+
+{% block content %}
+    {% for email in ordered_inbox_email_list %}
+        <div>
+            {{ email.subject }}
+        </div>
+    {% endfor %}
+{% endblock %}

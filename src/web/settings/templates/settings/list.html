@@ -7,26 +7,20 @@
 {% block topbar %}{% endblock %}
 
 {% block content %}
-    {% if area == 'global' %}
-        <h2>Глобальные настройки</h2>
-    {% elif area == 'school' %}
-        <h2>Настройки для школы {{ school_name }}</h2>
-    {% elif area == 'session' %}
-        <h2>Настройки для смены {{ session_name }}</h2>
-    {% endif %}
+    <h1>
+        {% if area == 'global' %} Глобальные настройки
+        {% elif area == 'school' %} Настройки для школы {{ school_name }}
+        {% elif area == 'session' %} Настройки для смены {{ session_name }}{% endif %}
+    </h1>
 
     {% for app in apps %}
-        <h3>{{ app }}</h3>
+        <h2>{{ app|title }}</h2>
         {% if apps|get_item:app|get_item:'groups' %}
             {% for group in apps|get_item:app|get_item:'groups' %}
                 <div class="group">
-                    <h5> {{ group.display_name }} </h5>
-                    {% for item in group.items %}
-                        <div class="item">
-                            <strong>{{ item.display_name }}</strong>
-                            <p class="lead">{{ item.value }}</p>
-                        <button class="btn">edit</button>
-                        </div>
+                    <h3> {{ group.display_name }} </h3>
+                    {% for item in group.items.all %}
+                        {% include 'settings/_settings_item.html' with item=item %}
                     {% endfor %}
                     <hr>
                 </div>
@@ -35,11 +29,7 @@
         {% endif %}
         {% if apps|get_item:app|get_item:'non_groups' %}
             {% for item in apps|get_item:app|get_item:'non_groups' %}
-                <div class="item">
-                    <strong>{{ item.display_name }}</strong>
-                    <p class="lead">{{ item.value }}</p>
-                    <button class="btn">edit</button>
-                </div>
+                {% include 'settings/_settings_item.html' with item=item %}
             {% endfor %}
         {% endif %}
     {% endfor %}

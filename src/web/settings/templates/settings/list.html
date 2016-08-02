@@ -7,18 +7,18 @@
 {% block topbar %}{% endblock %}
 
 {% block content %}
-    <h2>
+    <h1>
         {% if area == 'global' %} Глобальные настройки
         {% elif area == 'school' %} Настройки для школы {{ school_name }}
         {% elif area == 'session' %} Настройки для смены {{ session_name }}{% endif %}
-    </h2>
+    </h1>
 
     {% for app in apps %}
-        <h3>{{ app }}</h3>
+        <h2>{{ app|title }}</h2>
         {% if apps|get_item:app|get_item:'groups' %}
             {% for group in apps|get_item:app|get_item:'groups' %}
                 <div class="group">
-                    <h5> {{ group.display_name }} </h5>
+                    <h3> {{ group.display_name }} </h3>
                     {% for item in group.items.all %}
                         {% include 'settings/_settings_item.html' with item=item %}
                     {% endfor %}

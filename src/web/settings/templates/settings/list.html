@@ -20,11 +20,7 @@
                 <div class="group">
                     <h5> {{ group.display_name }} </h5>
                     {% for item in group.items.all %}
-                        <div class="item">
-                            <strong>{{ item.display_name }}</strong>
-                            <p class="lead">{{ item.value }}</p>
-                            <button class="btn">edit</button>
-                        </div>
+                        {% include 'settings/_settings_item.html' with item=item %}
                     {% endfor %}
                     <hr>
                 </div>
@@ -33,11 +29,7 @@
         {% endif %}
         {% if apps|get_item:app|get_item:'non_groups' %}
             {% for item in apps|get_item:app|get_item:'non_groups' %}
-                <div class="item">
-                    <strong>{{ item.display_name }}</strong>
-                    <p class="lead">{{ item.value }}</p>
-                    <button class="btn">edit</button>
-                </div>
+                {% include 'settings/_settings_item.html' with item=item %}
             {% endfor %}
         {% endif %}
     {% endfor %}

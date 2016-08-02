@@ -25,7 +25,7 @@ def gen_email():
 
 def gen_sub():
     subs = ['From Monaco', 'Film! Film! Film!', 'It is your mom', 'Attention!', 'About books',
-            'Buying a car', 'Sunrise', 'Big Data Problem', 'New Summer School', 'New album'
+            'Buying a car', 'Sunrise', 'Big Data Problem', 'New Summer School', 'New album',
             'Dancing at the weekend', 'The writings on the wall', 'I wish you were here',
             'Drops of Jupiter', 'If today was your last day']
     return choice(subs)
@@ -34,7 +34,7 @@ def gen_sub():
 def gen_text():
     phrases = ['Are you sure?', 'You should eat more apples.', 'What kind of music do you like?',
                'I think, Kant is cute.', 'It was incredible!', 'This car is red.', 'It is so hot!',
-               'I will be at the party.', 'Have you ever seen this film?', 'Please, help me!'
+               'I will be at the party.', 'Have you ever seen this film?', 'Please, help me!',
                'London is the capital of Great Britain.']
     shuffle(phrases)
     text = ''

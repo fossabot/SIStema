@@ -18,7 +18,7 @@ class SisEmailUser(EmailUser):
     user = models.ForeignKey(User, related_name='email_user')
 
     def __str__(self):
-        return '%s %s %s' % (self.user.first_name, self.user.last_name, self.user.email)
+        return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
 
 
 class ExternalEmailUser(EmailUser):
@@ -27,7 +27,7 @@ class ExternalEmailUser(EmailUser):
     email = models.EmailField()
 
     def __str__(self):
-        return '%s %s' % (self.display_name, self.email)
+        return '"%s" <%s>' % (self.display_name, self.email)
 
 
 class Attachment(models.Model):
@@ -63,20 +63,16 @@ class EmailMessage(models.Model):
     headers = models.TextField(blank=True)
 
 
-class ContactList(models.Model):
-    owner = models.ForeignKey(SisEmailUser)
-
-    def __str__(self):
-        return 'List of user ' + self.owner.__str__()
-
-
 class ContactRecord(models.Model):
-    contact_list = models.ForeignKey(ContactList, related_name='contacts')
+    owner = models.ForeignKey(SisEmailUser, related_name='contacts')
 
     person = models.ForeignKey(EmailUser)
 
+    class Meta:
+        unique_together = ('person', 'owner')
+
     def __str__(self):
-        return self.person.__str__()
+        return str(self.person)
 
 
 class PersonalEmail(models.Model):

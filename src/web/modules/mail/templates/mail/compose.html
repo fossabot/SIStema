@@ -1,0 +1,15 @@
+{% extends 'user_layout.html' %}
+
+{% load staticfiles %}
+
+{% block title %}Отправить письмо{% endblock %}
+
+{% block content %}
+    <div class="email-recipient-container">
+        <input id="email-recipient" type="text" class="email-recipient-field" data-submit-url="{% url 'mail:contacts' %}">
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static 'mail/js/user_hints.js' %}"></script>
+{% endblock %}

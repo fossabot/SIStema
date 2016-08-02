@@ -3,25 +3,15 @@ from django.contrib import admin
 from . import models
 
 
-class ContactListAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'owner',
-    )
-
-
-admin.site.register(models.ContactList, ContactListAdmin)
-
-
 class ContactRecordAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'person',
-        'contact_list',
+        'owner',
     )
 
     list_filter = (
-        'contact_list',
+        'owner',
     )
 
 

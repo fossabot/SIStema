@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from . import models
@@ -19,18 +19,18 @@ def contacts(request):
     user_contact_list = models.ContactList.objects.get(owner=email_user.id)
     records = models.ContactRecord.objects.filter(
         Q(contact_list=user_contact_list.id) & (
-            Q(person__sisemailuser__user__email__contains=search_request) |
-            Q(person__sisemailuser__user__first_name__contains=search_request) |
-            Q(person__sisemailuser__user__last_name__contains=search_request) |
-            Q(person__externalemailuser__display_name__contains=search_request) |
-            Q(person__externalemailuser__email__contains=search_request)
+            Q(person__sisemailuser__user__email__icontains=search_request) |
+            Q(person__sisemailuser__user__first_name__icontains=search_request) |
+            Q(person__sisemailuser__user__last_name__icontains=search_request) |
+            Q(person__externalemailuser__display_name__icontains=search_request) |
+            Q(person__externalemailuser__email__icontains=search_request)
         )
     )
-    json = []
+    filtered_records = []
     for rec in records:
         if isinstance(rec.person, models.ExternalEmailUser):
-            json.append({'email': rec.person.email, 'display_name': rec.person.display_name})
+            filtered_records.append({'email': rec.person.email, 'display_name': rec.person.display_name})
         else:
-            json.append({'email': rec.person.user.email,
-                         'display_name': rec.person.user.first_name + ' ' + rec.person.user.last_name})
-    return HttpResponse({'records': json}) 
+            filtered_records.append({'email': rec.person.user.email,
+                                     'display_name': rec.person.user.first_name + ' ' + rec.person.user.last_name})
+    return JsonResponse({'records': filtered_records})

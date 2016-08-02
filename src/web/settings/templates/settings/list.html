@@ -21,7 +21,7 @@
             {% for group in apps|get_item:app|get_item:'groups' %}
                 <div class="group">
                     <h5> {{ group.display_name }} </h5>
-                    {% for item in group.items %}
+                    {% for item in group.items.all %}
                         <div class="item">
                             <strong>{{ item.display_name }}</strong>
                             <p class="lead">{{ item.value }}</p>

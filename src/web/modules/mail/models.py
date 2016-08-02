@@ -18,7 +18,7 @@ class SisEmailUser(EmailUser):
     user = models.ForeignKey(User, related_name='email_user')
 
     def __str__(self):
-        return '%s %s %s' % (self.user.first_name, self.user.last_name, self.user.email)
+        return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
 
 
 class ExternalEmailUser(EmailUser):
@@ -27,7 +27,7 @@ class ExternalEmailUser(EmailUser):
     email = models.EmailField()
 
     def __str__(self):
-        return '%s %s' % (self.display_name, self.email)
+        return '"%s" <%s>' % (self.display_name, self.email)
 
 
 class Attachment(models.Model):

@@ -2,19 +2,25 @@ $(document).ready
 (
     function()
     {
-        $('.email-recipient').on('input',
-            function()
+        $('#tags').autocomplete({source:
+            function(request, response)
             {
-                console.log('success')
-                var $this = $(this);
-                var search_value = $this.val();
-                var submit_url = $this.data('submit-url');
+                var search_value = request.term;
+                var submit_url = $(document).find('.email-recipient').data('submit-url');
+                var items = []
 
                 $.get(submit_url + '?search=' + encodeURIComponent(search_value), function (data) {
-                    $(document).find('.contact-hints').text(data.users);
+                    var encoded_quote = encodeURIComponent('"')
+                    for (var i = 0; i < data.records.length; i++) {
+                        var label_data = '"' + data.records[i].display_name + '" <' + data.records[i].email + '>'
+                        items.push({label: label_data,
+                                    value: data.records[i].email});
+                    }
+                    response(items)
                 },
                 'json')
             }
-        )
+        });
+        $('.ui-helper-hidden-accessible').attr('style', 'display: none;')
     }
 );

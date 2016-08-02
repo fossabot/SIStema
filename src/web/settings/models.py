@@ -1,6 +1,7 @@
+import django
+from django import forms
 from django.db import models
 from polymorphic.models import PolymorphicModel
-
 from schools.models import School, Session
 
 
@@ -42,6 +43,9 @@ class SettingsItem(PolymorphicModel):
 
         super().save()
 
+    def get_form_field(self):
+        return self.value.formfield()
+
 
 class IntegerSettingsItem(SettingsItem):
     value = models.IntegerField()
@@ -70,6 +74,28 @@ class EmailSettingsItem(SettingsItem):
 class DateTimeSettingsItem(SettingsItem):
     value = models.DateTimeField()
 
+    def get_form_field(self):
+        return forms.DateTimeField(
+            widget=django.forms.DateInput(attrs={
+                'class': 'datetimepicker',
+                'data-format': 'DD.MM.YYYY',
+                'data-view-mode': 'years',
+                'data-pick-time': 'false',
+                'placeholder': 'дд.мм.гггг',
+            }),
+        )
+
 
 class DateSettingsItem(SettingsItem):
     value = models.DateField()
+
+    def get_form_field(self):
+        return forms.DateTimeField(
+            widget=django.forms.DateInput(attrs={
+                'class': 'datetimepicker',
+                'data-format': 'DD.MM.YYYY',
+                'data-view-mode': 'years',
+                'data-pick-time': 'false',
+                'placeholder': 'дд.мм.гггг',
+            }),
+        )

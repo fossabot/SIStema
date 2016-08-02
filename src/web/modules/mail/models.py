@@ -10,7 +10,8 @@ from schools.models import Session
 
 
 class EmailUser(PolymorphicModel):
-    pass
+    def __str__(self):
+        return str(self.get_real_instance())
 
 
 class SisEmailUser(EmailUser):
@@ -71,7 +72,7 @@ class ContactRecord(models.Model):
         unique_together = ('person', 'owner')
 
     def __str__(self):
-        return self.person.__str__()
+        return str(self.person)
 
 
 class PersonalEmail(models.Model):

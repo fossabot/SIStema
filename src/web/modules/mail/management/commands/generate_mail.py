@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 
 from ... import models
-from django.db import models as dbmodels
+import datetime
 from modules.mail.models import EmailUser
 
 
@@ -35,7 +35,8 @@ def gen_text():
     phrases = ['Are you sure?', 'You should eat more apples.', 'What kind of music do you like?',
                'I think, Kant is cute.', 'It was incredible!', 'This car is red.', 'It is so hot!',
                'I will be at the party.', 'Have you ever seen this film?', 'Please, help me!',
-               'London is the capital of Great Britain.']
+               'London is the capital of Great Britain.', 'You should play the piano.',
+               'I care what you think.', 'We are stressed out.']
     shuffle(phrases)
     text = ''
     for i in range(randint(5, 10)):
@@ -44,7 +45,7 @@ def gen_text():
 
 
 def gen_data():
-    return dbmodels.DateTimeField(auto_now_add=True)
+    return datetime.datetime.now()
 
 
 class Command(BaseCommand):
@@ -97,7 +98,7 @@ class Command(BaseCommand):
         new_email.save()
 
         print('Generation is succesfully.')
-        print('From: ', new_email.sender.display_name, ' <', str(new_email.sender.email), '>', sep='')
+        print('From:', str(new_email.sender))
         print('To:', str(recipient))
         if options['count_cc_recipients']:
             print('CC_Recipients:')

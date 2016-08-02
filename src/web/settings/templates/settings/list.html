@@ -7,13 +7,11 @@
 {% block topbar %}{% endblock %}
 
 {% block content %}
-    {% if area == 'global' %}
-        <h2>Глобальные настройки</h2>
-    {% elif area == 'school' %}
-        <h2>Настройки для школы {{ school_name }}</h2>
-    {% elif area == 'session' %}
-        <h2>Настройки для смены {{ session_name }}</h2>
-    {% endif %}
+    <h2>
+        {% if area == 'global' %} Глобальные настройки
+        {% elif area == 'school' %} Настройки для школы {{ school_name }}
+        {% elif area == 'session' %} Настройки для смены {{ session_name }}{% endif %}
+    </h2>
 
     {% for app in apps %}
         <h3>{{ app }}</h3>

@@ -17,8 +17,7 @@ def groups_list_from_settings_list(settings):
         else:
             group = setting.group
             if group not in app_dict['groups']:
-                app_dict['groups'][group] = []
-            app_dict['groups'][group].append(setting)
+                app_dict['groups'].append(group)
     return apps
 
 

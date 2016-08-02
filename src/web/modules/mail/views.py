@@ -6,7 +6,7 @@ from django.http import HttpResponseForbidden
 from . import models
 
 
-def check_access(user, email):
+def can_user_view_message(user, email):
     if isinstance(email.sender, models.SisEmailUser) and user == email.sender.user:
         return True
     if email.recipients.filter(sisemailuser__user=user):
@@ -32,7 +32,7 @@ def inbox(request):
 def message(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
-    if not check_access(request.user, email):
+    if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
 
     return render(request, 'mail/message.html', {

@@ -17,12 +17,11 @@ $(document).ready
             return split_by_commas(val).pop()
         }
 
-        $('#tags').autocomplete({
+        $('#email-recipient').autocomplete({
             source: function(request, response)
             {
                 var search_value = extract_last(request.term);
-                console.log(search_value)
-                var submit_url = $(document).find('.email-recipient').data('submit-url');
+                var submit_url = $('#email-recipient').attr('data-submit-url');
                 var items = []
 
                 $.get(submit_url + '?search=' + encodeURIComponent(search_value), function (data) {

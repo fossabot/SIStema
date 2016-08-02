@@ -25,9 +25,7 @@ def groups_list_from_settings_list(settings):
 @sistema.staff.only_staff
 def global_settings_list(request):
     settings_list = models.SettingsItem.objects.filter(school__isnull=True, session__isnull=True)
-    print(settings_list)
     groups = groups_list_from_settings_list(settings_list)
-    print(groups)
     return render(request, 'settings/list.html', {'apps': groups, 'area': 'global'})
 
 

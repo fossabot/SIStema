@@ -1,14 +1,14 @@
+from random import choice, shuffle, randint
+
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ObjectDoesNotExist
+
 from ... import models
 from django.db import models as dbmodels
 from modules.mail.models import EmailUser
-from users.models import User
-from random import choice
-from random import randint
-from django.core.exceptions import ObjectDoesNotExist
 
 
-def gen_d_name():
+def gen_display_name():
     first_names = ['Ben', 'Max', 'Ivan', 'Kate', 'Alex', 'Tina', 'Andrew', 'Michael',
                    'Serg', 'Leo', 'Polly', 'Egor', 'Den', 'Ann', 'Stas']
     last_names = ['Ruth', 'Nelson', 'Dijkstra', 'Todd', 'Damon', 'Di Caprio',
@@ -17,10 +17,10 @@ def gen_d_name():
 
 
 def gen_email():
-    emails = ['ben@ya.ru1', 'max@ya.ru1', 'ivan@ya.ru1', 'kate@ya.ru1', 'alex@ya.ru1', 'tina@ya.ru1',
-              'andrew@ya.ru1', 'michael@ya.ru1', 'serg@ya.ru1', 'leo@ya.ru1', 'polly@ya.ru1',
-              'egor@ya.ru1', 'den@ya.ru1', 'ann@ya.ru1', 'stas@ya.ru1']
-    return choice(emails)
+    login = ['ben', 'max', 'ivan', 'kate', 'alex', 'tina', 'andrew', 'michael', 'serg',
+             'leo', 'polly', 'egor', 'den', 'ann', 'stas']
+    domens = ['@ya.ru1', '@gmail.com1', '@abacaba.com1', '@mail.ru1', '@asdb.net1', '@ayo.org1']
+    return choice(login) + choice(domens)
 
 
 def gen_sub():
@@ -33,18 +33,18 @@ def gen_sub():
 
 def gen_text():
     phrases = ['Are you sure?', 'You should eat more apples.', 'What kind of music do you like?',
-               'I think, Kant is cute.', 'It was incredible!', 'This car is red.', 'There is so hot!',
+               'I think, Kant is cute.', 'It was incredible!', 'This car is red.', 'It is so hot!',
                'I will be at the party.', 'Have you ever seen this film?', 'Please, help me!'
                'London is the capital of Great Britain.']
-    text = ""
+    shuffle(phrases)
+    text = ''
     for i in range(randint(5, 10)):
-        text += choice(phrases) + ' '
+        text += phrases[i] + ' '
     return text
 
 
 def gen_data():
-    data = dbmodels.DateTimeField(auto_now_add=True)
-    return data
+    return dbmodels.DateTimeField(auto_now_add=True)
 
 
 class Command(BaseCommand):
@@ -52,22 +52,21 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('emailuser_id', type=str)
-
-        #parser.add_argument('sender_id', default=False, )
+        parser.add_argument('count_cc_recipients', type=int)
+        #parser.add_argument('sender_id', default=False)
 
     def handle(self, *args, **options):
         emailuser_id = options['emailuser_id']
-        #print(args)
-        #print(emailuser_id)
 
         if 'sender_id' in options.keys():
             sender_id = options['sender']
             try:
-                sender = User.objects.set(id=sender_id)
+                sender = EmailUser.objects.set(id=sender_id)
             except ObjectDoesNotExist:
                 print('Error: Given sender does not exist.')
+                return
         else:
-            sender = models.ExternalEmailUser(display_name=gen_d_name(), email=gen_email())
+            sender = models.ExternalEmailUser(display_name=gen_display_name(), email=gen_email())
             sender.save()
             try:
                 while models.ExternalEmailUser.objects.filter(email=sender.email).exists():
@@ -78,19 +77,32 @@ class Command(BaseCommand):
         new_email = models.EmailMessage(sender=sender, subject=gen_sub(), html_text=gen_text(), created_at=gen_data())
         new_email.save()
 
+        for j in range(options['count_cc_recipients']):
+            cc_recipient = models.ExternalEmailUser(display_name=gen_display_name(), email=gen_email())
+            cc_recipient.save()
+            try:
+                while models.ExternalEmailUser.objects.filter(email=cc_recipient.email).exists():
+                    cc_recipient.email = cc_recipient.email[:-1] + str(int(cc_recipient.email[-1]) + 1)
+            except ObjectDoesNotExist:
+                cc_recipient.save()
+            new_email.cc_recipients.add(cc_recipient)
+
         try:
             recipient = EmailUser.objects.get(id=emailuser_id)
         except ObjectDoesNotExist:
             print('Error: Given recipient does not exist.')
+            return
 
         new_email.recipients.add(recipient)
         new_email.save()
 
         print('Generation is succesfully.')
         print('From: ', new_email.sender.display_name, ' <', str(new_email.sender.email), '>', sep='')
-        #print('To: ', new_email.recipients.first_name, ' ', new_email.recipients.last_name, ' <',
-              #str(new_email.recipients.email), '>', sep='')
-        print('To: ', str(recipient), sep='')
+        print('To:', str(recipient))
+        if options['count_cc_recipients']:
+            print('CC_Recipients:')
+            for user in new_email.cc_recipients.all():
+                print('    ', str(user))
         print('Subject:', new_email.subject)
         print('Text:', new_email.html_text)
         print('Created at', str(new_email.created_at))

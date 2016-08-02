@@ -1,3 +1,5 @@
+import importlib
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
@@ -5,8 +7,6 @@ import questionnaire.views as questionnaire_views
 import sistema.staff
 from settings import views
 from .decorators import school_view
-
-import importlib
 
 
 class UserStep:
@@ -73,10 +73,12 @@ def questionnaire(request, questionnaire_name):
 
 
 @sistema.staff.only_staff
-def school_settings_list(request, school_name):
-    return views.school_settings_list(request, school_name)
+@school_view
+def school_settings_list(request):
+    return views.school_settings_list(request, request.school.name)
 
 
 @sistema.staff.only_staff
-def session_settings_list(request, school_name, session_name):
-    return views.session_settings_list(request, school_name, session_name)
+@school_view
+def session_settings_list(request, session_name):
+    return views.session_settings_list(request, session_name)

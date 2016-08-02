@@ -1,5 +1,3 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponse
 from django.shortcuts import render
 
 import sistema.staff
@@ -36,7 +34,7 @@ def school_settings_list(request, school_name):
 
 
 @sistema.staff.only_staff
-def session_settings_list(request, school_name, session_name):
+def session_settings_list(request, session_name):
     settings_list = models.SettingsItem.objects.filter(school__isnull=True, session__isnull=False)
     groups = groups_list_from_settings_list(settings_list)
     return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': session_name})

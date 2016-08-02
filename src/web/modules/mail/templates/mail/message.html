@@ -1,0 +1,30 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}{{ email.subject }}{% endblock %}
+
+{% block content %}
+    <div><div>
+        <b>От кого:</b> {{ email.sender }}
+    </div>
+    <div>
+        <b>Кому:</b>
+        {% for recipient in email.recipients.all %}
+            {{ recipient }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    </div>
+    {% if email.cc_recipients.all %}
+        <div>
+            <b>Копия:</b>
+            {% for cc_recipient in email.cc_recipients.all %}
+                {{ cc_recipient }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        </div></div>
+    {% endif %}
+    <div>
+        <b>Дата:</b> {{ email.created_at }}
+    </div>
+    <br>
+    <div style="background-color: white">
+        {{ email.html_text|safe }}
+    </div>
+{% endblock %}

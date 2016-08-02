@@ -1,0 +1,27 @@
+{% extends 'user_layout.html' %}
+
+{% block title %}Почта{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="mw800 center-block mt30">
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+                    <div class="panel-body p25 pt10">
+                        <div class="section mb25 mtn ptn"><h3>Входящие</h3></div>
+                        {% for email in inbox_email_list %}
+                            <div class="section mb20">
+                                {{ email.sender.display_name }} <a href="{% url 'mail:message' email.id %}">
+                                {{ email.subject }}</a> —
+                                {{ email.html_text|truncatechars:100|striptags }}{{ email.created_at }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" class="button btn-success">Написать письмо</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

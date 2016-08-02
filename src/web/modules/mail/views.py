@@ -13,6 +13,7 @@ def compose(request):
 
 @login_required
 def contacts(request):
+    NUMBER_OF_RETURNING_RECORDS = 10
     search_request = request.GET['search']
     user_id = request.user.id
     email_user = models.SisEmailUser.objects.get(user=user_id)
@@ -28,6 +29,8 @@ def contacts(request):
     )
     filtered_records = []
     for rec in records:
+        if len(filtered_records) == NUMBER_OF_RETURNING_RECORDS:
+            break
         if isinstance(rec.person, models.ExternalEmailUser):
             filtered_records.append({'email': rec.person.email, 'display_name': rec.person.display_name})
         else:

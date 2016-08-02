@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render
 
 from . import models
@@ -15,8 +15,10 @@ def compose(request):
 def contacts(request):
     NUMBER_OF_RETURNING_RECORDS = 10
     search_request = request.GET['search']
-    user_id = request.user.id
-    email_user = models.SisEmailUser.objects.get(user=user_id)
+    try:
+        email_user = models.SisEmailUser.objects.get(user=request.user)
+    except models.EmailUser.DoesNotExist:
+        return HttpResponseNotFound("Can't find your mail box.")
     records = models.ContactRecord.objects.filter(
         Q(owner=email_user) & (
             Q(person__sisemailuser__user__email__icontains=search_request) |
@@ -25,11 +27,9 @@ def contacts(request):
             Q(person__externalemailuser__display_name__icontains=search_request) |
             Q(person__externalemailuser__email__icontains=search_request)
         )
-    )
+    )[:NUMBER_OF_RETURNING_RECORDS]
     filtered_records = []
     for rec in records:
-        if len(filtered_records) == NUMBER_OF_RETURNING_RECORDS:
-            break
         if isinstance(rec.person, models.ExternalEmailUser):
             filtered_records.append({'email': rec.person.email, 'display_name': rec.person.display_name})
         else:

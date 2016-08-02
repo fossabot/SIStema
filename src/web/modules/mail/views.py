@@ -17,9 +17,8 @@ def contacts(request):
     search_request = request.GET['search']
     user_id = request.user.id
     email_user = models.SisEmailUser.objects.get(user=user_id)
-    user_contact_list = models.ContactList.objects.get(owner=email_user.id)
     records = models.ContactRecord.objects.filter(
-        Q(contact_list=user_contact_list.id) & (
+        Q(owner=email_user) & (
             Q(person__sisemailuser__user__email__icontains=search_request) |
             Q(person__sisemailuser__user__first_name__icontains=search_request) |
             Q(person__sisemailuser__user__last_name__icontains=search_request) |

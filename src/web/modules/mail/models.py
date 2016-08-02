@@ -19,14 +19,11 @@ class SisEmailUser(EmailUser):
 
     @property
     def display_name(self):
-        return self.user.first_name + " " + self.user.last_name
-
-    @property
-    def email(self):
-        return self.user.email  # TODO figure out what email to return
+        return '%s %s' % (self.user.first_name, self.user.last_name)
 
     def __str__(self):
-        return '%s %s %s' % (self.user.first_name, self.user.last_name, self.user.email)
+        return '"%s %s"<%s>' % (self.user.first_name, self.user.last_name, self.user.email)
+        # TODO figure out what email to return
 
 
 class ExternalEmailUser(EmailUser):
@@ -35,7 +32,7 @@ class ExternalEmailUser(EmailUser):
     email = models.EmailField()
 
     def __str__(self):
-        return '%s %s' % (self.display_name, self.email)
+        return '"%s"<%s>' % (self.display_name, self.email)
 
 
 class Attachment(models.Model):

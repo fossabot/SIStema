@@ -1,22 +1,22 @@
 {% extends 'user_layout.html' %}
 
-{% block title %}{{ message_id }}{% endblock %}
+{% block title %}{{ email.subject }}{% endblock %}
 
 {% block content %}
     <div><div>
-        <b>Кому:</b> {{ email.sender.display_name }} {{ email.sender.email }}
+        <b>От кого:</b> {{ email.sender }}
     </div>
     <div>
-        <b>От кого:</b>
+        <b>Кому:</b>
         {% for recipient in email.recipients.all %}
-            {{ recipient.display_name }} {{recipient.email}}{% if not forloop.last %},{% endif %}
+            {{ recipient }}{% if not forloop.last %},{% endif %}
         {% endfor %}
     </div>
     {% if email.cc_recipients.all %}
         <div>
             <b>Копия:</b>
             {% for cc_recipient in email.cc_recipients.all %}
-                {{ cc_recipient.display_name }} {{ cc_recipient.email }}{% if not forloop.last %},{% endif %}
+                {{ cc_recipient }}{% if not forloop.last %},{% endif %}
             {% endfor %}
         </div></div>
     {% endif %}
@@ -25,6 +25,6 @@
     </div>
     <br>
     <div style="background-color: white">
-        {{ email.html_text }}
+        {{ email.html_text|safe }}
     </div>
 {% endblock %}

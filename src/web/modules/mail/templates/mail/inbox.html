@@ -3,7 +3,7 @@
 {% block title %}Почта{% endblock %}
 
 {% block content %}
-    {% for email in ordered_inbox_email_list %}
+    {% for email in inbox_email_list %}
         <div>
             {{ email.sender.display_name }} <a href="{% url 'mail:message' email.id %}">{{ email.subject }}</a> —
             {{ email.html_text|truncatechars:100 }}{{ email.created_at }}

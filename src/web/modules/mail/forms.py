@@ -15,13 +15,13 @@ class ComposeForm(forms.Form):
                                      'maxlength': MAXIMUM_LETTER_IN_LETTERS,
                                      'placeholder': 'Начните вводить почту',
                                  }))
-    email_them = forms.CharField(max_length=MAXIMUM_THEME_LENGTH,
+    email_theme = forms.CharField(max_length=MAXIMUM_THEME_LENGTH,
                                  required=False,
                                  label='',
                                  label_suffix='',
                                  widget=forms.TextInput(attrs={
                                      'class': 'form-control mb10',
-                                     'id': 'email-them',
+                                     'id': 'email-theme',
                                      'placeholder': 'Тема',
                                      'maxlength': MAXIMUM_THEME_LENGTH,
                                  }))

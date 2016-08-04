@@ -75,3 +75,15 @@ def message(request, message_id):
     return render(request, 'mail/message.html', {
         'email': email,
     })
+
+
+@login_required
+def reply(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+
+    if not can_user_view_message(request.user, email):
+        return HttpResponseForbidden()
+
+    return render(request, 'mail/message.html', {
+        'email': email,
+    })

@@ -6,7 +6,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.min.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.theme.min.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.structure.min.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css'%}"
+    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css'%}">
 {% endblock %}
 
 {% block title %}Новое письмо{% endblock %}
@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="panel-body p25 pt10">
-                        <form method="post" id="mail-composer" class="centered-form">
+                        <form method="post" id="mail-composer" class="centered-form" action="../send/">
                             {% csrf_token %}
                             {{ form }}
                             <div class="text-right">

@@ -4,12 +4,13 @@ from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseForbidden
 
-from . import models
+from . import models, forms
 
 
 @login_required
 def compose(request):
-    return render(request, 'mail/compose.html')
+    form = forms.ComposeForm()
+    return render(request, 'mail/compose.html', {'form': form})
 
 
 @login_required
@@ -71,3 +72,14 @@ def message(request, message_id):
     return render(request, 'mail/message.html', {
         'email': email,
     })
+
+
+@login_required
+def send_email(request):
+    if request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+        if form.is_valid():
+            return JsonResponse({'result': 'ok'})
+        else:
+            return JsonResponse({'result': 'fail'})
+    return JsonResponse({'error': 'bad method'})

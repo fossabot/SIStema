@@ -9,8 +9,8 @@
 {% block content %}
     <h1>
         {% if area == 'global' %} Глобальные настройки
-        {% elif area == 'school' %} Настройки для школы {{ school_name }}
-        {% elif area == 'session' %} Настройки для смены {{ session_name }}{% endif %}
+        {% elif area == 'school' %} Настройки для школы {{ name }}
+        {% elif area == 'session' %} Настройки для смены {{ name }}{% endif %}
     </h1>
 
     {% for app in apps %}

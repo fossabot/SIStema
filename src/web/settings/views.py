@@ -46,7 +46,7 @@ def get_session(school_name, session_name):
         print(str(item))
         for existing_item in result:
             if existing_item.short_name == item.short_name:
-                del existing_item
+                result.remove(existing_item)
         result.append(item)
     return result
 
@@ -62,14 +62,17 @@ def global_settings_list(request):
 def school_settings_list(request, school_name):
     settings_list = get_school(school_name)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school_name})
+    school = School.objects.get(short_name=school_name)
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school.name})
 
 
 @sistema.staff.only_staff
 def session_settings_list(request, school_name, session_name):
     settings_list = get_session(school_name, session_name)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': session_name})
+    school = School.objects.get(short_name=school_name)
+    session = Session.objects.get(school=school, short_name=session_name)
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': str(session)})
 
 
 def edit_setting_item(request):

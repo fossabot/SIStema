@@ -29,11 +29,11 @@ def generate_domain():
 
 
 def generate_subject():
-    subs = ['From Monaco', 'Film! Film! Film!', 'It is your mom', 'Attention!', 'About books',
-            'Buying a car', 'Sunrise', 'Big Data Problem', 'New Summer School', 'New album',
-            'Dancing at the weekend', 'The writings on the wall', 'I wish you were here',
-            'Drops of Jupiter', 'If today was your last day']
-    return choice(subs)
+    subjects = ['From Monaco', 'Film! Film! Film!', 'It is your mom', 'Attention!', 'About books',
+                'Buying a car', 'Sunrise', 'Big Data Problem', 'New Summer School', 'New album',
+                'Dancing at the weekend', 'The writings on the wall', 'I wish you were here',
+                'Drops of Jupiter', 'If today was your last day']
+    return choice(subjects)
 
 
 def generate_text():
@@ -49,7 +49,7 @@ def generate_text():
     return text
 
 
-def generate_data():
+def generate_date():
     return datetime.datetime.now()
 
 
@@ -80,7 +80,7 @@ class Command(BaseCommand):
             sender.save()
 
         new_email = models.EmailMessage(sender=sender, subject=generate_subject(),
-                                        html_text=generate_text(), created_at=generate_data())
+                                        html_text=generate_text(), created_at=generate_date())
         new_email.save()
 
         for recipient_index in range(options['count_cc_recipients']):

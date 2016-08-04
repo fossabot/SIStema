@@ -62,7 +62,7 @@ def global_settings_list(request):
 def school_settings_list(request, school_name):
     settings_list = get_school(school_name)
     groups = groups_list_from_settings_list(settings_list)
-    school = School.objects.get(short_name=school_name)
+    school = get_object_or_404(School, short_name=school_name)
     return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school.name})
 
 
@@ -70,8 +70,8 @@ def school_settings_list(request, school_name):
 def session_settings_list(request, school_name, session_name):
     settings_list = get_session(school_name, session_name)
     groups = groups_list_from_settings_list(settings_list)
-    school = School.objects.get(short_name=school_name)
-    session = Session.objects.get(school=school, short_name=session_name)
+    school = get_object_or_404(School, short_name=school_name)
+    session = get_object_or_404(Session, school=school, short_name=session_name)
     return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': str(session)})
 
 

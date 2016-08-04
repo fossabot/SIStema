@@ -1,8 +1,9 @@
 <div class="item">
-    <h4 style="display: inline-block;">{{ item.display_name }}</h4>
+    <strong style="display: inline-block;">{{ item.display_name }}</strong>
     <button style="display: inline-block; margin-left: 0.5%;" class="btn btn-default btn-xs"
-            data-toggle="collapse" aria-expanded="false" aria-controls="edit-block-{{ item.id  }}"
-            href="#edit-block-{{ item.id }}">Изменить</button>
+            data-toggle="collapse" aria-expanded="false" aria-controls="edit-block-{{ item.id }}"
+            href="#edit-block-{{ item.id }}">Изменить
+    </button>
     <p class="lead">{{ item.value }}</p>
     <div class="collapse" id="edit-block-{{ item.id }}">
         Test!

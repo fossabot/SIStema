@@ -14,7 +14,7 @@
     </h1>
 
     {% for app in apps %}
-        <h2>{{ app|title }}</h2>
+        <h2 {% comment %}class="text-center"{% endcomment %}>Приложение {{ app|title }}</h2>
         {% if apps|get_item:app|get_item:'groups' %}
             {% for group in apps|get_item:app|get_item:'groups' %}
                 <div class="group">

@@ -22,7 +22,8 @@ class Group(models.Model):
 class SettingsItem(PolymorphicModel):
     short_name = models.CharField(
         max_length=100,
-        help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием'
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием',
+        unique=True
     )
 
     display_name = models.CharField(max_length=100)

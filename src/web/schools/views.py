@@ -75,10 +75,10 @@ def questionnaire(request, questionnaire_name):
 @sistema.staff.only_staff
 @school_view
 def school_settings_list(request):
-    return views.school_settings_list(request, request.school.name)
+    return views.school_settings_list(request, request.school.short_name)
 
 
 @sistema.staff.only_staff
 @school_view
 def session_settings_list(request, session_name):
-    return views.session_settings_list(request, session_name)
+    return views.session_settings_list(request, request.school.short_name, session_name)

@@ -1,3 +1,6 @@
+import random
+from trans import trans
+
 from django.db import models
 from django.conf import settings
 import django.db.migrations.writer
@@ -15,7 +18,7 @@ class EmailUser(PolymorphicModel):
 
 
 class SisEmailUser(EmailUser):
-    user = models.ForeignKey(User, related_name='email_user')
+    user = models.ForeignKey(User, related_name='sis_email_user')
 
     @property
     def display_name(self):
@@ -94,3 +97,43 @@ class PersonalEmail(models.Model):
     owner = models.ForeignKey(SisEmailUser)
 
     sessions = models.ManyToManyField(Session)
+
+    def __str__(self):
+        return '%s-%s' % (self.email_name, self.hash)
+
+    @staticmethod
+    def generate_unique_hash(symbols_count=6, bit_per_symbol=4):
+        hex_hash = ''
+        while True:
+            hash_seed = random.randrange(0, 2 ** (symbols_count * bit_per_symbol))
+            # hex() returns hex representation of number (0xffa1...)
+            # Cuts "0x"
+            hex_hash = hex(hash_seed)[2:]
+            # round hash length up to HASH_SYMBOLS_COUNT
+            hex_hash = '0' * (symbols_count - len(hex_hash)) + hex_hash
+
+            if len(PersonalEmail.objects.filter(hash=hex_hash)) == 0:
+                # all right, our hash is unique, let's go out of while
+                # if len != 0, let's go on and generate new hash
+                break
+        return hex_hash
+
+    @staticmethod
+    def generate_email(user: (User, SisEmailUser)):
+        unique_hash = PersonalEmail.generate_unique_hash()
+        email_name = None
+        owner = None
+
+        if isinstance(user, User):
+            email_name = trans(user.get_full_name())
+            if len(user.sis_email_user.all()) == 0:
+                user.sis_email_user.create()
+            owner = user.sis_email_user.all()[0]
+        elif isinstance(user, SisEmailUser):
+            email_name = trans(user.user.get_full_name())
+            owner = user
+        email_name = email_name.replace(' ', '-')
+
+        email = PersonalEmail(email_name=email_name, hash=unique_hash, owner=owner)
+        email.save()
+        return email

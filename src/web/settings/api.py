@@ -1,0 +1,52 @@
+class SettingsItem:
+    def __init__(self, short_name=None, display_name=None, description=None, default_value=None):
+        self.short_name = short_name
+        self.display_name = display_name
+        self.description = description
+        self.default_value = default_value
+        self.model = None
+        self.model_name = None
+
+    def register(self, app_name='sistema', app_config=None):
+        self.model = app_config.get_model(self.model_name)
+        result = self.model.objects.filter(short_name=self.short_name)
+        if not result:
+            self.model(short_name=self.short_name, display_name=self.display_name,
+                       description=self.description, value=self.default_value,
+                       app=app_name).save()
+
+
+class IntegerItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'IntegerSettingsItem'
+
+
+class BigIntegerItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'BigIntegerSettingsItem'
+
+
+class DateItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'DateSettingsItem'
+
+
+class DateTimeItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'DateTimeSettingsItem'
+
+
+class CharItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'CharSettingsItem'
+
+
+class TextItem(SettingsItem):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_name = 'TextSettingsItem'

@@ -39,8 +39,12 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def is_sender_of_email(user, email):
+    return isinstance(email.sender, models.SisEmailUser) and user == email.sender.user
+
+
 def can_user_view_message(user, email):
-    if isinstance(email.sender, models.SisEmailUser) and user == email.sender.user:
+    if is_sender_of_email(user, email):
         return True
     if email.recipients.filter(sisemailuser__user=user):
         return True

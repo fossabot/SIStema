@@ -37,9 +37,6 @@ class SettingsItem(PolymorphicModel):
 
     group = models.ForeignKey(Group, null=True, blank=True, related_name='items')
 
-    class Meta:
-        unique_together = ('short_name', 'school', 'session')
-
     def save(self, *args, **kwargs):
         if self.school_id is not None and self.session_id is not None:
             raise ValueError('sistema.models.SettingsItem: session field value contradicts school field value')

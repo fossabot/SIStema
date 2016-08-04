@@ -40,8 +40,12 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def is_sender_of_email(user, email):
+    return isinstance(email.sender, models.SisEmailUser) and user == email.sender.user
+
+
 def can_user_view_message(user, email):
-    if isinstance(email.sender, models.SisEmailUser) and user == email.sender.user:
+    if is_sender_of_email(user, email):
         return True
     if email.recipients.filter(sisemailuser__user=user):
         return True
@@ -83,3 +87,15 @@ def send_email(request):
         else:
             return JsonResponse({'result': 'fail'})
     return JsonResponse({'error': 'bad method'})
+
+
+@login_required
+def reply(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+
+    if not can_user_view_message(request.user, email):
+        return HttpResponseForbidden()
+
+    return render(request, 'mail/message.html', {
+        'email': email,
+    })

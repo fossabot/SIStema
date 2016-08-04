@@ -96,6 +96,8 @@ def reply(request, message_id):
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
 
-    return render(request, 'mail/message.html', {
-        'email': email,
+    form = forms.ComposeForm(initial={'email_theme': 'Re: %s' % email.subject, 'recipients': email.sender.email})
+
+    return render(request, 'mail/compose.html', {
+        'form': form,
     })

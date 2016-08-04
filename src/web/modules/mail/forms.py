@@ -16,10 +16,10 @@ class ComposeForm(forms.Form):
                                      'placeholder': 'Начните вводить почту',
                                  }))
     email_theme = forms.CharField(max_length=MAXIMUM_THEME_LENGTH,
-                                 required=False,
-                                 label='',
-                                 label_suffix='',
-                                 widget=forms.TextInput(attrs={
+                                  required=False,
+                                  label='',
+                                  label_suffix='',
+                                  widget=forms.TextInput(attrs={
                                      'class': 'form-control mb10',
                                      'id': 'email-theme',
                                      'placeholder': 'Тема',

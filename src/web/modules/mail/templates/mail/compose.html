@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.min.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.theme.min.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.structure.min.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css'%}"
 {% endblock %}
 
 {% block title %}Новое письмо{% endblock %}
@@ -13,7 +14,7 @@
 {% block content %}
 
     <div class="container-fluid">
-        <div class="mw800 center-block mt30">
+        <div class="mw600 center-block mt30">
             <div class="admin-form theme-alert">
                 <div class="panel panel-alert heading-border">
                     <div class="panel-heading">
@@ -23,8 +24,8 @@
                     </div>
                     <div class="panel-body p25 pt10">
                         <form method="post" id="mail-composer" class="centered-form">
-                            <input id="email-recipient"  class="form-control mb10" type="text" data-submit-url="{% url 'mail:contacts' %}" placeholder="Начните вводить почту">
-                            <textarea id="email-text" class="form-control mb10" placeholder="Текст письма" rows="10" style="resize: none"></textarea>
+                            {% csrf_token %}
+                            {{ form }}
                             <div class="text-right">
                                 <button class="btn btn-alert" type="submit">Отправить</button>
                             </div>

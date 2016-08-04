@@ -33,7 +33,7 @@ def get_school(school_name):
     for item in list(models.SettingsItem.objects.filter(school__short_name=school_name, session__isnull=True)):
         for existing_item in result:
             if existing_item.short_name == item.short_name:
-                del existing_item
+                result.remove(existing_item)
         result.append(item)
     return result
 

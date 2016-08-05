@@ -5,7 +5,6 @@ class SettingsItem:
         self.description = description
         self.default_value = default_value
         self.model = None
-        self.model_name = None
 
     def register(self, app_name='sistema', app_config=None):
         self.model = app_config.get_model(self.model_name)

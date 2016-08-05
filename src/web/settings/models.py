@@ -40,11 +40,12 @@ class SettingsItem(PolymorphicModel):
     def save(self, *args, **kwargs):
         if self.school_id is not None and self.session_id is not None:
             raise ValueError('sistema.models.SettingsItem: session field value contradicts school field value')
-
         super().save()
 
     def get_form_field(self):
         return self.value.formfield()
+
+
 
 
 class IntegerSettingsItem(SettingsItem):
@@ -78,10 +79,10 @@ class DateTimeSettingsItem(SettingsItem):
         return forms.DateTimeField(
             widget=django.forms.DateInput(attrs={
                 'class': 'datetimepicker',
-                'data-format': 'DD.MM.YYYY',
+                'data-format': 'HH:mm DD.MM.YYYY',
                 'data-view-mode': 'years',
-                'data-pick-time': 'false',
-                'placeholder': 'дд.мм.гггг',
+                'data-pick-time': 'true',
+                'placeholder': '__:__ __.__.____',
             }),
         )
 
@@ -96,6 +97,6 @@ class DateSettingsItem(SettingsItem):
                 'data-format': 'DD.MM.YYYY',
                 'data-view-mode': 'years',
                 'data-pick-time': 'false',
-                'placeholder': 'дд.мм.гггг',
+                'placeholder': '__.__.____',
             }),
         )

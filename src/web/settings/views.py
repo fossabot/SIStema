@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 
 import sistema.staff
 from . import models
+from schools.models import School, Session
+from . import models
 
 
 def groups_list_from_settings_list(settings):
@@ -24,25 +26,54 @@ def groups_list_from_settings_list(settings):
     return apps
 
 
+def get_global_settings():
+    return list(models.SettingsItem.objects.filter(school__isnull=True, session__isnull=True))
+
+
+def get_school_settings(school_name):
+    result = get_global_settings()
+    for item in list(models.SettingsItem.objects.filter(school__short_name=school_name, session__isnull=True)):
+        for existing_item in result:
+            if existing_item.short_name == item.short_name:
+                result.remove(existing_item)
+        result.append(item)
+    return result
+
+
+def get_session_settings(school_name, session_name):
+    result = get_school_settings(school_name)
+    for item in list(models.SettingsItem.objects.filter(school__isnull=True,
+                                                        session__short_name=session_name,
+                                                        session__school__short_name=school_name)):
+        for existing_item in result:
+            if existing_item.short_name == item.short_name:
+                result.remove(existing_item)
+        result.append(item)
+    return result
+
+
 @sistema.staff.only_staff
 def global_settings_list(request):
-    settings_list = models.SettingsItem.objects.filter(school__isnull=True, session__isnull=True)
+    settings_list = get_global_settings()
     groups = groups_list_from_settings_list(settings_list)
     return render(request, 'settings/list.html', {'apps': groups, 'area': 'global'})
 
 
 @sistema.staff.only_staff
 def school_settings_list(request, school_name):
-    settings_list = models.SettingsItem.objects.filter(school__isnull=False, session__isnull=True)
+    settings_list = get_school_settings(school_name)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school_name})
+    school = get_object_or_404(School, short_name=school_name)
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school.name})
 
 
 @sistema.staff.only_staff
-def session_settings_list(request, session_name):
-    settings_list = models.SettingsItem.objects.filter(school__isnull=True, session__isnull=False)
+def session_settings_list(request, school_name, session_name):
+    settings_list = get_session_settings(school_name, session_name)
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': session_name})
+    school = get_object_or_404(School, short_name=school_name)
+    session = get_object_or_404(Session, school=school, short_name=session_name)
+    return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': str(session)})
 
 
 @sistema.staff.only_staff

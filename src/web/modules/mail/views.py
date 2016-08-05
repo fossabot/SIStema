@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponseForbidden
+from django.utils.html import strip_tags
 
 from . import models, forms
+
+from string import whitespace
 
 
 @login_required
@@ -89,6 +91,37 @@ def send_email(request):
     return JsonResponse({'error': 'bad method'})
 
 
+def get_depth(string):
+    current = 0
+    while string[current] == '>':
+        current += 1
+    return current
+
+
+def cite_text(text):
+    MAX_STRING_LENGTH = 70
+    text = strip_tags(text)
+    lines = text.split("\n")
+    final = list()
+    for line in lines:
+        depth = get_depth(line)
+        new_depth_string = '>' * (depth + 1)
+        line = line[depth:]
+        while len(line) > MAX_STRING_LENGTH:
+            current = MAX_STRING_LENGTH
+            while current >= 0 and line[current] not in whitespace:
+                current -= 1
+            if current == -1:
+                result = line[:MAX_STRING_LENGTH]
+                line = line[MAX_STRING_LENGTH:]
+            else:
+                result = line[:current]
+                line = line[current + 1:]
+            final.append('%s %s' % (new_depth_string, result))
+        final.append('%s %s' % (new_depth_string, line))
+    return '\n'.join(final)
+
+
 @login_required
 def reply(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
@@ -96,7 +129,24 @@ def reply(request, message_id):
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
 
-    form = forms.ComposeForm(initial={'email_theme': 'Re: %s' % email.subject, 'recipients': email.sender.email})
+    email_theme = 'Re: %s' % email.subject
+
+    recipients = list()
+    recipients.append(email.sender.email)
+
+    for recipient in email.recipients.all():
+        if isinstance(recipient, models.ExternalEmailUser) or recipient.user != request.user:
+            recipients.append(recipient.email)
+
+    for cc_recipient in email.cc_recipients.all():
+        if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
+            recipients.append(cc_recipient.email)
+
+    form = forms.ComposeForm(initial={
+        'email_theme': email_theme,
+        'recipients': ", ".join(recipients),
+        'email_message': cite_text(email.html_text)
+    })
 
     return render(request, 'mail/compose.html', {
         'form': form,

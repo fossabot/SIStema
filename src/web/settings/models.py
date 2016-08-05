@@ -2,6 +2,7 @@ import django
 from django import forms
 from django.db import models
 from polymorphic.models import PolymorphicModel
+
 from schools.models import School, Session
 
 
@@ -43,7 +44,7 @@ class SettingsItem(PolymorphicModel):
         super().save()
 
     def get_form_field(self):
-        return self.value.formfield()
+        return self.__class__._meta.get_field('value').formfield()
 
 
 class IntegerSettingsItem(SettingsItem):

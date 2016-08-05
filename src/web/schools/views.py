@@ -82,3 +82,15 @@ def school_settings_list(request):
 @school_view
 def session_settings_list(request, session_name):
     return views.session_settings_list(request, session_name)
+
+
+@sistema.staff.only_staff
+@school_view
+def school_settings_item_edit(request, settings_item_id):
+    return views.process_edit_request(request, settings_item_id, school_name=request.school.name)
+
+
+@sistema.staff.only_staff
+@school_view
+def session_settings_item_edit(request, session_name, settings_item_id):
+    return views.process_edit_request(request, settings_item_id, session_name=session_name)

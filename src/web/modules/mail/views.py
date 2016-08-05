@@ -91,35 +91,54 @@ def send_email(request):
     return JsonResponse({'error': 'bad method'})
 
 
-def get_depth(string):
+MAX_STRING_LENGTH = 70
+
+
+def get_citation_depth(string):
+    # Returns the citation depth of a sentence, i.e. 3 for "> > > Hello" and 2 for "> > Hello"
     current = 0
-    while string[current] == '>':
+    while current < len(string) and string[current] == '>':
         current += 1
     return current
 
 
+def ensure_rfc_space_stuffing(line):
+    if (line and line[0] == '>') or (len(line) >= 5 and line[:6] == 'From '):
+        return ' %s' % line
+    else:
+        return line
+
+
 def cite_text(text):
-    MAX_STRING_LENGTH = 70
-    text = strip_tags(text)
     lines = text.split("\n")
-    final = list()
+    cited_lines = []
     for line in lines:
-        depth = get_depth(line)
-        new_depth_string = '>' * (depth + 1)
-        line = line[depth:]
+        depth = get_citation_depth(line)  # Gets the depth of the current citation
+        line = line[depth:]  # Deletes the old citation prefix
+        new_string_prefix = ">" * (depth + 1)  # Creates the new citation prefix
+        line = line.rstrip()  # Strips unnecessary whitespaces
+        line = line.replace('\r', '')  # Removes all occurrences of '\r'
+        line = ensure_rfc_space_stuffing(line)  # Ensures space-stuffing from RFC 3676 4.2 and 4.4
         while len(line) > MAX_STRING_LENGTH:
             current = MAX_STRING_LENGTH
+            # Will try to find a whitespace where the line could be split
             while current >= 0 and line[current] not in whitespace:
                 current -= 1
-            if current == -1:
-                result = line[:MAX_STRING_LENGTH]
-                line = line[MAX_STRING_LENGTH:]
-            else:
+            if current != -1:  # If an appropriate place to insert a line-break was found
                 result = line[:current]
                 line = line[current + 1:]
-            final.append('%s %s' % (new_depth_string, result))
-        final.append('%s %s' % (new_depth_string, line))
-    return '\n'.join(final)
+            # Adding a whitespace if necessary
+            if result and result[0] == ' ':
+                cited_lines.append('%s%s' % (new_string_prefix, result))
+            else:
+                cited_lines.append('%s %s' % (new_string_prefix, result))
+        # Adding a whitespace if necessary
+        if line and line[0] == ' ':
+            cited_lines.append('%s%s' % (new_string_prefix, line))
+        else:
+            cited_lines.append('%s %s' % (new_string_prefix, line))
+
+    return '\n'.join(cited_lines)
 
 
 @login_required
@@ -142,10 +161,16 @@ def reply(request, message_id):
         if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
             recipients.append(cc_recipient.email)
 
+    if email.sender.display_name.isspace():
+        display = email.sender.email
+    else:
+        display = email.sender.display_name
+    text = '%s:\n%s' % (display, cite_text(strip_tags(email.html_text)))
+
     form = forms.ComposeForm(initial={
         'email_theme': email_theme,
         'recipients': ", ".join(recipients),
-        'email_message': cite_text(email.html_text)
+        'email_message': text,
     })
 
     return render(request, 'mail/compose.html', {

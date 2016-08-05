@@ -22,14 +22,13 @@ $(document).ready
             {
                 var search_value = extract_last(request.term);
                 var submit_url = $('#email-recipient').attr('data-submit-url');
-                var items = []
+                var items = [];
 
                 $.get(submit_url + '?search=' + encodeURIComponent(search_value), function (data) {
-                    var encoded_quote = encodeURIComponent('"')
                     for (var i = 0; i < data.records.length; i++) {
-                        var label_data = '"' + data.records[i].display_name + '" <' + data.records[i].email + '>'
+                        var label_data = '"' + data.records[i].display_name + '" <' + data.records[i].email + '>';
                         items.push({label: label_data,
-                                    value: data.records[i].email});
+                                    value: data.records[i].email + ', '});
                     }
                     response(items)
                 },
@@ -45,8 +44,10 @@ $(document).ready
                 terms.pop();
                 terms.push(ui.item.value);
                 this.value = terms.join(', ');
+                terms.push("");
                 return false;
-            }
+            },
+            minLength: 1
         });
         $('.ui-helper-hidden-accessible').attr('style', 'display: none;')
     }

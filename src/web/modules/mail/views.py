@@ -4,12 +4,13 @@ from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseForbidden
 
-from . import models
+from . import models, forms
 
 
 @login_required
 def compose(request):
-    return render(request, 'mail/compose.html')
+    form = forms.ComposeForm()
+    return render(request, 'mail/compose.html', {'form': form})
 
 
 @login_required
@@ -39,8 +40,12 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def is_sender_of_email(user, email):
+    return isinstance(email.sender, models.SisEmailUser) and user == email.sender.user
+
+
 def can_user_view_message(user, email):
-    if isinstance(email.sender, models.SisEmailUser) and user == email.sender.user:
+    if is_sender_of_email(user, email):
         return True
     if email.recipients.filter(sisemailuser__user=user):
         return True
@@ -63,6 +68,29 @@ def inbox(request):
 
 @login_required
 def message(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+
+    if not can_user_view_message(request.user, email):
+        return HttpResponseForbidden()
+
+    return render(request, 'mail/message.html', {
+        'email': email,
+    })
+
+
+@login_required
+def send_email(request):
+    if request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+        if form.is_valid():
+            return JsonResponse({'result': 'ok'})
+        else:
+            return JsonResponse({'result': 'fail'})
+    return JsonResponse({'error': 'bad method'})
+
+
+@login_required
+def reply(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
     if not can_user_view_message(request.user, email):

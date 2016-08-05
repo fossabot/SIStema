@@ -47,12 +47,12 @@ def get_settings(app_name, setting_name, setting_area=None):
 
     if type(setting_area) is Session:
         setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, session__id=setting_area.id)
-        if setting_item is not None:
+        if setting_item:
             return setting_item[0].value
 
     if type(setting_area) is School:
         setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, school__id=setting_area.id)
-        if setting_item is not None:
+        if setting_item:
             return setting_item[0].value
 
     return SettingsItem.objects.filter(short_name=setting_name, app=app_name)[0].value

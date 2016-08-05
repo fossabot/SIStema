@@ -46,8 +46,6 @@ class SettingsItem(PolymorphicModel):
         return self.value.formfield()
 
 
-
-
 class IntegerSettingsItem(SettingsItem):
     value = models.IntegerField()
 

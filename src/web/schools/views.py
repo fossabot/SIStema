@@ -81,7 +81,7 @@ def school_settings_list(request):
 @sistema.staff.only_staff
 @school_view
 def session_settings_list(request, session_name):
-    return views.session_settings_list(request, session_name)
+    return views.session_settings_list(request, request.school, session_name)
 
 
 @sistema.staff.only_staff

@@ -1,12 +1,11 @@
 from django import forms
-from django.http.response import JsonResponse, HttpResponse
+from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
-
-from schools.models import School, Session
-from . import models
 from django.shortcuts import render
 
 import sistema.staff
+from schools.models import School, Session
+from . import models
 
 
 def groups_list_from_settings_list(settings):

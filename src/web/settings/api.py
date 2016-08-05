@@ -1,4 +1,6 @@
 class SettingsItem:
+    model_name = None
+
     def __init__(self, short_name=None, display_name=None, description=None, default_value=None):
         self.short_name = short_name
         self.display_name = display_name

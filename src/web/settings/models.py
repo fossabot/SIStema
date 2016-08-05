@@ -43,32 +43,76 @@ class SettingsItem(PolymorphicModel):
             raise ValueError('sistema.models.SettingsItem: session field value contradicts school field value')
         super().save()
 
-    def get_form_field(self):
-        return self.__class__._meta.get_field('value').formfield()
-
 
 class IntegerSettingsItem(SettingsItem):
     value = models.IntegerField()
+
+    def get_form_field(self):
+        return forms.IntegerField(
+            widget=forms.DateInput(attrs={
+                'class': 'form-control',
+            }),
+        )
 
 
 class BigIntegerSettingsItem(SettingsItem):
     value = models.BigIntegerField()
 
+    def get_form_field(self):
+        return forms.IntegerField(
+            max_value=models.BigIntegerField.MAX_BIGINT,
+            min_value=-1 - models.BigIntegerField.MAX_BIGINT,
+            widget=forms.DateInput(attrs={
+                'class': 'form-control',
+            }),
+        )
+
 
 class PositiveIntegerSettingsItem(SettingsItem):
     value = models.PositiveIntegerField()
+
+    def get_form_field(self):
+        return forms.IntegerField(
+            min_value=0,
+            widget=forms.DateInput(attrs={
+                'class': 'form-control'
+            }),
+        )
 
 
 class TextSettingsItem(SettingsItem):
     value = models.TextField()
 
+    def get_form_field(self):
+        return forms.CharField(
+            widget=forms.Textarea(attrs={
+                'class': 'form-control'
+            }),
+        )
+
 
 class CharSettingsItem(SettingsItem):
     value = models.CharField(max_length=256)
 
+    def get_form_field(self):
+        return forms.CharField(
+            max_length=256,
+            widget=forms.DateInput(attrs={
+                'rows': '1',
+                'class': 'form-control'
+            }),
+        )
+
 
 class EmailSettingsItem(SettingsItem):
     value = models.EmailField()
+
+    def get_form_field(self):
+        return forms.EmailField(
+            widget=forms.DateInput(attrs={
+                'class': 'form-control'
+            }),
+        )
 
 
 class DateTimeSettingsItem(SettingsItem):
@@ -76,12 +120,12 @@ class DateTimeSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.DateTimeField(
-            widget=django.forms.DateInput(attrs={
-                'class': 'datetimepicker',
+            widget=forms.DateInput(attrs={
+                'class': 'form-control',
                 'data-format': 'HH:mm DD.MM.YYYY',
                 'data-view-mode': 'years',
                 'data-pick-time': 'true',
-                'placeholder': '__:__ __.__.____',
+                'placeholder': '__:__ __.__.____'
             }),
         )
 
@@ -91,11 +135,11 @@ class DateSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.DateTimeField(
-            widget=django.forms.DateInput(attrs={
-                'class': 'datetimepicker',
+            widget=forms.DateInput(attrs={
+                'class': 'form-control',
                 'data-format': 'DD.MM.YYYY',
                 'data-view-mode': 'years',
                 'data-pick-time': 'false',
-                'placeholder': '__.__.____',
+                'placeholder': '__.__.____'
             }),
         )

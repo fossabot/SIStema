@@ -12,10 +12,7 @@ class SettingsConfig(AppConfig):
         for app_config in apps.get_app_configs():
             if not hasattr(app_config, 'sistema_settings'):
                 continue
-            if hasattr(app_config, 'verbose_name'):
-                app_name = app_config.verbose_name
-            else:
-                app_name = app_config.name
+            app_name = app_config.name
 
             for settings_item in app_config.sistema_settings:
                 settings_item.register(app_name=app_name, app_config=app_config)

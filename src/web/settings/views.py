@@ -43,7 +43,6 @@ def get_session(school_name, session_name):
     for item in list(models.SettingsItem.objects.filter(school__isnull=True,
                                                         session__short_name=session_name,
                                                         session__school__short_name=school_name)):
-        print(str(item))
         for existing_item in result:
             if existing_item.short_name == item.short_name:
                 result.remove(existing_item)

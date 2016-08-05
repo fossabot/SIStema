@@ -101,39 +101,68 @@ class PersonalEmail(models.Model):
     def __str__(self):
         return '%s-%s' % (self.email_name, self.hash)
 
-    @staticmethod
-    def generate_unique_hash(symbols_count=6, bit_per_symbol=4):
-        hex_hash = ''
-        while True:
-            hash_seed = random.randrange(0, 2 ** (symbols_count * bit_per_symbol))
-            # hex() returns hex representation of number (0xffa1...)
-            # Cuts "0x"
-            hex_hash = hex(hash_seed)[2:]
-            # round hash length up to HASH_SYMBOLS_COUNT
-            hex_hash = '0' * (symbols_count - len(hex_hash)) + hex_hash
+    @classmethod
+    def _try_to_generate_hash(cls, symbols_count):
+        BIT_PER_SYMBOL = 4
 
-            if len(PersonalEmail.objects.filter(hash=hex_hash)) == 0:
-                # all right, our hash is unique, let's go out of while
-                # if len != 0, let's go on and generate new hash
-                break
+        hash_seed = random.randrange(0, 2 ** (symbols_count * BIT_PER_SYMBOL))
+        # hex() returns hex representation of number (0xffa1...)
+        # Cuts "0x"
+        hex_hash = hex(hash_seed)[2:]
+        # round hash length up to symbols_count
+        return hex_hash.rjust(symbols_count, '0')
+
+    @classmethod
+    def _generate_unique_hash(cls, symbols_count):
+        hex_hash = cls._try_to_generate_hash(symbols_count)
+        while cls.objects.filter(hash=hex_hash).exists():
+            hex_hash = cls._try_to_generate_hash(symbols_count)
         return hex_hash
 
-    @staticmethod
-    def generate_email(user: (User, SisEmailUser)):
-        unique_hash = PersonalEmail.generate_unique_hash()
-        email_name = None
-        owner = None
+    @classmethod
+    def _make_email_valid(cls, email_name, hash_length, replacer='_'):
+        # === rfc3696 ===
+        # allowed symbols: !#$%&'*+-/=? ^_`.{|}~
+        # max length for email login part: 64
+
+        EMAIL_LOGIN_MAX_LENGTH = 64
+        SPECIAL_SYMBOLS = r'\"+.'
+
+        replacement_table = {symbol: replacer for symbol in SPECIAL_SYMBOLS}
+        replacement_table.update({' ': '-'})
+
+        email_name = email_name.translate(str.maketrans(replacement_table))
+
+        if len(email_name) > EMAIL_LOGIN_MAX_LENGTH:
+            email_name = email_name[:EMAIL_LOGIN_MAX_LENGTH - hash_length]
+
+        return email_name
+
+    @classmethod
+    def generate_email(cls, user: (User, SisEmailUser)):
+        HASH_SYMBOLS_COUNT = 6
+
+        unique_hash = cls._generate_unique_hash(HASH_SYMBOLS_COUNT)
 
         if isinstance(user, User):
-            email_name = trans(user.get_full_name())
-            if len(user.sis_email_user.all()) == 0:
+            # If we are given instance of User, we must find his instance of SisEmailUser.
+            # If SisEmailUser for current user is not created, let's create it.
+            if user.sis_email_user.count() == 0:
                 user.sis_email_user.create()
-            owner = user.sis_email_user.all()[0]
+            owner = user.sis_email_user.first()
         elif isinstance(user, SisEmailUser):
-            email_name = trans(user.user.get_full_name())
             owner = user
-        email_name = email_name.replace(' ', '-')
+        else:
+            raise TypeError('Method generate_email() must take instance of User or SisEmailUser')
 
-        email = PersonalEmail(email_name=email_name, hash=unique_hash, owner=owner)
+        try:
+            email_name = trans(owner.display_name)
+        except Exception:
+            # TODO: add logging
+            raise
+
+        email_name = cls._make_email_valid(email_name, HASH_SYMBOLS_COUNT)
+
+        email = cls(email_name=email_name, hash=unique_hash, owner=owner)
         email.save()
         return email

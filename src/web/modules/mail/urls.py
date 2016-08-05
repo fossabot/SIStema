@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^compose/', views.compose, name='compose'),
     url(r'^contacts/', views.contacts, name='contacts'),
     url(r'^send/', views.send_email, name='send'),
-    url(r'^(?P<message_id>[^/]+)/', views.message, name='message'),
     url(r'^(?P<message_id>[^/]+)/reply', views.reply, name='reply'),
+    url(r'^(?P<message_id>[^/]+)/edit', views.edit, name='edit'),
+    url(r'^(?P<message_id>[^/]+)/', views.message, name='message'),
 ]

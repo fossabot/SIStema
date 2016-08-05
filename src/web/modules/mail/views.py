@@ -99,3 +99,21 @@ def reply(request, message_id):
     return render(request, 'mail/message.html', {
         'email': email,
     })
+
+
+@login_required
+def edit(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+
+    if not is_sender_of_email(request.user, email):
+        return HttpResponseForbidden()
+
+    form = forms.ComposeForm(data={
+        'recipients': email.recipients,
+        'email_theme': email.subject,
+        'email_message': email.html_text,
+    })
+
+    return render(request, 'mail/compose.html', {
+        'form': form,
+    })

@@ -32,7 +32,7 @@
                             </div>
                         </div>
                         <div class="section mb25 mt25">
-                            {{ email.html_text|safe }}
+                            {{ email.html_text|safe|linebreaks }}
                         </div>
                         <div class="text-left">
                             <a href="{% url 'mail:reply' email.id %}" class="button btn-alert">Ответить</a>

@@ -109,6 +109,12 @@ def ensure_rfc_space_stuffing(line):
         return line
 
 
+def ensure_beginning_whitespace(string):  # Adds a beginning whitespace if necessary
+    if string and string[0] != ' ':
+        return ' %s' % string
+    return string
+
+
 def cite_text(text):
     lines = text.split("\n")
     cited_lines = []
@@ -127,16 +133,12 @@ def cite_text(text):
             if current != -1:  # If an appropriate place to insert a line-break was found
                 result = line[:current]
                 line = line[current + 1:]
-            # Adding a whitespace if necessary
-            if result and result[0] == ' ':
-                cited_lines.append('%s%s' % (new_string_prefix, result))
             else:
-                cited_lines.append('%s %s' % (new_string_prefix, result))
-        # Adding a whitespace if necessary
-        if line and line[0] == ' ':
-            cited_lines.append('%s%s' % (new_string_prefix, line))
-        else:
-            cited_lines.append('%s %s' % (new_string_prefix, line))
+                result = line
+            # Add the resulting short line
+            cited_lines.append('%s%s' % (new_string_prefix, ensure_beginning_whitespace(result)))
+        # Add the remainder of the line
+        cited_lines.append('%s%s' % (new_string_prefix, ensure_beginning_whitespace(line)))
 
     return '\n'.join(cited_lines)
 
@@ -165,7 +167,7 @@ def reply(request, message_id):
         display = email.sender.email
     else:
         display = email.sender.display_name
-    text = '%s:\n%s' % (display, cite_text(strip_tags(email.html_text)))
+    text = '\n\n%s:\n%s' % (display, cite_text(strip_tags(email.html_text)))
 
     form = forms.ComposeForm(initial={
         'email_theme': email_theme,

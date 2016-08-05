@@ -17,36 +17,24 @@ class SettingsItem:
 
 
 class IntegerItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'IntegerSettingsItem'
+    model_name = 'IntegerSettingsItem'
 
 
 class BigIntegerItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'BigIntegerSettingsItem'
+    model_name = 'BigIntegerSettingsItem'
 
 
 class DateItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'DateSettingsItem'
+    model_name = 'DateSettingsItem'
 
 
 class DateTimeItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'DateTimeSettingsItem'
+    model_name = 'DateTimeSettingsItem'
 
 
 class CharItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'CharSettingsItem'
+    model_name = 'CharSettingsItem'
 
 
 class TextItem(SettingsItem):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_name = 'TextSettingsItem'
+    model_name = 'TextSettingsItem'

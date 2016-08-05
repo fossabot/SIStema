@@ -77,7 +77,7 @@ class Command(BaseCommand):
     help = 'Generate new email for given EmailUser'
 
     def add_arguments(self, parser):
-        parser.add_argument('email_user_id', type=str)
+        parser.add_argument('recipient_id', type=str)
         parser.add_argument('count_cc_recipients', type=int)
 
     def handle(self, *args, **options):
@@ -93,9 +93,9 @@ class Command(BaseCommand):
             sender = generate_external_email_user()
 
         # Find recipient
-        email_user_id = options['email_user_id']
+        recipient_id = options['recipient_id']
         try:
-            recipient = EmailUser.objects.get(id=email_user_id)
+            recipient = EmailUser.objects.get(id=recipient_id)
         except EmailUser.ObjectDoesNotExist:
             print('Error: Given recipient does not exist.')
             return

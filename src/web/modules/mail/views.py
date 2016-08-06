@@ -1,3 +1,5 @@
+from string import whitespace
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
@@ -5,8 +7,6 @@ from django.shortcuts import render, get_object_or_404
 from django.utils.html import strip_tags
 
 from . import models, forms
-
-from string import whitespace
 
 
 @login_required
@@ -95,7 +95,7 @@ MAX_STRING_LENGTH = 70
 
 
 def get_citation_depth(string):
-    # Returns the citation depth of a sentence, i.e. 3 for "> > > Hello" and 2 for "> > Hello"
+    """ Returns the citation depth of a sentence, i.e. 3 for "> > > Hello" and 2 for "> > Hello"  """
     current = 0
     while current < len(string) and string[current] == '>':
         current += 1
@@ -103,42 +103,61 @@ def get_citation_depth(string):
 
 
 def ensure_rfc_space_stuffing(line):
-    if (line and line[0] == '>') or (len(line) >= 5 and line[:6] == 'From '):
+    """ Ensures space-stuffing from RFC 3676 statements 4.2 and 4.4 """
+    if (line and line[0] == '>') or (len(line) >= 5 and line[:5] == 'From '):
         return ' %s' % line
     else:
         return line
 
 
-def ensure_beginning_whitespace(string):  # Adds a beginning whitespace if necessary
+def ensure_beginning_whitespace(string):
+    """ Adds a beginning whitespace if necessary """
     if string and string[0] != ' ':
         return ' %s' % string
     return string
 
 
+def rstrip_if_not_space(line):
+    if not line.isspace():
+        return line.rstrip()
+    return line
+
+
 def cite_text(text):
-    lines = text.split("\n")
+    """ Returns cited(quoted) text. Follows RFC 3676. """
+    lines = text.split('\n')
     cited_lines = []
     for line in lines:
         depth = get_citation_depth(line)  # Gets the depth of the current citation
         line = line[depth:]  # Deletes the old citation prefix
-        new_string_prefix = ">" * (depth + 1)  # Creates the new citation prefix
-        line = line.rstrip()  # Strips unnecessary whitespaces
+        new_string_prefix = '>' * (depth + 1)  # Creates the new citation prefix
+        current_max_string_length = MAX_STRING_LENGTH - len(new_string_prefix)  # Max length for line without citation
+        line = rstrip_if_not_space(line)  # Strips unnecessary whitespaces if line is not a space
         line = line.replace('\r', '')  # Removes all occurrences of '\r'
-        line = ensure_rfc_space_stuffing(line)  # Ensures space-stuffing from RFC 3676 4.2 and 4.4
-        while len(line) > MAX_STRING_LENGTH:
-            current = MAX_STRING_LENGTH
+        while len(line) > current_max_string_length:
+            search_position = current_max_string_length
             # Will try to find a whitespace where the line could be split
-            while current >= 0 and line[current] not in whitespace:
-                current -= 1
-            if current != -1:  # If an appropriate place to insert a line-break was found
-                result = line[:current]
-                line = line[current + 1:]
+            while search_position >= 0 and line[search_position] not in whitespace:
+                search_position -= 1
+            if search_position != -1:  # If an appropriate place to insert a line-break was found
+                result = line[:search_position]
+                line = line[search_position + 1:]
             else:
-                result = line
-            # Add the resulting short line
+                # Will try to find the first whitespace where the line could be split when a word is too long
+                search_position = current_max_string_length + 1
+                while search_position < len(line) and line[search_position] not in whitespace:
+                    search_position += 1
+                if search_position != len(line):  # If found
+                    result = line[:search_position]
+                    line = line[search_position + 1:]
+                else:  # If an acceptable position was not found adds the whole line
+                    result = line
+                    line = ''
+            # Add the resulting shortened line
             cited_lines.append('%s%s' % (new_string_prefix, ensure_beginning_whitespace(result)))
-        # Add the remainder of the line
-        cited_lines.append('%s%s' % (new_string_prefix, ensure_beginning_whitespace(line)))
+        # Add the remainder of the line (if it is not empty)
+        if line:
+            cited_lines.append('%s%s' % (new_string_prefix, ensure_beginning_whitespace(line)))
 
     return '\n'.join(cited_lines)
 
@@ -150,7 +169,7 @@ def reply(request, message_id):
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
 
-    email_theme = 'Re: %s' % email.subject
+    email_subject = 'Re: %s' % email.subject
 
     recipients = list()
     recipients.append(email.sender.email)
@@ -164,14 +183,14 @@ def reply(request, message_id):
             recipients.append(cc_recipient.email)
 
     if email.sender.display_name.isspace():
-        display = email.sender.email
+        display_name = email.sender.email
     else:
-        display = email.sender.display_name
-    text = '\n\n%s:\n%s' % (display, cite_text(strip_tags(email.html_text)))
+        display_name = email.sender.display_name
+    text = '\n \n%s:\n%s' % (display_name, cite_text(strip_tags(email.html_text)))
 
     form = forms.ComposeForm(initial={
-        'email_theme': email_theme,
-        'recipients': ", ".join(recipients),
+        'email_subject': email_subject,
+        'recipients': ', '.join(recipients),
         'email_message': text,
     })
 

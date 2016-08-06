@@ -3,10 +3,57 @@ from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import JsonResponse, HttpResponseNotFound
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.http import HttpResponseForbidden
+from django.views.decorators.http import require_POST
+
 from . import models, forms
+
+
+# Parse recipients from string like: a@mail.ru, b@mail.ru, ...
+def _get_recipients(string_with_recipients):
+    recipients = []
+    for recipient in string_with_recipients.split(', '):
+        if models.EmailUser.objects.filter(
+                        Q(sisemailuser__user__email__iexact=recipient) |
+                        Q(externalemailuser__email__iexact=recipient)
+        ).exists():
+            recipients.append(models.EmailUser.objects.get(
+                Q(sisemailuser__user__email__iexact=recipient) |
+                Q(externalemailuser__email__iexact=recipient)
+            ))
+        else:
+            if models.PersonalEmail.objects.annotate(
+                    full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
+                                      output_field=TextField())).filter(full_email__iexact=recipient).exists():
+                recipients.append(models.PersonalEmail.objects.annotate(
+                    full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
+                                      output_field=TextField())).get(full_email__iexact=recipient).owner)
+            else:
+                external_user = models.ExternalEmailUser()
+                external_user.email = recipient
+                external_user.save()
+                recipients.append(external_user)
+    return recipients
+
+
+def _save_email(request, email_form, email_id=None):
+    email = models.EmailMessage()
+    try:
+        email.sender = models.SisEmailUser.objects.get(user=request.user)
+    except models.EmailUser.DoesNotExist:
+        return False
+    email.html_text = email_form['email_message']
+    email.subject = email_form['email_subject']
+    email.id = email_id
+    with transaction.atomic():
+        email.save()
+        for recipient in _get_recipients(email_form['recipients']):
+            email.recipients.add(recipient)
+        email.save()
+
+    return True
 
 
 @login_required
@@ -16,7 +63,8 @@ def compose(request):
     else:
         form = forms.ComposeForm()
     if form.is_valid():
-        save_email(request, form.cleaned_data)
+        _save_email(request, form.cleaned_data)
+        # TODO: make feedback
     else:
         pass
     return render(request, 'mail/compose.html', {'form': form})
@@ -105,43 +153,11 @@ def reply(request, message_id):
     })
 
 
-# TODO: REFACTOR THIS
-def save_email(request, email_form):
-    def get_recipients(string_with_recipients):
-        recipients = []
-        for recipient in string_with_recipients.split(', '):
-            if models.EmailUser.objects.filter(
-                            Q(sisemailuser__user__email__iexact=recipient) |
-                            Q(externalemailuser__email__iexact=recipient)
-            ).exists():
-                recipients.append(models.EmailUser.objects.get(
-                    Q(sisemailuser__user__email__iexact=recipient) |
-                    Q(externalemailuser__email__iexact=recipient)
-                ))
-            else:
-                if models.PersonalEmail.objects.annotate(
-                        full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
-                                          output_field=TextField())).filter(full_email__iexact=recipient).exists():
-                    recipients.append(models.PersonalEmail.objects.annotate(
-                        full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
-                                          output_field=TextField())).get(full_email__iexact=recipient).owner)
-                else:
-                    external_user = models.ExternalEmailUser()
-                    external_user.email = recipient
-                    external_user.save()
-                    recipients.append(external_user)
-        return recipients
-
-    try:
-        email = models.EmailMessage()
-        email.sender = models.SisEmailUser.objects.get(user=request.user)
-        email.html_text = email_form['email_message']
-        email.subject = email_form['email_subject']
-        with transaction.atomic():
-            email.save()
-            for recipient in get_recipients(email_form['recipients']):
-                email.recipients.add(recipient)
-            email.save()
-    except models.EmailUser.DoesNotExist:
-        return HttpResponseNotFound("Can't find your mail box.")
-    return JsonResponse({'result': True})
+@login_required
+@require_POST
+def delete_email(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+    if not can_user_view_message(request.user, email):
+        return HttpResponseForbidden()
+    email.delete()
+    return redirect('/mail')

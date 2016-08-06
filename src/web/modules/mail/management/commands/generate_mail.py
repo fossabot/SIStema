@@ -163,6 +163,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
+            '--count_emails',
+            dest='cnt_emails',
+            type=int,
+            default=1
+        )
+
+        parser.add_argument(
             '--sender_id',
             dest='sender_id',
             type=int,
@@ -225,32 +232,33 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # TODO: подумать, что делать, если и в sender, и в одном из полей recipient  cc_recipient есть ExternalEmailUser
-        sender = find_sender(options)
-        recipients = find_recipients(options)
-        cc_recipients = find_cc_recipients(options)
-        if len(recipients) == 0 and len(cc_recipients) == 0:
-            recipients.append(generate_external_email_user())
-        subject = find_subject(options)
-        text = find_text(options)
+        for email_index in range(options['cnt_emails']):
+            sender = find_sender(options)
+            recipients = find_recipients(options)
+            cc_recipients = find_cc_recipients(options)
+            if len(recipients) == 0 and len(cc_recipients) == 0:
+                recipients.append(generate_external_email_user())
+            subject = find_subject(options)
+            text = find_text(options)
 
-        with transaction.atomic():
-            sender.save()
-            new_email = models.EmailMessage(
-                sender=sender,
-                created_at=generate_date(),
-                subject=subject,
-                html_text=text
-            )
-            new_email.save()
+            with transaction.atomic():
+                sender.save()
+                new_email = models.EmailMessage(
+                    sender=sender,
+                    created_at=generate_date(),
+                    subject=subject,
+                    html_text=text
+                )
+                new_email.save()
 
-            for recipient in recipients:
-                recipient.save()
-                new_email.recipients.add(recipient)
+                for recipient in recipients:
+                    recipient.save()
+                    new_email.recipients.add(recipient)
 
-            for cc_recipient in cc_recipients:
-                cc_recipient.save()
-                new_email.cc_recipients.add(cc_recipient)
+                for cc_recipient in cc_recipients:
+                    cc_recipient.save()
+                    new_email.cc_recipients.add(cc_recipient)
 
-            new_email.save()
+                new_email.save()
 
-        show_email(new_email)
+            show_email(new_email)

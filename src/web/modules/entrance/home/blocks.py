@@ -170,4 +170,5 @@ class EntranceStatusHomePageBlock(AbstractHomePageBlock):
 
 class AbsenceReasonHomePageBlock(AbstractHomePageBlock):
     def build(self, request):
+        from .. import models as entrance_models
         self.reason = entrance_models.AbstractAbsenceReason.for_user_in_school(request.user, request.school)

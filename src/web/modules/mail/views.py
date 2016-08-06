@@ -30,13 +30,8 @@ def contacts(request):
             Q(person__externalemailuser__email__icontains=search_request)
         )
     )[:NUMBER_OF_RETURNING_RECORDS]
-    filtered_records = []
-    for rec in records:
-        if isinstance(rec.person, models.ExternalEmailUser):
-            filtered_records.append({'email': rec.person.email, 'display_name': rec.person.display_name})
-        else:
-            filtered_records.append({'email': rec.person.user.email,
-                                     'display_name': rec.person.user.first_name + ' ' + rec.person.user.last_name})
+    filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
+                        for rec in records]
     return JsonResponse({'records': filtered_records})
 
 

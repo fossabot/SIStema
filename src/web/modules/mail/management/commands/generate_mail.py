@@ -225,7 +225,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # TODO: подумать, что делать, если и в sender, и в одном из полей recipient  cc_recipient есть ExternalEmailUser
-
         sender = find_sender(options)
         recipients = find_recipients(options)
         cc_recipients = find_cc_recipients(options)

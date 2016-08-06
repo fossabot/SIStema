@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 from . import models, forms
 
@@ -45,9 +46,11 @@ def _save_email(request, email_form, email_id=None):
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
         return None
+    email.status = models.EmailMessage.STATUS_DRAFT
     email.html_text = email_form['email_message']
     email.subject = email_form['email_subject']
     email.id = email_id
+    email.created_at = timezone.now()
     with transaction.atomic():
         email.save()
         for recipient in _get_recipients(email_form['recipients']):
@@ -160,8 +163,16 @@ def edit(request, message_id):
     if not is_sender_of_email(request.user, email):
         return HttpResponseForbidden()
 
+    if email.status != models.EmailMessage.STATUS_DRAFT:
+        # TODO: Make readable error message
+        return HttpResponseForbidden()
+
+    EMAILS_SEPARATOR = ', '
+
+    recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
+
     form = forms.ComposeForm(data={
-        'recipients': email.recipients,
+        'recipients': recipients,
         'email_theme': email.subject,
         'email_message': email.html_text,
     })
@@ -170,6 +181,7 @@ def edit(request, message_id):
         'form': form,
     })
 
+
 @require_POST
 def delete_email(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
@@ -177,3 +189,15 @@ def delete_email(request, message_id):
         return HttpResponseForbidden()
     email.delete()
     return redirect('/mail')
+
+
+@login_required
+def save_changes(request, message_id):
+    message_data = request.POST
+    email = _save_email(request, message_data, message_id)
+
+    SUCCESS_LABEL = 'is_successful'
+
+    if email is None:
+        return JsonResponse({SUCCESS_LABEL: False})
+    return JsonResponse({SUCCESS_LABEL: True, 'id': email.id})

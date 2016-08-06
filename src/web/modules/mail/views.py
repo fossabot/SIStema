@@ -63,8 +63,10 @@ def compose(request):
     else:
         form = forms.ComposeForm()
     if form.is_valid():
-        _save_email(request, form.cleaned_data)
-        # TODO: make feedback
+        if _save_email(request, form.cleaned_data) is None:
+            return HttpResponseNotFound('Can\'t find your email box.')
+        else:
+            return redirect('../?result=ok')
     else:
         pass
     return render(request, 'mail/compose.html', {'form': form})

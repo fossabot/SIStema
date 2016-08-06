@@ -95,7 +95,7 @@ MAX_STRING_LENGTH = 70
 
 
 def get_citation_depth(string):
-    """ Returns the citation depth of a sentence, i.e. 3 for "> > > Hello" and 2 for "> > Hello"  """
+    """ Returns the citation depth of a sentence, i.e. 3 for ">>> Hello" and 2 for ">> Hello"  """
     current = 0
     while current < len(string) and string[current] == '>':
         current += 1

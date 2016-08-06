@@ -18,7 +18,7 @@ class EmailUser(PolymorphicModel):
 
 
 class SisEmailUser(EmailUser):
-    user = models.ForeignKey(User, related_name='sis_email_user')
+    user = models.ForeignKey(User, related_name='email_user')
 
     @property
     def display_name(self):
@@ -147,9 +147,9 @@ class PersonalEmail(models.Model):
         if isinstance(user, User):
             # If we are given instance of User, we must find his instance of SisEmailUser.
             # If SisEmailUser for current user is not created, let's create it.
-            if user.sis_email_user.count() == 0:
-                user.sis_email_user.create()
-            owner = user.sis_email_user.first()
+            if user.email_user.count() == 0:
+                user.email_user.create()
+            owner = user.email_user.first()
         elif isinstance(user, SisEmailUser):
             owner = user
         else:

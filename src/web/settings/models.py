@@ -49,7 +49,7 @@ class IntegerSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.IntegerField(
-            widget=forms.DateInput(attrs={
+            widget=forms.NumberInput(attrs={
                 'class': 'form-control',
             }),
         )
@@ -62,7 +62,7 @@ class BigIntegerSettingsItem(SettingsItem):
         return forms.IntegerField(
             max_value=models.BigIntegerField.MAX_BIGINT,
             min_value=-1 - models.BigIntegerField.MAX_BIGINT,
-            widget=forms.DateInput(attrs={
+            widget=forms.NumberInput(attrs={
                 'class': 'form-control',
             }),
         )
@@ -74,7 +74,7 @@ class PositiveIntegerSettingsItem(SettingsItem):
     def get_form_field(self):
         return forms.IntegerField(
             min_value=0,
-            widget=forms.DateInput(attrs={
+            widget=forms.NumberInput(attrs={
                 'class': 'form-control'
             }),
         )
@@ -97,7 +97,7 @@ class CharSettingsItem(SettingsItem):
     def get_form_field(self):
         return forms.CharField(
             max_length=256,
-            widget=forms.DateInput(attrs={
+            widget=forms.TextInput(attrs={
                 'rows': '1',
                 'class': 'form-control'
             }),
@@ -109,7 +109,7 @@ class EmailSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.EmailField(
-            widget=forms.DateInput(attrs={
+            widget=forms.EmailInput(attrs={
                 'class': 'form-control'
             }),
         )
@@ -120,7 +120,7 @@ class DateTimeSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.DateTimeField(
-            widget=forms.DateInput(attrs={
+            widget=forms.DateTimeInput(attrs={
                 'class': 'form-control',
                 'data-format': 'HH:mm DD.MM.YYYY',
                 'data-view-mode': 'years',

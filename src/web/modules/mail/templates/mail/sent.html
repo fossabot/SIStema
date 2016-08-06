@@ -10,12 +10,12 @@
 
 {% block tabs %}
     <div class="section mb25 mtn ptn">
-        <h3><span class="mr10">Входящие</span><span><a href="{% url 'mail:sent' %}">Отправленные</a></span></h3>
+        <h3><span class="mr10"><a href="{% url 'mail:inbox' %}">Входящие</a></span><span>Отправленные<span></h3>
     </div>
 {% endblock %}
 {% block if_empty %}
     <div class="section mb5 fs16">
-        <span class="text-muted">Вам ещё никто не написал.</span>
+        <span class="text-muted">Вы ещё никому не написали.</span>
         <a href="{% url 'mail:compose' %}">Отправьте письмо</a>.
     </div>
 {% endblock %}

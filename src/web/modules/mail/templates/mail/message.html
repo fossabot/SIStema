@@ -31,12 +31,14 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="section mb25 mt25">
-                            {{ email.html_text|safe }}
+                        <div class="section mbn mt25">
+                            {{ email.html_text|safe|linebreaks }}
                         </div>
-                        <div class="text-left">
-                            <a href="{% url 'mail:reply' email.id %}" class="button btn-alert">Ответить</a>
-                        </div>
+                        {% if allow_replying %}
+                            <div class="text-left mt25">
+                                <a href="{% url 'mail:reply' email.id %}" class="button btn-alert">Ответить</a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

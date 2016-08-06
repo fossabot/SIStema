@@ -10,7 +10,7 @@
 
 {% block tabs %}
     <div class="section mb25 mtn ptn">
-        <h3><span class="mr10">Входящие</span><span><a href="{% url 'mail:sent' %}">Отправленные</a></span></h3>
+        <h3><span class="mr10"><a href="{% url 'mail:inbox' %}">Входящие</a></span><span>Отправленные<span></h3>
     </div>
 {% endblock %}
 {% block if_empty %}

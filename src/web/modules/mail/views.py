@@ -60,13 +60,24 @@ def can_user_view_message(user, email):
 
 @login_required
 def inbox(request):
-    inbox_email_list = models.EmailMessage.objects.filter(
+    mail_list = models.EmailMessage.objects.filter(
         Q(recipients__sisemailuser__user=request.user) |
         Q(cc_recipients__sisemailuser__user=request.user)
     ).order_by('-created_at')
 
     return render(request, 'mail/inbox.html', {
-        'inbox_email_list': inbox_email_list,
+        'mail_list': mail_list,
+    })
+
+
+@login_required
+def sent(request):
+    mail_list = models.EmailMessage.objects.filter(
+        sender__sisemailuser__user=request.user,
+    ).order_by('-created_at')
+
+    return render(request, 'mail/sent.html', {
+        'mail_list': mail_list,
     })
 
 

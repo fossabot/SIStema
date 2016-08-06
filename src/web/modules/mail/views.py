@@ -1,15 +1,24 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, TextField
+from django.db.models.expressions import Value
+from django.db.models.functions import Concat
 from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404
+from django.db import transaction
 from django.http import HttpResponseForbidden
-
 from . import models, forms
 
 
 @login_required
 def compose(request):
-    form = forms.ComposeForm()
+    if request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+    else:
+        form = forms.ComposeForm()
+    if form.is_valid():
+        save_email(request, form.cleaned_data)
+    else:
+        pass
     return render(request, 'mail/compose.html', {'form': form})
 
 
@@ -30,13 +39,8 @@ def contacts(request):
             Q(person__externalemailuser__email__icontains=search_request)
         )
     )[:NUMBER_OF_RETURNING_RECORDS]
-    filtered_records = []
-    for rec in records:
-        if isinstance(rec.person, models.ExternalEmailUser):
-            filtered_records.append({'email': rec.person.email, 'display_name': rec.person.display_name})
-        else:
-            filtered_records.append({'email': rec.person.user.email,
-                                     'display_name': rec.person.user.first_name + ' ' + rec.person.user.last_name})
+    filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
+                        for rec in records]
     return JsonResponse({'records': filtered_records})
 
 
@@ -99,3 +103,45 @@ def reply(request, message_id):
     return render(request, 'mail/message.html', {
         'email': email,
     })
+
+
+# TODO: REFACTOR THIS
+def save_email(request, email_form):
+    def get_recipients(string_with_recipients):
+        recipients = []
+        for recipient in string_with_recipients.split(', '):
+            if models.EmailUser.objects.filter(
+                            Q(sisemailuser__user__email__iexact=recipient) |
+                            Q(externalemailuser__email__iexact=recipient)
+            ).exists():
+                recipients.append(models.EmailUser.objects.get(
+                    Q(sisemailuser__user__email__iexact=recipient) |
+                    Q(externalemailuser__email__iexact=recipient)
+                ))
+            else:
+                if models.PersonalEmail.objects.annotate(
+                        full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
+                                          output_field=TextField())).filter(full_email__iexact=recipient).exists():
+                    recipients.append(models.PersonalEmail.objects.annotate(
+                        full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
+                                          output_field=TextField())).get(full_email__iexact=recipient).owner)
+                else:
+                    external_user = models.ExternalEmailUser()
+                    external_user.email = recipient
+                    external_user.save()
+                    recipients.append(external_user)
+        return recipients
+
+    try:
+        email = models.EmailMessage()
+        email.sender = models.SisEmailUser.objects.get(user=request.user)
+        email.html_text = email_form['email_message']
+        email.subject = email_form['email_subject']
+        with transaction.atomic():
+            email.save()
+            for recipient in get_recipients(email_form['recipients']):
+                email.recipients.add(recipient)
+            email.save()
+    except models.EmailUser.DoesNotExist:
+        return HttpResponseNotFound("Can't find your mail box.")
+    return JsonResponse({'result': True})

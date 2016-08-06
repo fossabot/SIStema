@@ -159,7 +159,7 @@ def show_email(new_email):
 
 
 class Command(BaseCommand):
-    help = 'Generate new email'
+    help = 'Generate new email with many different options'
 
     def add_arguments(self, parser):
         parser.add_argument(

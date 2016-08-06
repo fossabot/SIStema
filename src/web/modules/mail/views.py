@@ -40,7 +40,7 @@ def _get_recipients(string_with_recipients):
     return recipients
 
 
-# Save email to database(if email_id != None edit exist email)
+# Save email to database(if email_id != None edit existing email)
 def _save_email(request, email_form, email_id=None):
     email = models.EmailMessage()
     try:
@@ -98,14 +98,12 @@ def is_sender_of_email(user, email):
     return isinstance(email.sender, models.SisEmailUser) and user == email.sender.user
 
 
+def is_recipient_of_email(user, email):
+    return email.recipients.filter(sisemailuser__user=user) or email.cc_recipients.filter(sisemailuser__user=user)
+
+
 def can_user_view_message(user, email):
-    if is_sender_of_email(user, email):
-        return True
-    if email.recipients.filter(sisemailuser__user=user):
-        return True
-    if email.cc_recipients.filter(sisemailuser__user=user):
-        return True
-    return False
+    return is_recipient_of_email(user, email) or is_sender_of_email(user, email)
 
 
 @login_required
@@ -140,6 +138,7 @@ def message(request, message_id):
 
     return render(request, 'mail/message.html', {
         'email': email,
+        'allow_replying': is_recipient_of_email(request.user, email),
     })
 
 
@@ -243,11 +242,19 @@ def reply(request, message_id):
         display_name = email.sender.display_name
     text = '\n \n%s:\n%s' % (display_name, cite_text(strip_tags(email.html_text)))
 
-    form = forms.ComposeForm(initial={
-        'email_subject': email_subject,
-        'recipients': ', '.join(recipients),
-        'email_message': text,
-    })
+    if request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+    else:
+        form = forms.ComposeForm(initial={
+            'email_subject': email_subject,
+            'recipients': ', '.join(recipients),
+            'email_message': text,
+        })
+    if form.is_valid():
+        _save_email(request, form.cleaned_data)
+        # TODO: make feedback
+    else:
+        pass
 
     return render(request, 'mail/compose.html', {
         'form': form,

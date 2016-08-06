@@ -5,6 +5,9 @@
     </button>
     <p class="lead">{{ item.value }}</p>
     <div class="collapse" id="edit-block-{{ item.id }}">
-        {{ item.form }}
+        <form method="post" action="{{ item.id }}">
+            {% csrf_token %}
+            {{ item.form }}
+        </form>
     </div>
 </div>

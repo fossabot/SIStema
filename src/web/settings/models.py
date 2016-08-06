@@ -1,6 +1,7 @@
 import django
 from django import forms
 from django.db import models
+from django.utils import html
 from polymorphic.models import PolymorphicModel
 
 from schools.models import School, Session
@@ -18,6 +19,35 @@ class Group(models.Model):
 
     def __str__(self):
         return self.display_name
+
+
+class SubmitButtonWidget(forms.Widget):
+    def render(self, name, value, attrs=None):
+        return '<input class="form-control btn btn-default" type="submit" name="%s" value="%s" />' % \
+               (html.escape(name), html.escape(value))
+
+
+class SubmitButtonField(forms.Field):
+    def __init__(self, *args, **kwargs):
+        if not kwargs:
+            kwargs = {}
+        kwargs['widget'] = SubmitButtonWidget
+
+        super(SubmitButtonField, self).__init__(*args, **kwargs)
+
+    def clean(self, value):
+        return value
+
+
+class EditForm(forms.Form):
+    value_field = forms.Field()
+    submit_button = SubmitButtonField(label='', initial=u'Сохранить')
+
+    def __init__(self, settings_item, data):
+        super().__init__(data)
+        print('INIT')
+        self.value_field = settings_item.get_form_field()
+        print(data)
 
 
 class SettingsItem(PolymorphicModel):

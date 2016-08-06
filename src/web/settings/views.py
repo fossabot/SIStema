@@ -1,12 +1,11 @@
 from django.db import IntegrityError
-from django.shortcuts import render
-from django import forms
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 
 import sistema.staff
-from . import models
 from schools.models import School, Session
+from settings.models import EditForm
 from . import models
 
 
@@ -79,9 +78,10 @@ def session_settings_list(request, school_name, session_name):
 @sistema.staff.only_staff
 def edit_settings_item(request, id):
     item = get_object_or_404(models.SettingsItem, id=id)
+    print("AAAAAAA SLOZHNAAAA 1")
     form = get_form(item, request.POST)
     if form.is_valid():
-        item.value = form.cleaned_data['value']
+        item.value = form.cleaned_data['value_field']
         item.save()
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'failed', 'error': ', '.join(form.errors)})
@@ -97,9 +97,11 @@ def clone_settings_item(request, id, school_name, session_name):
     elif session_name is not None:
         item.session = get_object_or_404(models.Session, short_name=session_name, school__short_name=school_name)
     item.id = None
+    print("AAAAAAA SLOZHNAAAA 2")
     form = get_form(item, request.POST)
+    print(form.data)
     if form.is_valid():
-        item.value = form.cleaned_data['value']
+        item.value = form.cleaned_data['value_field']
         try:
             item.save()
         except IntegrityError:
@@ -109,8 +111,7 @@ def clone_settings_item(request, id, school_name, session_name):
 
 
 def get_form(settings_item, data=None):
-    form_class = type('SettingsItemForm', (forms.Form,), {'value': settings_item.get_form_field()})
-    return form_class(data)
+    return EditForm(settings_item, data)
 
 
 def process_edit_request(request, settings_item_id, school_name=None, session_name=None):

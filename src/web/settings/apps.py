@@ -15,5 +15,8 @@ class SettingsConfig(AppConfig):
             app_name = app_config.name
 
             for settings_item in app_config.sistema_settings:
-                settings_item.register(app_name=app_name, app_config=app_config)
+                try:
+                    settings_item.register(app_name=app_name, app_config=app_config)
+                except Exception:
+                    print('Settings not registered, database is empty')
 

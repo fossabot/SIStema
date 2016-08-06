@@ -27,6 +27,7 @@ class ComposeForm(forms.Form):
                                     required=False,
                                     label='',
                                     label_suffix='',
+                                    strip=False,
                                     widget=forms.Textarea(attrs={
                                         'class': 'form-control mb10',
                                         'placeholder': 'Текст письма',

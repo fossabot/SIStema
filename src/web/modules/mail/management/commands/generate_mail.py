@@ -70,23 +70,23 @@ def convert_to_list(var):
 
 
 def find_sender(options):
-    if 'sender_id' in options and options['sender_email'] is not None:
+    if options['sender_id'] is not None and options['sender_email'] is not None:
         raise CommandError('Please, choose one option out of sender_id and sender_email')
 
-    try:
+    if options['sender_id'] is not None:
         sender_id = options['sender_id']
         try:
             sender = EmailUser.objects.get(id=sender_id)
         except EmailUser.DoesNotExist:
             raise CommandError('Sender with id = "%s" does not exist' % sender_id)
-    except ValueError:
-        try:
+    else:
+        if options['sender_email'] is not None:
             sender_email = options['sender_email']
             try:
                 sender = EmailUser.objects.get(email=sender_email)
             except EmailUser.DoesNotExist:
                 sender = generate_external_email_user(sender_email)
-        except ValueError:
+        else:
             sender = generate_external_email_user()
 
     return sender
@@ -234,6 +234,7 @@ class Command(BaseCommand):
         text = find_text(options)
 
         with transaction.atomic():
+            sender.save()
             new_email = models.EmailMessage(
                 sender=sender,
                 created_at=generate_date(),

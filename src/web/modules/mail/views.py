@@ -38,12 +38,13 @@ def _get_recipients(string_with_recipients):
     return recipients
 
 
+# Save email to database(if email_id != None edit exist email)
 def _save_email(request, email_form, email_id=None):
     email = models.EmailMessage()
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
-        return False
+        return None
     email.html_text = email_form['email_message']
     email.subject = email_form['email_subject']
     email.id = email_id
@@ -52,8 +53,7 @@ def _save_email(request, email_form, email_id=None):
         for recipient in _get_recipients(email_form['recipients']):
             email.recipients.add(recipient)
         email.save()
-
-    return True
+    return email
 
 
 @login_required

@@ -1,3 +1,4 @@
+from django import forms
 from django.db import IntegrityError
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -5,7 +6,6 @@ from django.shortcuts import render
 
 import sistema.staff
 from schools.models import School, Session
-from settings.forms import EditForm
 from . import models
 
 
@@ -108,7 +108,8 @@ def clone_settings_item(request, id, school_name, session_name):
 
 
 def get_form(settings_item, data=None):
-    return EditForm(settings_item, data)
+    form_class = type('SettingsItemForm', (forms.Form,), {'value': settings_item.get_form_field()})
+    return form_class(data)
 
 
 def process_edit_request(request, settings_item_id, school_name=None, session_name=None):

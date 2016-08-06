@@ -71,6 +71,19 @@ class EmailMessage(models.Model):
 
     headers = models.TextField(blank=True)
 
+    STATUS_UNKNOWN = 0
+    STATUS_ACCEPTED = 1
+    STATUS_SENT = 2
+    STATUS_DRAFT = 3
+    STATUS_RAW_DRAFT = 4
+
+    status = models.IntegerField(choices=(
+        (STATUS_ACCEPTED, 'Принято'),
+        (STATUS_SENT, 'Отправлено'),
+        (STATUS_DRAFT, 'Черновик'),
+        (STATUS_RAW_DRAFT, 'Новый черновик')
+    ), default=STATUS_UNKNOWN)
+
 
 class ContactRecord(models.Model):
     owner = models.ForeignKey(SisEmailUser, related_name='contacts')

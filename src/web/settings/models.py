@@ -115,6 +115,17 @@ class EmailSettingsItem(SettingsItem):
         )
 
 
+class BooleanSettingsItem(SettingsItem):
+    value = models.BooleanField()
+
+    def get_form_field(self):
+        return forms.BooleanField(
+            widget=forms.CheckboxInput(attrs={
+                'class': 'form-control'
+            }),
+        )
+
+
 class DateTimeSettingsItem(SettingsItem):
     value = models.DateTimeField()
 

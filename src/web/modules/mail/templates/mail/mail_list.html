@@ -1,0 +1,44 @@
+{% extends 'user_layout.html' %}
+
+{% load staticfiles %}
+
+{% block title %}Почта{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static "mail/css/mail.css" %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="mw800 center-block mt30">
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+                    <div class="panel-body p25 pt10">
+                        <div class="section mb25 mtn ptn">
+                            {% block tabs %}
+                            {% endblock %}
+                        </div>
+                        {% if mail_list %}
+                            {% for email in mail_list %}
+                                <div class="section mb20">
+                                    <div title="{{ email.sender.email }}" class="ib mr15">
+                                        {{ email.sender.display_name }}
+                                    </div>
+                                    <a href="{% url 'mail:message' email.id %}">
+                                        <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {% block if_empty %}
+                            {% endblock %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-right">
+                    <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

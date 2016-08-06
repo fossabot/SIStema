@@ -2,6 +2,7 @@ from random import choice, randint, sample
 import string
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 import datetime
 
 from ... import models
@@ -48,27 +49,28 @@ def generate_date():
     return datetime.datetime.now()
 
 
-def generate_external_email_user():
-    login = generate_login()
-    domain = generate_domain()
-    while models.ExternalEmailUser.objects.filter(email=login + domain).exists():
-        login = login + choice(string.ascii_lowercase + string.digits)
+def generate_external_email_user(email=''):
+    if email == '':
+        login = generate_login()
+        domain = generate_domain()
+        while models.ExternalEmailUser.objects.filter(email=login + domain).exists():
+            login = login + choice(string.ascii_lowercase + string.digits)
+        email = login + domain
     cc_recipient = models.ExternalEmailUser(
         display_name=generate_display_name(),
-        email=login + domain
+        email=email
     )
-    cc_recipient.save()
     return cc_recipient
 
 
-def convert_list(var):
+def convert_to_list(var):
     if type(var) is not list:
         return [var]
     return var
 
 
 def find_sender(options):
-    if ('sender_id' in options) and (options['sender_email'] is not None):
+    if 'sender_id' in options and options['sender_email'] is not None:
         raise CommandError('Please, choose one option out of sender_id and sender_email')
 
     try:
@@ -83,75 +85,49 @@ def find_sender(options):
             try:
                 sender = EmailUser.objects.get(email=sender_email)
             except EmailUser.DoesNotExist:
-                sender = models.ExternalEmailUser(display_name=generate_display_name(), email=sender_email)
-                sender.save()
+                sender = generate_external_email_user(sender_email)
         except ValueError:
             sender = generate_external_email_user()
-            sender.save()
 
     return sender
 
 
-def find_recipients(options):
+def find_all_recipients(options, who=''):
     recipients = []
 
-    if options['recipients_id'] is not None:
-        recipients_id = convert_list(options['recipients_id'])
+    if options[who + 'recipients_id'] is not None:
+        recipients_id = convert_to_list(options[who + 'recipients_id'])
 
         for recipient_id in recipients_id:
             try:
                 recipient = EmailUser.objects.get(id=recipient_id)
             except EmailUser.DoesNotExist:
-                raise CommandError('Recipient with id = "%s" does not exist' % recipient_id)
+                raise CommandError(who + 'recipient with id = "%s" does not exist' % recipient_id)
             recipients.append(recipient)
 
-    if options['recipients_emails'] is not None:
-        recipients_emails = convert_list(options['recipients_emails'])
+    if options[who + 'recipients_emails'] is not None:
+        recipients_emails = convert_to_list(options[who + 'recipients_emails'])
 
         for recipient_email in recipients_emails:
             try:
                 recipient = models.ExternalEmailUser.objects.get(email=recipient_email)
             except models.ExternalEmailUser.DoesNotExist:
-                recipient = models.ExternalEmailUser(display_name=generate_display_name(),
-                                                     email=recipient_email)
-                recipient.save()
+                recipient = generate_external_email_user(recipient_email)
             recipients.append(recipient)
 
-    if options['count_recipients'] is not None:
-        for recipient_index in range(options['count_recipients']):
+    if options['count_' + who + 'recipients'] is not None:
+        for recipient_index in range(options['count_' + who + 'recipients']):
             recipients.append(generate_external_email_user())
 
     return recipients
 
 
+def find_recipients(options):
+    return find_all_recipients(options)
+
+
 def find_cc_recipients(options):
-    cc_recipients = []
-
-    if options['cc_recipients_id'] is not None:
-        cc_recipients_id = convert_list(options['cc_recipients_id'])
-        for cc_recipient_id in cc_recipients_id:
-            try:
-                cc_recipient = EmailUser.objects.get(id=cc_recipient_id)
-            except EmailUser.DoesNotExist:
-                raise CommandError('CC_Recipient with id = "%s" does not exist' % cc_recipient_id)
-            cc_recipients.append(cc_recipient)
-
-    if options['cc_recipients_emails'] is not None:
-        cc_recipients_emails = convert_list(options['cc_recipients_emails'])
-        for cc_recipient_email in cc_recipients_emails:
-            try:
-                cc_recipient = models.ExternalEmailUser.objects.get(email=cc_recipient_email)
-            except models.ExternalEmailUser.DoesNotExist:
-                cc_recipient = models.ExternalEmailUser(display_name=generate_display_name(),
-                                                        email=cc_recipient_email)
-                cc_recipient.save()
-            cc_recipients.append(cc_recipient)
-
-    if options['count_cc_recipients'] is not None:
-        for cc_recipient_index in range(options['count_cc_recipients']):
-            cc_recipients.append(generate_external_email_user())
-
-    return cc_recipients
+    return find_all_recipients(options, 'cc_')
 
 
 def find_subject(options):
@@ -183,7 +159,7 @@ def show_email(new_email):
 
 
 class Command(BaseCommand):
-    help = 'Generate new email'
+    help = 'Generate new email with many different options'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -249,30 +225,31 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # TODO: подумать, что делать, если и в sender, и в одном из полей recipient  cc_recipient есть ExternalEmailUser
-        print(options)
-
         sender = find_sender(options)
         recipients = find_recipients(options)
         cc_recipients = find_cc_recipients(options)
-        if (len(recipients) == 0) and (len(cc_recipients) == 0):
+        if len(recipients) == 0 and len(cc_recipients) == 0:
             recipients.append(generate_external_email_user())
         subject = find_subject(options)
         text = find_text(options)
 
-        new_email = models.EmailMessage(
-            sender=sender,
-            created_at=generate_date(),
-            subject=subject,
-            html_text=text
-        )
-        new_email.save()
+        with transaction.atomic():
+            new_email = models.EmailMessage(
+                sender=sender,
+                created_at=generate_date(),
+                subject=subject,
+                html_text=text
+            )
+            new_email.save()
 
-        for recipient in recipients:
-            new_email.recipients.add(recipient)
+            for recipient in recipients:
+                recipient.save()
+                new_email.recipients.add(recipient)
 
-        for cc_recipient in cc_recipients:
-            new_email.cc_recipients.add(cc_recipient)
+            for cc_recipient in cc_recipients:
+                cc_recipient.save()
+                new_email.cc_recipients.add(cc_recipient)
 
-        new_email.save()
+            new_email.save()
 
         show_email(new_email)

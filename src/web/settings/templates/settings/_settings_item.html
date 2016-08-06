@@ -8,6 +8,7 @@
         <form method="post" action="{{ item.id }}">
             {% csrf_token %}
             {{ item.form }}
+            <input class="form-control btn btn-default" type="submit" name="" value="Сохранить" />
         </form>
     </div>
 </div>

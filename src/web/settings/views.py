@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 import sistema.staff
 from schools.models import School, Session
-from settings.models import EditForm
+from settings.forms import EditForm
 from . import models
 
 

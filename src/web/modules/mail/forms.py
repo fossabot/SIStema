@@ -13,6 +13,7 @@ class ComposeForm(forms.Form):
                                      'class': 'form-control mb10',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
+                                     'data-submit-url': '../contacts/'
                                     }
                                  ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,

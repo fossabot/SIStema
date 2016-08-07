@@ -13,6 +13,7 @@ class ComposeForm(forms.Form):
                                      'class': 'form-control mb10',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
+                                     'data-submit-url': '../contacts/'
                                     }
                                  ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,
@@ -27,6 +28,7 @@ class ComposeForm(forms.Form):
                                     required=False,
                                     label='',
                                     label_suffix='',
+                                    strip=False,
                                     widget=forms.Textarea(attrs={
                                         'class': 'form-control mb10',
                                         'placeholder': 'Текст письма',

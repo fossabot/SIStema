@@ -54,6 +54,9 @@ class Attachment(models.Model):
         'SISTEMA_MAIL_ATTACHMENTS_DIR'
     ), recursive=True)
 
+    def __str__(self):
+        return self.original_file_name
+
 
 class EmailMessage(models.Model):
     sender = models.ForeignKey(EmailUser, related_name='sent_emails')

@@ -55,6 +55,6 @@ def get_settings(app_name, setting_name, setting_area=None):
         if setting_item:
             return setting_item[0].value
 
-    setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name)
+    setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, school=None, session=None)
     if setting_item:
         return setting_item[0].value

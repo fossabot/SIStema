@@ -92,21 +92,21 @@ def find_sender(options):
     return sender
 
 
-def find_all_recipients(options, who=''):
+def find_all_recipients(options, recipient_prefix=''):
     recipients = []
 
-    if options[who + 'recipients_id'] is not None:
-        recipients_id = convert_to_list(options[who + 'recipients_id'])
+    if options[recipient_prefix + 'recipients_id'] is not None:
+        recipients_id = convert_to_list(options[recipient_prefix + 'recipients_id'])
 
         for recipient_id in recipients_id:
             try:
                 recipient = EmailUser.objects.get(id=recipient_id)
             except EmailUser.DoesNotExist:
-                raise CommandError(who + 'recipient with id = "%s" does not exist' % recipient_id)
+                raise CommandError(recipient_prefix + 'recipient with id = "%s" does not exist' % recipient_id)
             recipients.append(recipient)
 
-    if options[who + 'recipients_emails'] is not None:
-        recipients_emails = convert_to_list(options[who + 'recipients_emails'])
+    if options[recipient_prefix + 'recipients_emails'] is not None:
+        recipients_emails = convert_to_list(options[recipient_prefix + 'recipients_emails'])
 
         for recipient_email in recipients_emails:
             try:
@@ -115,8 +115,8 @@ def find_all_recipients(options, who=''):
                 recipient = generate_external_email_user(recipient_email)
             recipients.append(recipient)
 
-    if options['count_' + who + 'recipients'] is not None:
-        for recipient_index in range(options['count_' + who + 'recipients']):
+    if options['count_' + recipient_prefix + 'recipients'] is not None:
+        for recipient_index in range(options['count_' + recipient_prefix + 'recipients']):
             recipients.append(generate_external_email_user())
 
     return recipients

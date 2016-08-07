@@ -10,7 +10,7 @@ class AbstractSettingsItem:
 
     def register(self, app_name='sistema', app_config=None):
         self.model = app_config.get_model(self.model_name)
-        result = self.model.objects.filter(short_name=self.short_name)
+        result = self.model.objects.filter(short_name=self.short_name, app=app_name)
         if not result:
             self.model(short_name=self.short_name, display_name=self.display_name,
                        description=self.description, value=self.default_value,

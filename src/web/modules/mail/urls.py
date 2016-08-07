@@ -11,6 +11,5 @@ urlpatterns = [
     url(r'^(?P<message_id>[^/]+)/save/', views.save_changes, name='save'),
     url(r'^(?P<message_id>[^/]+)/reply/', views.reply, name='reply'),
     url(r'^(?P<message_id>[^/]+)/edit/', views.edit, name='edit'),
-    url(r'^(?P<message_id>[^/]+)/send/', views.send, name='send'),
     url(r'^(?P<message_id>[^/]+)/$', views.message, name='message'),
 ]

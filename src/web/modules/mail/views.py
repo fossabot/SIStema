@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -148,7 +148,7 @@ def _is_message_dict_empty(email):
     FIELDS = ('recipients', 'email_subject', 'email_message')
     is_message_empty = True
     for field in FIELDS:
-        if field:
+        if email[field]:
             is_message_empty = False
             break
     return is_message_empty
@@ -311,19 +311,38 @@ def edit(request, message_id):
         # TODO: Make readable error message
         return HttpResponseForbidden()
 
-    EMAILS_SEPARATOR = ', '
+    if request.method == 'GET':
+        EMAILS_SEPARATOR = ', '
 
-    recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
+        recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
 
-    form = forms.ComposeForm(data={
-        'recipients': recipients,
-        'email_theme': email.subject,
-        'email_message': email.html_text,
-    })
+        form = forms.ComposeForm(data={
+            'recipients': recipients,
+            'email_theme': email.subject,
+            'email_message': email.html_text,
+        })
+        return render(request, 'mail/compose.html', {
+            'form': form,
+        })
 
-    return render(request, 'mail/compose.html', {
-        'form': form,
-    })
+    elif request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+        if form.is_valid():
+            message_data = request.POST
+            email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT)
+            if email is not None:
+                return redirect(urlresolvers.reverse('mail:sent'))
+            else:
+                # Error when sending
+                # TODO: readable response
+                pass
+        else:
+            return render(request, 'mail/compose.html', {
+                'form': form,
+            })
+
+    else:
+        return HttpResponseBadRequest('Method is not supported')
 
 
 @require_POST
@@ -375,22 +394,3 @@ def download_attachment(request, attachment_id):
         attachment.get_file_abspath(),
         attachment.original_file_name
     )
-
-
-@login_required
-def send(request, message_id):
-    # TODO: real sending
-    form = forms.ComposeForm(request.POST)
-    if form.is_valid():
-        message_data = request.POST
-        email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT)
-        if email is not None:
-            return redirect(urlresolvers.reverse('mail:sent'))
-        else:
-            # Error when sending
-            # TODO: readable response
-            pass
-    else:
-        return render(request, 'mail/compose.html', {
-            'form': form,
-        })

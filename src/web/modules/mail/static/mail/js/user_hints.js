@@ -22,7 +22,6 @@ $(document).ready
             {
                 var search_value = extract_last(request.term);
                 var submit_url = $('#id_recipients').attr('data-submit-url');
-                alert(submit_url);
                 var items = [];
 
                 $.get(submit_url + '?search=' + encodeURIComponent(search_value), function (data) {
@@ -45,7 +44,7 @@ $(document).ready
                 terms.pop();
                 terms.push(ui.item.value);
                 this.value = terms.join(', ');
-                // terms.push("");
+                terms.push("");
                 return false;
             },
             minLength: 1

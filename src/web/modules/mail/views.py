@@ -13,28 +13,27 @@ from django.utils.html import strip_tags
 
 from . import models, forms
 from sistema.helpers import respond_as_attachment
-from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR
+from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR, MAIL_DOMAIN
 
 
 # Parse recipients from string like: a@mail.ru, b@mail.ru, ...
 def _get_recipients(string_with_recipients):
     recipients = []
     for recipient in string_with_recipients.split(', '):
-        if models.EmailUser.objects.filter(
-                        Q(sisemailuser__user__email__iexact=recipient) |
-                        Q(externalemailuser__email__iexact=recipient)
-        ).exists():
-            recipients.append(models.EmailUser.objects.get(
-                Q(sisemailuser__user__email__iexact=recipient) |
-                Q(externalemailuser__email__iexact=recipient)
-            ))
+        if recipient == '':
+            continue
+        query = models.EmailUser.objects.filter(
+            Q(sisemailuser__user__email__iexact=recipient) |
+            Q(externalemailuser__email__iexact=recipient)
+        )
+        if query.first() is not None:
+            recipients.append(query.first())
         else:
-            if models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
-                                      output_field=TextField())).filter(full_email__iexact=recipient).exists():
-                recipients.append(models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value('@sistema.lksh.ru'),
-                                      output_field=TextField())).get(full_email__iexact=recipient).owner)
+            query = models.PersonalEmail.objects.annotate(
+                    full_email=Concat('email_name', Value('-'), 'hash', Value(MAIL_DOMAIN),
+                                      output_field=TextField())).filter(full_email__iexact=recipient)
+            if query.first() is not None:
+                recipients.append(query.first().owner)
             else:
                 external_user = models.ExternalEmailUser()
                 external_user.email = recipient
@@ -145,18 +144,6 @@ def message(request, message_id):
         'email': email,
         'allow_replying': is_recipient_of_email(request.user, email),
     })
-
-
-@login_required
-def send_email(request):
-    if request.method == 'POST':
-        form = forms.ComposeForm(request.POST)
-        if form.is_valid():
-            return JsonResponse({'result': 'ok'})
-        else:
-            return JsonResponse({'result': 'fail'})
-    return JsonResponse({'error': 'bad method'})
-
 
 MAX_STRING_LENGTH = 70
 

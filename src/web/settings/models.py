@@ -1,7 +1,5 @@
-import django
 from django import forms
 from django.db import models
-from django.utils import html
 from polymorphic.models import PolymorphicModel
 
 from schools.models import School, Session

@@ -261,8 +261,11 @@ def reply(request, message_id):
             'email_message': text,
         })
     if form.is_valid():
-        _save_email(request, form.cleaned_data)
-        # TODO: make feedback
+        uploaded_files = request.FILES.getlist('attachments')
+        if _save_email(request, form.cleaned_data, uploaded_files) is None:
+            return HttpResponseNotFound('Can\'t find your email box.')
+        else:
+            return redirect('../../?result=ok')
     else:
         pass
 

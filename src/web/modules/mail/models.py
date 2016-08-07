@@ -55,7 +55,7 @@ class Attachment(models.Model):
     ), recursive=True)
 
     def __str__(self):
-        return self.original_file_name + '.' + self.content_type
+        return self.original_file_name
 
 
 class EmailMessage(models.Model):

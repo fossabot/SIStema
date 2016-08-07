@@ -46,13 +46,13 @@ def _get_recipients(string_with_recipients):
 
 
 # Save email to database(if email_id != None edit existing email)
-def _save_email(request, email_form, email_id=None):
+def _save_email(request, email_form, email_id=None, email_status=models.EmailMessage.STATUS_DRAFT):
     email = models.EmailMessage()
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
         return None
-    email.status = models.EmailMessage.STATUS_DRAFT
+    email.status = email_status
     email.html_text = email_form['email_message']
     email.subject = email_form['email_subject']
     email.id = email_id
@@ -70,17 +70,21 @@ def compose(request):
     """
         Initialization draft in database and redirecting to editor-page
     """
-    email = models.EmailMessage()
-
     try:
-        email.sender = models.SisEmailUser.objects.get(user=request.user)
-    except models.EmailUser.DoesNotExist:
-        return HttpResponseNotFound('Can\'t find your email box.')
+        email = models.EmailMessage.objects.get(sender=request.user.email_user.first(),
+                                                status=models.EmailMessage.STATUS_RAW_DRAFT)
+    except models.EmailMessage.DoesNotExist:
+        # Empty message for current user not found. Let's create it.
+        email = models.EmailMessage()
+        try:
+            email.sender = models.SisEmailUser.objects.get(user=request.user)
+        except models.EmailUser.DoesNotExist:
+            return HttpResponseNotFound('Can\'t find your email box.')
 
-    email.sender = request.user.email_user.first()
-    email.status = models.EmailMessage.STATUS_RAW_DRAFT
-    with transaction.atomic():
-        email.save()
+        email.status = models.EmailMessage.STATUS_RAW_DRAFT
+        with transaction.atomic():
+            email.save()
+
     url = urlresolvers.reverse('mail:edit', kwargs={'message_id': email.id})
     return redirect(url)
 
@@ -117,6 +121,20 @@ def is_recipient_of_email(user, email):
 
 def can_user_view_message(user, email):
     return is_recipient_of_email(user, email) or is_sender_of_email(user, email)
+
+
+def _is_message_dict_empty(email):
+    """
+    Returns True if email is empty
+    :param email: dict-like object with email fields
+    """
+    FIELDS = ('recipients', 'email_subject', 'email_message')
+    is_message_empty = True
+    for field in FIELDS:
+        if field:
+            is_message_empty = False
+            break
+    return is_message_empty
 
 
 @login_required
@@ -310,11 +328,20 @@ def delete_email(request, message_id):
 
 
 @login_required
+@require_POST
 def save_changes(request, message_id):
+    """
+    If email is not filled draft, do nothing.
+    If email is filled draft, save it to database.
+    """
     message_data = request.POST
-    email = _save_email(request, message_data, message_id)
+    is_raw_draft = _is_message_dict_empty(message_data)
 
     SUCCESS_LABEL = 'is_successful'
+    if is_raw_draft:
+        return JsonResponse({SUCCESS_LABEL: True})
+
+    email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_DRAFT)
 
     if email is None:
         return JsonResponse({SUCCESS_LABEL: False})

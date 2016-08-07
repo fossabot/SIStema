@@ -1,4 +1,5 @@
 function saveEdit(index) {
-    $.post(index, $('#form-' + index).serialize());
-    document.getElementById("setting-" + index).innerHTML = document.getElementById("form-" + index).children[2].value;
+    var form = $('#form-' + index);
+    $.post(index, form.serialize());
+    $('#setting-' + index).innerHTML = form.children[2].value;
 }

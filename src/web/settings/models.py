@@ -85,7 +85,8 @@ class TextSettingsItem(SettingsItem):
     def get_form_field(self):
         return forms.CharField(
             widget=forms.Textarea(attrs={
-                'class': 'form-control'
+                'class': 'form-control',
+                'rows': '5'
             }),
         )
 
@@ -96,9 +97,10 @@ class CharSettingsItem(SettingsItem):
     def get_form_field(self):
         return forms.CharField(
             max_length=256,
+            label=self.value,
             widget=forms.TextInput(attrs={
                 'rows': '1',
-                'class': 'form-control'
+                'class': 'form-control',
             }),
         )
 
@@ -108,6 +110,7 @@ class EmailSettingsItem(SettingsItem):
 
     def get_form_field(self):
         return forms.EmailField(
+            label=self.value,
             widget=forms.EmailInput(attrs={
                 'class': 'form-control'
             }),

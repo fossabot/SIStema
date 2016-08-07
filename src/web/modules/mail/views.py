@@ -45,7 +45,6 @@ def _get_recipients(string_with_recipients):
 
 # Save email to database(if email_id != None edit existing email)
 def _save_email(request, email_form, uploaded_files, email_id=None):
-    print(email_form)
     attachments = []
     for file in uploaded_files:
         saved_attachment_filename = os.path.relpath(

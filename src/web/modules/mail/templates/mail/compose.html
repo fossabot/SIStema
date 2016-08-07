@@ -23,10 +23,10 @@
                         </div>
                     </div>
                     <div class="panel-body p25 pt10">
-                        <form method="post" id="mail-composer" class="centered-form">
+                        <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form">
                             {% csrf_token %}
                             {{ form }}
-                            <div class="text-right">
+                            <div class="text-right mt10">
                                 <button class="btn btn-alert" type="submit">Отправить</button>
                             </div>
                         </form>

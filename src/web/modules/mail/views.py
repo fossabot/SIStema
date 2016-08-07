@@ -30,7 +30,7 @@ def _get_recipients(string_with_recipients):
             recipients.append(query.first())
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(sistema.settings.MAIL_DOMAIN),
+                    full_email=Concat('email_name', Value('-'), 'hash', Value(MAIL_DOMAIN),
                                       output_field=TextField())).filter(full_email__iexact=recipient)
             if query.first() is not None:
                 recipients.append(query.first().owner)

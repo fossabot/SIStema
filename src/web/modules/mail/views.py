@@ -13,7 +13,8 @@ from django.utils.html import strip_tags
 
 from . import models, forms
 from sistema.helpers import respond_as_attachment
-from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR, MAIL_DOMAIN
+from django.conf import settings
+from sistema.uploads import save_file
 
 
 # Parse recipients from string like: a@mail.ru, b@mail.ru, ...
@@ -30,7 +31,7 @@ def _get_recipients(string_with_recipients):
             recipients.append(query.first())
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(MAIL_DOMAIN),
+                    full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
                                       output_field=TextField())).filter(full_email__iexact=recipient)
             if query.first() is not None:
                 recipients.append(query.first().owner)
@@ -43,7 +44,20 @@ def _get_recipients(string_with_recipients):
 
 
 # Save email to database(if email_id != None edit existing email)
-def _save_email(request, email_form, email_id=None):
+def _save_email(request, email_form, uploaded_files, email_id=None):
+    print(email_form)
+    attachments = []
+    for file in uploaded_files:
+        saved_attachment_filename = os.path.relpath(
+            save_file(file, 'mail-attachments'),
+            models.Attachment._meta.get_field('file').path
+        )
+        attachments.append(models.Attachment(
+            original_file_name=file.name,
+            file_size=file.size,
+            content_type=file.content_type,
+            file=saved_attachment_filename,
+        ))
     email = models.EmailMessage()
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
@@ -56,6 +70,9 @@ def _save_email(request, email_form, email_id=None):
         email.save()
         for recipient in _get_recipients(email_form['recipients']):
             email.recipients.add(recipient)
+        for attachment in attachments:
+            attachment.save()
+            email.attachments.add(attachment)
         email.save()
     return email
 
@@ -63,11 +80,12 @@ def _save_email(request, email_form, email_id=None):
 @login_required
 def compose(request):
     if request.method == 'POST':
-        form = forms.ComposeForm(request.POST)
+        form = forms.ComposeForm(data=request.POST, files=request.FILES)
     else:
         form = forms.ComposeForm()
     if form.is_valid():
-        if _save_email(request, form.cleaned_data) is None:
+        uploaded_files = request.FILES.getlist('attachments')
+        if _save_email(request, form.cleaned_data, uploaded_files) is None:
             return HttpResponseNotFound('Can\'t find your email box.')
         else:
             return redirect('../?result=ok')

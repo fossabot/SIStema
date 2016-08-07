@@ -33,3 +33,10 @@ class ComposeForm(forms.Form):
                                         'class': 'form-control mb10',
                                         'placeholder': 'Текст письма',
                                     }))
+    attachments = forms.FileField(required=False,
+                                 label='',
+                                 label_suffix='',
+                                 widget=forms.ClearableFileInput(attrs={
+                                     'multiple': True,
+                                 })
+                                 )

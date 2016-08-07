@@ -37,6 +37,10 @@ class CharItem(AbstractSettingsItem):
     model_name = 'CharSettingsItem'
 
 
+class BooleanItem(AbstractSettingsItem):
+    model_name = 'BooleanSettingsItem'
+
+
 class TextItem(AbstractSettingsItem):
     model_name = 'TextSettingsItem'
 

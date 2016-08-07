@@ -1,4 +1,7 @@
 from django.conf import settings
+from polymorphic.models import PolymorphicModel
+
+from schools.models import School, Session
 
 
 class DjangoSettingsReference(object):
@@ -11,6 +14,7 @@ class DjangoSettingsReference(object):
     models.FilePathField(path=DjangoSettingsReference('UPLOAD_DIR')). It will be saved in migration as
         models.FilePathField(path=DjangoSettingsReference('UPLOAD_DIR'))
     """
+
     def __init__(self, name):
         self.name = name
 

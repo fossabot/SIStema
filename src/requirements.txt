@@ -27,4 +27,5 @@ markdown
 sqlparse
 reportlab
 trans
+django-anymail[mailgun]
 

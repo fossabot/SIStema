@@ -14,7 +14,7 @@ class ComposeForm(forms.Form):
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
                                      'data-submit-url': '../contacts/'
-                                    }
+                                 }
                                  ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,
                                     required=False,
@@ -33,3 +33,17 @@ class ComposeForm(forms.Form):
                                         'class': 'form-control mb10',
                                         'placeholder': 'Текст письма',
                                     }))
+
+
+class WriteForm(ComposeForm):
+    recipients = forms.CharField(max_length=ComposeForm.MAXIMUM_LENGTH_OF_RECIPIENTS,
+                                 required=True,
+                                 label='',
+                                 label_suffix='',
+                                 widget=forms.TextInput(attrs={
+                                     'class': 'form-control mb10',
+                                     'rows': '10',
+                                     'placeholder': 'Начните вводить имя',
+                                     'data-submit-url': '../contacts/'
+                                 }
+                                 ))

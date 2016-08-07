@@ -33,6 +33,10 @@ class SisEmailUser(EmailUser):
         # TODO figure out what email to return
 
 
+def get_user_by_hash(user_hash):
+    return EmailUser.objects.filter(sisemailuser__user__email__endswith=user_hash).first()
+
+
 class ExternalEmailUser(EmailUser):
     display_name = models.TextField()
 

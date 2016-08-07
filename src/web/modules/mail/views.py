@@ -11,6 +11,7 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils.html import strip_tags
 
+from modules.mail.models import get_user_by_hash
 from . import models, forms
 from sistema.helpers import respond_as_attachment
 from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR
@@ -295,3 +296,24 @@ def download_attachment(request, attachment_id):
         attachment.get_file_abspath(),
         attachment.original_file_name
     )
+
+
+def write(request):
+    form = forms.WriteForm(initial={
+        'email_subject': '',
+        'recipients': '',
+        'email_message': '',
+        'text': ''
+    })
+    return render(request, 'mail/write.html', {'form': form, 'recipient': 'unknown'})
+
+
+def write_to(request, recipient_hash):
+    recipient = get_user_by_hash(recipient_hash)
+    form = forms.WriteForm(initial={
+        'email_subject': '',
+        'recipients': recipient,
+        'email_message': '',
+        'text': ''
+    })
+    return render(request, 'mail/write.html', {'form': form, 'recipient': recipient})

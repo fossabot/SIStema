@@ -11,6 +11,7 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.core import urlresolvers
 
 from . import models, forms
 from sistema.helpers import respond_as_attachment
@@ -66,18 +67,22 @@ def _save_email(request, email_form, email_id=None):
 
 @login_required
 def compose(request):
-    if request.method == 'POST':
-        form = forms.ComposeForm(request.POST)
-    else:
-        form = forms.ComposeForm()
-    if form.is_valid():
-        if _save_email(request, form.cleaned_data) is None:
+    """
+        Initialization draft in database and redirecting to editor-page
+    """
+    email = models.EmailMessage()
+
+    try:
+        email.sender = models.SisEmailUser.objects.get(user=request.user)
+    except models.EmailUser.DoesNotExist:
             return HttpResponseNotFound('Can\'t find your email box.')
-        else:
-            return redirect('../?result=ok')
-    else:
-        pass
-    return render(request, 'mail/compose.html', {'form': form})
+
+    email.sender = request.user.email_user.first()
+    email.status = models.EmailMessage.STATUS_RAW_DRAFT
+    with transaction.atomic():
+        email.save()
+    url = urlresolvers.reverse('mail:edit', kwargs={'message_id': email.id})
+    return redirect(url)
 
 
 @login_required
@@ -276,7 +281,7 @@ def edit(request, message_id):
     if not is_sender_of_email(request.user, email):
         return HttpResponseForbidden()
 
-    if email.status != models.EmailMessage.STATUS_DRAFT:
+    if email.status not in (models.EmailMessage.STATUS_DRAFT, models.EmailMessage.STATUS_RAW_DRAFT):
         # TODO: Make readable error message
         return HttpResponseForbidden()
 

@@ -34,6 +34,13 @@
                         <div class="section mbn mt25">
                             {{ email.html_text|safe|linebreaks }}
                         </div>
+                        <div class="section mt15 mbn">
+                            {% for attachment in email.attachments.all %}
+                                <a href="{% url 'mail:download_attachment' attachment.id %}">
+                                <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}</a>
+                                {% if not forloop.last %}<br>{% endif %}
+                            {% endfor %}
+                        </div>
                         {% if allow_replying %}
                             <div class="text-left mt25">
                                 <a href="{% url 'mail:reply' email.id %}" class="button btn-alert">Ответить</a>

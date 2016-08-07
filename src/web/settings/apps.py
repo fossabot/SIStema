@@ -1,12 +1,9 @@
 from django.apps import AppConfig, apps
-from .api import TextItem
 
 
 class SettingsConfig(AppConfig):
     name = 'settings'
-    sistema_settings = [
-        TextItem(short_name='test_text', display_name='Hahahah', description='Azazaza', default_value='olololo')
-    ]
+    sistema_settings = []
 
     def ready(self):
         for app_config in apps.get_app_configs():
@@ -19,4 +16,3 @@ class SettingsConfig(AppConfig):
                     settings_item.register(app_name=app_name, app_config=app_config)
                 except Exception:
                     print('Settings not registered, database is empty')
-

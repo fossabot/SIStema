@@ -328,8 +328,9 @@ def edit(request, message_id):
     elif request.method == 'POST':
         form = forms.ComposeForm(request.POST)
         if form.is_valid():
-            message_data = request.POST
-            email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT)
+            message_data = form.cleaned_data
+            uploaded_files = request.FILES.getlist('attachments')
+            email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
             if email is not None:
                 return redirect(urlresolvers.reverse('mail:sent'))
             else:

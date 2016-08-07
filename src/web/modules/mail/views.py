@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -375,3 +375,22 @@ def download_attachment(request, attachment_id):
         attachment.get_file_abspath(),
         attachment.original_file_name
     )
+
+
+@login_required
+def send(request, message_id):
+    # TODO: real sending
+    form = forms.ComposeForm(request.POST)
+    if form.is_valid():
+        message_data = request.POST
+        email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT)
+        if email is not None:
+            return redirect(urlresolvers.reverse('mail:sent'))
+        else:
+            # Error when sending
+            # TODO: readable response
+            pass
+    else:
+        return render(request, 'mail/compose.html', {
+            'form': form,
+        })

@@ -75,7 +75,7 @@ def compose(request):
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
-            return HttpResponseNotFound('Can\'t find your email box.')
+        return HttpResponseNotFound('Can\'t find your email box.')
 
     email.sender = request.user.email_user.first()
     email.status = models.EmailMessage.STATUS_RAW_DRAFT

@@ -46,19 +46,20 @@ def _get_recipients(string_with_recipients):
 
 
 # Save email to database(if email_id != None edit existing email)
-def _save_email(request, email_form, uploaded_files, email_id=None, email_status=models.EmailMessage.STATUS_DRAFT):
+def _save_email(request, email_form, email_id=None, email_status=models.EmailMessage.STATUS_DRAFT, uploaded_files=None):
     attachments = []
-    for file in uploaded_files:
-        saved_attachment_filename = os.path.relpath(
-            save_file(file, 'mail-attachments'),
-            models.Attachment._meta.get_field('file').path
-        )
-        attachments.append(models.Attachment(
-            original_file_name=file.name,
-            file_size=file.size,
-            content_type=file.content_type,
-            file=saved_attachment_filename,
-        ))
+    if uploaded_files is not None:
+        for file in uploaded_files:
+            saved_attachment_filename = os.path.relpath(
+                save_file(file, 'mail-attachments'),
+                models.Attachment._meta.get_field('file').path
+            )
+            attachments.append(models.Attachment(
+                original_file_name=file.name,
+                file_size=file.size,
+                content_type=file.content_type,
+                file=saved_attachment_filename,
+            ))
 
     email = models.EmailMessage()
     try:

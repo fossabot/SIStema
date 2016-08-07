@@ -38,6 +38,7 @@
                             {% for attachment in email.attachments.all %}
                                 <a href="{% url 'mail:download_attachment' attachment.id %}">
                                 <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}</a>
+                                {{ attachment.file_size|filesizeformat }}
                                 {% if not forloop.last %}<br>{% endif %}
                             {% endfor %}
                         </div>

@@ -292,6 +292,6 @@ def download_attachment(request, attachment_id):
         return HttpResponseForbidden()
     return respond_as_attachment(
         request,
-        os.path.join(SISTEMA_MAIL_ATTACHMENTS_DIR, attachment.file),
+        attachment.get_file_abspath(),
         attachment.original_file_name
     )

@@ -1,4 +1,5 @@
 from string import whitespace
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, TextField
@@ -11,6 +12,8 @@ from django.views.decorators.http import require_POST
 from django.utils.html import strip_tags
 
 from . import models, forms
+from sistema.helpers import respond_as_attachment
+from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR
 
 
 # Parse recipients from string like: a@mail.ru, b@mail.ru, ...
@@ -101,7 +104,7 @@ def is_sender_of_email(user, email):
 
 
 def is_recipient_of_email(user, email):
-    return email.recipients.filter(sisemailuser__user=user) or email.cc_recipients.filter(sisemailuser__user=user)
+    return bool(email.recipients.filter(sisemailuser__user=user) or email.cc_recipients.filter(sisemailuser__user=user))
 
 
 def can_user_view_message(user, email):
@@ -271,3 +274,24 @@ def delete_email(request, message_id):
         return HttpResponseForbidden()
     email.delete()
     return redirect('/mail')
+
+
+def can_user_download_attachment(user, attachment):
+    return bool(models.EmailMessage.objects.filter(
+        Q(attachments=attachment) &
+        (Q(sender__sisemailuser__user=user) |
+         Q(recipients__sisemailuser__user=user) |
+         Q(cc_recipients__sisemailuser__user=user))
+    ))
+
+
+@login_required
+def download_attachment(request, attachment_id):
+    attachment = get_object_or_404(models.Attachment, id=attachment_id)
+    if not can_user_download_attachment(request.user, attachment):
+        return HttpResponseForbidden()
+    return respond_as_attachment(
+        request,
+        attachment.get_file_abspath(),
+        attachment.original_file_name
+    )

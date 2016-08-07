@@ -10,7 +10,7 @@ class AbstractSettingsItem:
 
     def register(self, app_name='sistema', app_config=None):
         self.model = app_config.get_model(self.model_name)
-        result = self.model.objects.filter(short_name=self.short_name)
+        result = self.model.objects.filter(short_name=self.short_name, app=app_name)
         if not result:
             self.model(short_name=self.short_name, display_name=self.display_name,
                        description=self.description, value=self.default_value,
@@ -37,6 +37,10 @@ class CharItem(AbstractSettingsItem):
     model_name = 'CharSettingsItem'
 
 
+class BooleanItem(AbstractSettingsItem):
+    model_name = 'BooleanSettingsItem'
+
+
 class TextItem(AbstractSettingsItem):
     model_name = 'TextSettingsItem'
 
@@ -55,6 +59,6 @@ def get_settings(app_name, setting_name, setting_area=None):
         if setting_item:
             return setting_item[0].value
 
-    setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name)
+    setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, school=None, session=None)
     if setting_item:
         return setting_item[0].value

@@ -36,7 +36,7 @@
                         </div>
                         {% for attachment in email.attachments.all %}
                             <div class="section mtn mb10">
-                                {% if attachment.preview %}
+                                {% if attachment.content_type|truncatechars:8 == 'image...' %}
                                     <img class='mb5' src="{% url 'mail:get_preview' attachment.id %}">
                                     <br>
                                 {% endif %}

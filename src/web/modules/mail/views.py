@@ -302,3 +302,16 @@ def download_attachment(request, attachment_id):
         attachment.get_file_abspath(),
         attachment.original_file_name
     )
+
+
+@login_required
+def get_preview(request, attachment_id):
+    attachment = get_object_or_404(models.Attachment, id=attachment_id)
+    if not can_user_download_attachment(request.user, attachment):
+        return HttpResponseForbidden()
+    print(attachment.get_preview_abspath())
+    return respond_as_attachment(
+        request,
+        attachment.get_preview_abspath(),
+        attachment.original_file_name
+    )

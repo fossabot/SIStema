@@ -53,6 +53,6 @@ admin.site.register(models.EmailMessage, EmailMessageAdmin)
 
 
 class AttachmentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'original_file_name', 'file_size', 'file')
+    list_display = ('id', 'original_file_name', 'file_size', 'file', 'preview')
 
 admin.site.register(models.Attachment, AttachmentAdmin)

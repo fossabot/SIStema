@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^contacts/', views.contacts, name='contacts'),
     url(r'^sent/', views.sent, name='sent'),
     url(r'^attachment/(?P<attachment_id>[^/]+)/', views.download_attachment, name='download_attachment'),
+    url(r'^attachment_preview/(?P<attachment_id>[^/]+)/', views.get_preview, name='get_preview'),
     url(r'^(?P<message_id>[^/]+)/$', views.message, name='message'),
     url(r'^(?P<message_id>[^/]+)/delete/', views.delete_email, name='delete'),
     url(r'^(?P<message_id>[^/]+)/reply/', views.reply, name='reply'),

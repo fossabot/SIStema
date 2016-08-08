@@ -1,5 +1,6 @@
 import random
 from trans import trans
+import os
 
 from django.db import models
 from django.conf import settings
@@ -10,6 +11,9 @@ from relativefilepathfield.fields import RelativeFilePathField
 
 from users.models import User
 from schools.models import Session
+from sistema.uploads import save_file
+
+from PIL import Image
 
 
 class EmailUser(PolymorphicModel):
@@ -53,6 +57,23 @@ class Attachment(models.Model):
         settings.SISTEMA_MAIL_ATTACHMENTS_DIR,
         'SISTEMA_MAIL_ATTACHMENTS_DIR'
     ), recursive=True)
+
+    preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
+        settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
+        'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
+    ), recursive=True)
+
+    def save(self, *args, **kwargs):
+        output_file = '%s_preview' % os.path.splitext(
+            os.path.join(Attachment._meta.get_field('preview').path, self.file)
+        )[0]
+        if self.content_type[:5] == 'image':
+            size = (64, 64)
+            preview = Image.open(self.get_file_abspath())
+            preview.thumbnail(size)
+            preview.save(output_file, 'JPEG')
+            self.preview = os.path.relpath(output_file, Attachment._meta.get_field('preview').path)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.original_file_name

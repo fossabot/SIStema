@@ -34,14 +34,18 @@
                         <div class="section mbn mt25">
                             {{ email.html_text|safe|linebreaks }}
                         </div>
-                        <div class="section mt15 mbn">
-                            {% for attachment in email.attachments.all %}
+                        {% for attachment in email.attachments.all %}
+                            <div class="section mtn mb10">
+                                {% if attachment.preview %}
+                                    <img class='mb5' src="{% url 'mail:get_preview' attachment.id %}">
+                                {% endif %}
+                                <br>
                                 <a href="{% url 'mail:download_attachment' attachment.id %}">
-                                <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}</a>
+                                    <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}
+                                </a>
                                 {{ attachment.file_size|filesizeformat }}
-                                {% if not forloop.last %}<br>{% endif %}
-                            {% endfor %}
-                        </div>
+                            </div>
+                        {% endfor %}
                         {% if allow_replying %}
                             <div class="text-left mt25">
                                 <a href="{% url 'mail:reply' email.id %}" class="button btn-alert">Ответить</a>

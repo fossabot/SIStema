@@ -278,26 +278,20 @@ def reply(request, message_id):
         display_name = email.sender.display_name
     text = '\n \n%s:\n%s' % (display_name, cite_text(strip_tags(email.html_text)))
 
-    if request.method == 'POST':
-        form = forms.ComposeForm(request.POST)
-    else:
-        form = forms.ComposeForm(initial={
-            'email_subject': email_subject,
-            'recipients': ', '.join(recipients),
-            'email_message': text,
-        })
-    if form.is_valid():
-        uploaded_files = request.FILES.getlist('attachments')
-        if _save_email(request, form.cleaned_data, uploaded_files) is None:
-            return HttpResponseNotFound('Can\'t find your email box.')
-        else:
-            return redirect('../../?result=ok')
-    else:
-        pass
+    form_data = {
+        'email_subject': email_subject,
+        'recipients': ', '.join(recipients),
+        'email_message': text,
+    }
 
-    return render(request, 'mail/compose.html', {
-        'form': form,
-    })
+    uploaded_files = request.FILES.getlist('attachments')
+    sending_email = _save_email(request, form_data,
+                                email_status=models.EmailMessage.STATUS_DRAFT,
+                                uploaded_files=uploaded_files)
+    if sending_email is None:
+        return HttpResponseNotFound('Can\'t find your email box.')
+    else:
+        return redirect(urlresolvers.reverse('mail:edit', kwargs={'message_id': sending_email.id}))
 
 
 @login_required

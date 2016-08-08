@@ -38,8 +38,8 @@
                             <div class="section mtn mb10">
                                 {% if attachment.preview %}
                                     <img class='mb5' src="{% url 'mail:get_preview' attachment.id %}">
+                                    <br>
                                 {% endif %}
-                                <br>
                                 <a href="{% url 'mail:download_attachment' attachment.id %}">
                                     <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}
                                 </a>

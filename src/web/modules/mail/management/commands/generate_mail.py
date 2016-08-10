@@ -296,7 +296,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--status',
             dest='status',
-            type=str
+            type=str,
+            help='Available values: {incoming, draft, sent}'
         )
 
     def handle(self, *args, **options):

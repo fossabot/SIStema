@@ -40,7 +40,7 @@
                                     <img class='mb5' src="{% url 'mail:get_preview' attachment.id %}">
                                     <br>
                                 {% endif %}
-                                <a href="{% url 'mail:download_attachment' attachment.id %}">
+                                <a class='mr5' href="{% url 'mail:download_attachment' attachment.id %}">
                                     <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}
                                 </a>
                                 {{ attachment.file_size|filesizeformat }}

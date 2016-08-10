@@ -284,7 +284,7 @@ def delete_email(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(models.EmailMessage.objects.filter(
+    return bool(attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |

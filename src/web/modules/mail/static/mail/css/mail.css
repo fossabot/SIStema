@@ -1,3 +1,7 @@
 #id_email_message {
     resize: none;
 }
+
+#delete {
+    cursor: default;
+}

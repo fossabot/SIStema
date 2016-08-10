@@ -346,7 +346,7 @@ def edit(request, message_id):
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
             if email is not None:
-                return redirect(urlresolvers.reverse('mail:sent'))
+                return redirect(urlresolvers.reverse('mail:sent') + '?type=send&result=ok')
             else:
                 # Error when sending
                 # TODO: readable response
@@ -367,7 +367,7 @@ def delete_email(request, message_id):
         return HttpResponseForbidden()
     email.is_remove = True
     email.save()
-    return redirect(urlresolvers.reverse('mail:inbox'))
+    return redirect(urlresolvers.reverse('mail:inbox') + '?type=delete&result=ok')
 
 
 @login_required

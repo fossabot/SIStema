@@ -46,7 +46,7 @@ admin.site.register(models.PersonalEmail, PersonalEmailAdmin)
 
 
 class EmailMessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'sender', 'subject', 'created_at')
+    list_display = ('id', 'sender', 'subject', 'created_at', 'status', 'is_remove')
 
 
 admin.site.register(models.EmailMessage, EmailMessageAdmin)

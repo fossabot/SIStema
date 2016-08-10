@@ -1,5 +1,7 @@
 import random
+from mimetypes import guess_type
 from trans import trans
+import os.path
 
 from django.db import models
 from django.conf import settings
@@ -53,6 +55,19 @@ class Attachment(models.Model):
         settings.SISTEMA_MAIL_ATTACHMENTS_DIR,
         'SISTEMA_MAIL_ATTACHMENTS_DIR'
     ), recursive=True)
+
+    @staticmethod
+    def from_file(renamed_path, name):
+        content_type = guess_type(renamed_path)
+        original_file_name = name
+        file_size = os.path.getsize(renamed_path)
+        file = renamed_path
+        return Attachment(
+            content_type=content_type,
+            original_file_name=original_file_name,
+            file_size=file_size,
+            file=file
+        )
 
     def __str__(self):
         return self.original_file_name

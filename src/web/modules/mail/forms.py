@@ -44,6 +44,6 @@ class WriteForm(ComposeForm):
                                      'class': 'form-control mb10',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить имя',
-                                     'data-submit-url': '../contacts/'
+                                     'data-submit-url': '../sis_users/'
                                  }
                                  ))

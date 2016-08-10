@@ -100,6 +100,16 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def sis_users(request):
+    NUMBER_OF_RETURNING_RECORDS = 10
+    search_request = request.GET['search']
+    records = models.SisEmailUser.objects.filter(
+        Q(user__first_name__icontains=search_request) | Q(user__last_name__icontains=search_request)
+    )[:NUMBER_OF_RETURNING_RECORDS]
+    filtered_records = [{'display_name': rec.display_name} for rec in records]
+    return JsonResponse({'records': filtered_records})
+
+
 def is_sender_of_email(user, email):
     return isinstance(email.sender, models.SisEmailUser) and user == email.sender.user
 

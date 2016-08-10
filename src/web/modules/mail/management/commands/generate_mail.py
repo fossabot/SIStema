@@ -6,7 +6,7 @@ from django.db import transaction
 import datetime
 
 from ... import models
-from modules.mail.models import EmailUser
+from modules.mail.models import EmailUser, EmailMessage
 
 
 def generate_display_name():
@@ -145,6 +145,19 @@ def find_text(options):
         text = generate_text()
     return text
 
+def find_status(options):
+    STRING_TO_STATUS = {
+        'incoming': EmailMessage.STATUS_ACCEPTED,
+        'sent': EmailMessage.STATUS_SENT,
+        'draft': EmailMessage.STATUS_DRAFT,
+    }
+
+    if options['status'] is not None:
+        status = STRING_TO_STATUS[options['status']]
+    else:
+        status = EmailMessage.STATUS_UNKNOWN
+    return status
+
 
 def show_email(new_email):
     print('Generation is successful.')
@@ -230,6 +243,12 @@ class Command(BaseCommand):
             nargs='?'
         )
 
+        parser.add_argument(
+            '--status',
+            dest='status',
+            type=str
+        )
+
     def handle(self, *args, **options):
         # TODO: подумать, что делать, если и в sender, и в одном из полей recipient  cc_recipient есть ExternalEmailUser
         for email_index in range(options['cnt_emails']):
@@ -240,6 +259,7 @@ class Command(BaseCommand):
                 recipients.append(generate_external_email_user())
             subject = find_subject(options)
             text = find_text(options)
+            status = find_status(options)
 
             with transaction.atomic():
                 sender.save()
@@ -247,7 +267,8 @@ class Command(BaseCommand):
                     sender=sender,
                     created_at=generate_date(),
                     subject=subject,
-                    html_text=text
+                    html_text=text,
+                    status=status,
                 )
                 new_email.save()
 

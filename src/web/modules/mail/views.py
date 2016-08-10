@@ -310,7 +310,7 @@ def edit(request, message_id):
 
         recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
 
-        form = forms.ComposeForm(data={
+        form = forms.ComposeForm(initial={
             'recipients': recipients,
             'email_theme': email.subject,
             'email_message': email.html_text,

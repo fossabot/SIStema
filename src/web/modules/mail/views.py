@@ -72,6 +72,11 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     email.subject = email_form['email_subject']
     email.id = email_id
     email.created_at = timezone.now()
+
+    # Nazarov Georgiy - Как я понял, в джанге инициализация связей ленивая и происходит только в момент сохранения
+    with transaction.atomic():
+        email.save()
+
     email.recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)

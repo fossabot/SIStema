@@ -305,7 +305,7 @@ def download_attachment(request, attachment_id):
 
 
 @login_required
-def get_preview(request, attachment_id):
+def preview(request, attachment_id):
     attachment = get_object_or_404(models.Attachment, id=attachment_id)
     if not can_user_download_attachment(request.user, attachment):
         return HttpResponseForbidden()

@@ -11,9 +11,9 @@ from relativefilepathfield.fields import RelativeFilePathField
 
 from users.models import User
 from schools.models import Session
-from sistema.uploads import save_file
+from sistema.uploads import _ensure_directory_exists
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 
 class EmailUser(PolymorphicModel):
@@ -46,6 +46,43 @@ class ExternalEmailUser(EmailUser):
         return '"%s" <%s>' % (self.display_name, self.email)
 
 
+class AbstractPreviewGenerator:
+    template = '__template_not_found__'
+
+    def __init__(self, attachment):
+        self.attachment = attachment
+
+    def generate(self, output_file):
+        raise NotImplementedError
+
+
+class ImagePreviewGenerator(AbstractPreviewGenerator):
+    template = 'image.html'
+
+    def generate(self, output_file):
+        size = (64, 64)
+        preview = Image.open(self.attachment.get_file_abspath())
+        preview.thumbnail(size)
+        preview.save(output_file, 'JPEG')
+
+
+class TextPreviewGenerator(AbstractPreviewGenerator):
+    template = 'text.html'
+
+    def generate(self, output_file):
+        text_file = open(self.attachment.get_file_abspath(), "r")
+        size = (64, 96)
+        image = Image.new('RGBA', size, (255, 255, 255))
+        font = ImageFont.truetype('/System/Library/Fonts/Helvetica.dfont', size=7)
+        draw = ImageDraw.Draw(image)
+        text = text_file.read(500)
+        split_text = text.split('\n')
+        for counter in range(min(12, len(split_text))):
+            line = split_text[counter] + '\n'
+            draw.text((7, 9 + counter * 7), line, fill=(100, 100, 100), font=font)
+        image.save(output_file, 'JPEG')
+
+
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
 
@@ -63,17 +100,33 @@ class Attachment(models.Model):
         'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
     ), recursive=True)
 
-    def save(self, *args, **kwargs):
+    def _generate_preview(self):
+        directory = Attachment._meta.get_field('preview').path
+        _ensure_directory_exists(directory)
         output_file = '%s_preview' % os.path.splitext(
-            os.path.join(Attachment._meta.get_field('preview').path, self.file)
+            os.path.join(directory, self.file)
         )[0]
-        if self.content_type[:5] == 'image':
-            size = (64, 64)
-            preview = Image.open(self.get_file_abspath())
-            preview.thumbnail(size)
-            preview.save(output_file, 'JPEG')
+        preview_generator = self.preview_generator
+        if preview_generator is not None:
+            try:
+                preview_generator.generate(output_file)
+            except Exception:
+                pass
             self.preview = os.path.relpath(output_file, Attachment._meta.get_field('preview').path)
+        else:
+            self.preview = ''
+
+    def save(self, *args, **kwargs):
+        self._generate_preview()
         super().save(*args, **kwargs)
+
+    @property
+    def preview_generator(self):
+        if self.content_type[:6] == 'image/':
+            return ImagePreviewGenerator(self)
+        if self.content_type[:5] == 'text/':
+            return TextPreviewGenerator(self)
+        return None
 
     def __str__(self):
         return self.original_file_name

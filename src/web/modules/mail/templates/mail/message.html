@@ -35,16 +35,7 @@
                             {{ email.html_text|safe|linebreaks }}
                         </div>
                         {% for attachment in email.attachments.all %}
-                            <div class="section mtn mb10">
-                                {% if attachment.content_type|truncatechars:8 == 'image...' %}
-                                    <img class='mb5' src="{% url 'mail:get_preview' attachment.id %}">
-                                    <br>
-                                {% endif %}
-                                <a class='mr5' href="{% url 'mail:download_attachment' attachment.id %}">
-                                    <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}
-                                </a>
-                                {{ attachment.file_size|filesizeformat }}
-                            </div>
+                            {% include 'mail/_message_attachment.html' with attachment=attachment%}
                         {% endfor %}
                         {% if allow_replying %}
                             <div class="text-left mt25">

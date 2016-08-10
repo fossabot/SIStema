@@ -86,6 +86,18 @@ class EmailMessage(models.Model):
     @classmethod
     def get_email_by_sender(cls, sender):
         return cls.objects.filter(sender=sender)
+    STATUS_UNKNOWN = 0
+    STATUS_ACCEPTED = 1
+    STATUS_SENT = 2
+    STATUS_DRAFT = 3
+    STATUS_RAW_DRAFT = 4
+
+    status = models.IntegerField(choices=(
+        (STATUS_ACCEPTED, 'Принято'),
+        (STATUS_SENT, 'Отправлено'),
+        (STATUS_DRAFT, 'Черновик'),
+        (STATUS_RAW_DRAFT, 'Новый черновик')
+    ), default=STATUS_UNKNOWN)
 
 
 class ContactRecord(models.Model):

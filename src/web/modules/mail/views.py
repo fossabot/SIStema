@@ -6,11 +6,13 @@ from django.core import urlresolvers
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 from django.utils.html import strip_tags
+from django.core import urlresolvers
 
 from . import models, forms
 from sistema.helpers import respond_as_attachment
@@ -45,31 +47,35 @@ def _get_recipients(string_with_recipients):
 
 
 # Save email to database(if email_id != None edit existing email)
-def _save_email(request, email_form, uploaded_files, email_id=None):
+def _save_email(request, email_form, email_id=None, email_status=models.EmailMessage.STATUS_DRAFT, uploaded_files=None):
     attachments = []
-    for file in uploaded_files:
-        saved_attachment_filename = os.path.relpath(
-            save_file(file, 'mail-attachments'),
-            models.Attachment._meta.get_field('file').path
-        )
-        attachments.append(models.Attachment(
-            original_file_name=file.name,
-            file_size=file.size,
-            content_type=file.content_type,
-            file=saved_attachment_filename,
-        ))
+    if uploaded_files is not None:
+        for file in uploaded_files:
+            saved_attachment_filename = os.path.relpath(
+                save_file(file, 'mail-attachments'),
+                models.Attachment._meta.get_field('file').path
+            )
+            attachments.append(models.Attachment(
+                original_file_name=file.name,
+                file_size=file.size,
+                content_type=file.content_type,
+                file=saved_attachment_filename,
+            ))
+
     email = models.EmailMessage()
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
         return None
+    email.status = email_status
     email.html_text = email_form['email_message']
     email.subject = email_form['email_subject']
     email.id = email_id
+    email.created_at = timezone.now()
+    email.recipients.clear()
+    for recipient in _get_recipients(email_form['recipients']):
+        email.recipients.add(recipient)
     with transaction.atomic():
-        email.save()
-        for recipient in _get_recipients(email_form['recipients']):
-            email.recipients.add(recipient)
         for attachment in attachments:
             attachment.save()
             email.attachments.add(attachment)
@@ -79,19 +85,26 @@ def _save_email(request, email_form, uploaded_files, email_id=None):
 
 @login_required
 def compose(request):
-    if request.method == 'POST':
-        form = forms.ComposeForm(data=request.POST, files=request.FILES)
-    else:
-        form = forms.ComposeForm()
-    if form.is_valid():
-        uploaded_files = request.FILES.getlist('attachments')
-        if _save_email(request, form.cleaned_data, uploaded_files) is None:
+    """
+        Initialization draft in database and redirecting to editor-page
+    """
+    try:
+        email = models.EmailMessage.objects.get(sender=request.user.email_user.first(),
+                                                status=models.EmailMessage.STATUS_RAW_DRAFT)
+    except models.EmailMessage.DoesNotExist:
+        # Empty message for current user not found. Let's create it.
+        email = models.EmailMessage()
+        try:
+            email.sender = models.SisEmailUser.objects.get(user=request.user)
+        except models.EmailUser.DoesNotExist:
             return HttpResponseNotFound('Can\'t find your email box.')
-        else:
-            return redirect('../?result=ok')
-    else:
-        pass
-    return render(request, 'mail/compose.html', {'form': form})
+
+        email.status = models.EmailMessage.STATUS_RAW_DRAFT
+        with transaction.atomic():
+            email.save()
+
+    url = urlresolvers.reverse('mail:edit', kwargs={'message_id': email.id})
+    return redirect(url)
 
 
 @login_required
@@ -128,9 +141,23 @@ def can_user_view_message(user, email):
     return is_recipient_of_email(user, email) or is_sender_of_email(user, email)
 
 
+def _is_message_dict_empty(email):
+    """
+    Returns True if email is empty
+    :param email: dict-like object with email fields
+    """
+    FIELDS = ('recipients', 'email_subject', 'email_message')
+    is_message_empty = True
+    for field in FIELDS:
+        if email[field]:
+            is_message_empty = False
+            break
+    return is_message_empty
+
+
 @login_required
 def inbox(request):
-    mail_list = models.EmailMessage.get_not_removed().filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
         Q(recipients__sisemailuser__user=request.user) |
         Q(cc_recipients__sisemailuser__user=request.user)
     ).order_by('-created_at')
@@ -142,10 +169,9 @@ def inbox(request):
 
 @login_required
 def sent(request):
-    mail_list = models.EmailMessage.get_not_removed().filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
-
     return render(request, 'mail/sent.html', {
         'mail_list': mail_list,
     })
@@ -252,29 +278,68 @@ def reply(request, message_id):
         display_name = email.sender.display_name
     text = '\n \n%s:\n%s' % (display_name, cite_text(strip_tags(email.html_text)))
 
-    if request.method == 'POST':
-        form = forms.ComposeForm(request.POST)
-    else:
-        form = forms.ComposeForm(initial={
-            'email_subject': email_subject,
-            'recipients': ', '.join(recipients),
-            'email_message': text,
-        })
-    if form.is_valid():
-        uploaded_files = request.FILES.getlist('attachments')
-        if _save_email(request, form.cleaned_data, uploaded_files) is None:
-            return HttpResponseNotFound('Can\'t find your email box.')
-        else:
-            return redirect('../../?result=ok')
-    else:
-        pass
+    form_data = {
+        'email_subject': email_subject,
+        'recipients': ', '.join(recipients),
+        'email_message': text,
+    }
 
-    return render(request, 'mail/compose.html', {
-        'form': form,
-    })
+    uploaded_files = request.FILES.getlist('attachments')
+    sending_email = _save_email(request, form_data,
+                                email_status=models.EmailMessage.STATUS_DRAFT,
+                                uploaded_files=uploaded_files)
+    if sending_email is None:
+        return HttpResponseNotFound('Can\'t find your email box.')
+    else:
+        return redirect(urlresolvers.reverse('mail:edit', kwargs={'message_id': sending_email.id}))
 
 
 @login_required
+def edit(request, message_id):
+    email = get_object_or_404(models.EmailMessage, id=message_id)
+
+    if not is_sender_of_email(request.user, email):
+        return HttpResponseForbidden()
+
+    if email.status not in (models.EmailMessage.STATUS_DRAFT, models.EmailMessage.STATUS_RAW_DRAFT):
+        # TODO: Make readable error message
+        return HttpResponseForbidden()
+
+    if request.method == 'GET':
+        EMAILS_SEPARATOR = ', '
+
+        recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
+
+        form = forms.ComposeForm(initial={
+            'recipients': recipients,
+            'email_theme': email.subject,
+            'email_message': email.html_text,
+        })
+        return render(request, 'mail/compose.html', {
+            'form': form,
+        })
+
+    elif request.method == 'POST':
+        form = forms.ComposeForm(request.POST)
+        if form.is_valid():
+            message_data = form.cleaned_data
+            uploaded_files = request.FILES.getlist('attachments')
+            email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
+            if email is not None:
+                return redirect(urlresolvers.reverse('mail:sent'))
+            else:
+                # Error when sending
+                # TODO: readable response
+                pass
+        else:
+            return render(request, 'mail/compose.html', {
+                'form': form,
+            })
+
+    else:
+        return HttpResponseBadRequest('Method is not supported')
+
+
 @require_POST
 def delete_email(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
@@ -283,6 +348,27 @@ def delete_email(request, message_id):
     email.is_remove = True
     email.save()
     return redirect(urlresolvers.reverse('mail:inbox'))
+
+
+@login_required
+@require_POST
+def save_changes(request, message_id):
+    """
+    If email is not filled draft, do nothing.
+    If email is filled draft, save it to database.
+    """
+    message_data = request.POST
+    is_raw_draft = _is_message_dict_empty(message_data)
+
+    SUCCESS_LABEL = 'is_successful'
+    if is_raw_draft:
+        return JsonResponse({SUCCESS_LABEL: True})
+
+    email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_DRAFT)
+
+    if email is None:
+        return JsonResponse({SUCCESS_LABEL: False})
+    return JsonResponse({SUCCESS_LABEL: True, 'id': email.id})
 
 
 def can_user_download_attachment(user, attachment):

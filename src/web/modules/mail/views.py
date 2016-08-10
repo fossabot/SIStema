@@ -382,7 +382,7 @@ def save_changes(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(models.EmailMessage.objects.filter(
+    return bool(attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |
@@ -423,3 +423,15 @@ def write_to(request, recipient_hash):
         'text': ''
     })
     return render(request, 'mail/compose.html', {'form': form})
+
+
+@login_required
+def preview(request, attachment_id):
+    attachment = get_object_or_404(models.Attachment, id=attachment_id)
+    if not can_user_download_attachment(request.user, attachment):
+        return HttpResponseForbidden()
+    return respond_as_attachment(
+        request,
+        attachment.get_preview_abspath(),
+        attachment.original_file_name
+    )

@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 
     'reversion',
     'social.apps.django_app.default',
@@ -195,6 +196,8 @@ SISTEMA_GENERATOR_ASSETS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator
 SISTEMA_FINANCE_DOCUMENTS = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'finance-documents')
 
 SISTEMA_MAIL_ATTACHMENTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'mail-attachments')
+
+SISTEMA_ATTACHMENT_PREVIEWS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'attachment-thumbnails')
 
 SISTEMA_SEND_CONFIRMATION_EMAILS = False
 

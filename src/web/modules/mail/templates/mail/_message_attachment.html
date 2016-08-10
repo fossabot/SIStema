@@ -1,0 +1,11 @@
+<div class="section mtn mb10">
+    {% if attachment.preview %}
+        <div class="mb5">
+            {% include 'mail/previews/'|add:attachment.preview_generator.template %}
+        </div>
+    {% endif %}
+    <a class='mr5' href="{% url 'mail:download_attachment' attachment.id %}">
+        <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}
+    </a>
+    {{ attachment.file_size|filesizeformat }}
+</div>

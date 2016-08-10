@@ -156,7 +156,7 @@ def _is_message_dict_empty(email):
 
 @login_required
 def inbox(request):
-    mail_list = models.EmailMessage.objects.filter(
+    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
         Q(recipients__sisemailuser__user=request.user) |
         Q(cc_recipients__sisemailuser__user=request.user)
     ).order_by('-created_at')
@@ -168,7 +168,7 @@ def inbox(request):
 
 @login_required
 def sent(request):
-    mail_list = models.EmailMessage.objects.filter(
+    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_SENT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 

@@ -77,6 +77,16 @@ class EmailMessage(models.Model):
 
     headers = models.TextField(blank=True)
 
+    is_remove = models.BooleanField(default=False)
+
+    @classmethod
+    def get_not_removed(cls):
+        return cls.objects.filter(is_remove=False)
+
+    @classmethod
+    def get_email_by_sender(cls, sender):
+        return cls.objects.filter(sender=sender)
+
 
 class ContactRecord(models.Model):
     owner = models.ForeignKey(SisEmailUser, related_name='contacts')

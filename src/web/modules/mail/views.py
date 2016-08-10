@@ -71,10 +71,9 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     email.subject = email_form['email_subject']
     email.id = email_id
     email.created_at = timezone.now()
+    for recipient in _get_recipients(email_form['recipients']):
+        email.recipients.add(recipient)
     with transaction.atomic():
-        email.save()
-        for recipient in _get_recipients(email_form['recipients']):
-            email.recipients.add(recipient)
         for attachment in attachments:
             attachment.save()
             email.attachments.add(attachment)

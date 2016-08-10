@@ -34,7 +34,7 @@ class SisEmailUser(EmailUser):
 
 
 def get_user_by_hash(user_hash):
-    return EmailUser.objects.filter(sisemailuser__user__email__endswith=user_hash).first()
+    return EmailUser.objects.filter(sisemailuser__user__email__endswith='-' + user_hash).first()
 
 
 class ExternalEmailUser(EmailUser):

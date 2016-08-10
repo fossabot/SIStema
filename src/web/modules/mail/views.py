@@ -305,7 +305,7 @@ def write(request):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/write.html', {'form': form, 'recipient': 'unknown'})
+    return render(request, 'mail/compose.html', {'form': form})
 
 
 def write_to(request, recipient_hash):
@@ -316,4 +316,4 @@ def write_to(request, recipient_hash):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/write.html', {'form': form, 'recipient': recipient})
+    return render(request, 'mail/compose.html', {'form': form})

@@ -310,9 +310,11 @@ def write(request):
 
 def write_to(request, recipient_hash):
     recipient = get_user_by_hash(recipient_hash)
+    if recipient is None:
+        return HttpResponseNotFound()
     form = forms.WriteForm(initial={
         'email_subject': '',
-        'recipients': recipient,
+        'recipients': recipient.display_name,
         'email_message': '',
         'text': ''
     })

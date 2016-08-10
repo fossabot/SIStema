@@ -35,6 +35,12 @@ class SisEmailUser(EmailUser):
         # TODO figure out what email to return
 
 
+def get_user_by_hash(user_hash):
+    email = PersonalEmail.objects.filter(hash=str(user_hash)).first()
+    if email is not None:
+        return email.owner
+
+
 class ExternalEmailUser(EmailUser):
     display_name = models.TextField()
 

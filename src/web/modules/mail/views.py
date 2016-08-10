@@ -12,8 +12,8 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
-from django.core import urlresolvers
 
+from modules.mail.models import get_user_by_hash
 from . import models, forms
 from sistema.helpers import respond_as_attachment
 from django.conf import settings
@@ -126,6 +126,16 @@ def contacts(request):
     )[:NUMBER_OF_RETURNING_RECORDS]
     filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
                         for rec in records]
+    return JsonResponse({'records': filtered_records})
+
+
+def sis_users(request):
+    NUMBER_OF_RETURNING_RECORDS = 10
+    search_request = request.GET['search']
+    records = models.SisEmailUser.objects.filter(
+        Q(user__first_name__icontains=search_request) | Q(user__last_name__icontains=search_request)
+    )[:NUMBER_OF_RETURNING_RECORDS]
+    filtered_records = [{'display_name': rec.display_name} for rec in records]
     return JsonResponse({'records': filtered_records})
 
 
@@ -390,3 +400,26 @@ def download_attachment(request, attachment_id):
         attachment.get_file_abspath(),
         attachment.original_file_name
     )
+
+
+def write(request):
+    form = forms.WriteForm(initial={
+        'email_subject': '',
+        'recipients': '',
+        'email_message': '',
+        'text': ''
+    })
+    return render(request, 'mail/compose.html', {'form': form})
+
+
+def write_to(request, recipient_hash):
+    recipient = get_user_by_hash(recipient_hash)
+    if recipient is None:
+        return HttpResponseNotFound()
+    form = forms.WriteForm(initial={
+        'email_subject': '',
+        'recipients': recipient.display_name,
+        'email_message': '',
+        'text': ''
+    })
+    return render(request, 'mail/compose.html', {'form': form})

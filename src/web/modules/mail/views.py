@@ -322,7 +322,7 @@ def edit(request, message_id):
 
         form = forms.ComposeForm(initial={
             'recipients': recipients,
-            'email_theme': email.subject,
+            'email_subject': email.subject,
             'email_message': email.html_text,
         })
         return render(request, 'mail/compose.html', {

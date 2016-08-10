@@ -2,7 +2,7 @@ from string import whitespace
 import os
 
 from django.contrib.auth.decorators import login_required
-from django.core import urlresolvers
+from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
@@ -12,6 +12,7 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django import forms
 
 from modules.mail.models import get_user_by_hash
 from . import models, forms
@@ -25,6 +26,11 @@ def _get_recipients(string_with_recipients):
     recipients = []
     for recipient in string_with_recipients.split(', '):
         if recipient == '':
+            continue
+        try:
+            validators.validate_email(recipient)
+        except exceptions.ValidationError:
+            # if recipient is not real email, skip it.
             continue
         query = models.EmailUser.objects.filter(
             Q(sisemailuser__user__email__iexact=recipient) |

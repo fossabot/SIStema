@@ -1,12 +1,18 @@
 from random import choice, randint, sample
 import string
 
+
 from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 from django.db import transaction
 import datetime
 
 from ... import models
+from sistema import uploads
 from modules.mail.models import EmailUser
+import os
+import os.path
+import shutil
 
 
 def generate_display_name():
@@ -78,7 +84,7 @@ def find_sender(options):
         try:
             sender = EmailUser.objects.get(id=sender_id)
         except EmailUser.DoesNotExist:
-            raise CommandError('Sender with id = "%s" does not exist' % sender_id)
+            raise CommandError('Sender with id = %s does not exist' % sender_id)
     else:
         if options['sender_email'] is not None:
             sender_email = options['sender_email']
@@ -102,7 +108,7 @@ def find_all_recipients(options, recipient_prefix=''):
             try:
                 recipient = EmailUser.objects.get(id=recipient_id)
             except EmailUser.DoesNotExist:
-                raise CommandError(recipient_prefix + 'recipient with id = "%s" does not exist' % recipient_id)
+                raise CommandError(recipient_prefix + 'recipient with id = %s does not exist' % recipient_id)
             recipients.append(recipient)
 
     if options[recipient_prefix + 'recipients_emails'] is not None:
@@ -146,6 +152,36 @@ def find_text(options):
     return text
 
 
+def find_attachments(options):
+    attachments = []
+
+    if options['attachments_path'] is not None:
+        attachments_path = convert_to_list(options['attachments_path'])
+
+        for attachment_path in attachments_path:
+            attachment = create_attachment_to_sistema(attachment_path)
+            attachments.append(attachment)
+
+    if options['count_attachments'] is not None:
+        project_mail_dir = os.path.join(os.path.join(settings.PROJECT_DIR, 'modules'), 'mail')
+        test_attachments_dir = os.path.join(os.path.join(os.path.join(project_mail_dir, 'management'), 'commands'), 'test_attachments')
+        test_attachments_list = os.listdir(test_attachments_dir)
+
+        for attachment_index in range(options['count_attachments']):
+            attachment = create_attachment_to_sistema(os.path.join(test_attachments_dir, test_attachments_list[attachment_index]))
+            attachments.append(attachment)
+
+    return attachments
+
+
+def create_attachment_to_sistema(attachment_path):
+    shutil.copy(attachment_path, settings.SISTEMA_MAIL_ATTACHMENTS_DIR)
+    new_path_attachment = os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, os.path.basename(attachment_path))
+    attachment_name = uploads._generate_random_name() + os.path.splitext(new_path_attachment)[1]
+    os.rename(new_path_attachment, os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name))
+    return models.Attachment.from_file(os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name), os.path.basename(attachment_path))
+
+
 def show_email(new_email):
     print('Generation is successful.')
     print('From:', str(new_email.sender))
@@ -154,6 +190,7 @@ def show_email(new_email):
         print('CC_Recipients:', ' '.join(map(str, new_email.cc_recipients.all())))
     print('Subject:', new_email.subject)
     print('Text:', new_email.html_text)
+    print('Attachments:', ' '.join(map(str, new_email.attachments.all())))
     print('Created at', str(new_email.created_at))
     print('This email_id is', new_email.id)
 
@@ -166,7 +203,8 @@ class Command(BaseCommand):
             '--count_emails',
             dest='cnt_emails',
             type=int,
-            default=1
+            default=1,
+            help='Emails with same options'
         )
 
         parser.add_argument(
@@ -221,13 +259,25 @@ class Command(BaseCommand):
         parser.add_argument(
             '--subject',
             dest='subject',
-            type=str,
+            type=str
         )
         parser.add_argument(
             '--text',
             dest='text',
             type=str,
+        )
+
+        parser.add_argument(
+            '--attachment_path',
+            dest='attachments_path',
+            type=str,
             nargs='?'
+        )
+        parser.add_argument(
+            '--count_attachments',
+            dest='count_attachments',
+            type=int,
+            help='No more than 11 attachments'
         )
 
     def handle(self, *args, **options):
@@ -240,6 +290,7 @@ class Command(BaseCommand):
                 recipients.append(generate_external_email_user())
             subject = find_subject(options)
             text = find_text(options)
+            attachments = find_attachments(options)
 
             with transaction.atomic():
                 sender.save()
@@ -258,6 +309,10 @@ class Command(BaseCommand):
                 for cc_recipient in cc_recipients:
                     cc_recipient.save()
                     new_email.cc_recipients.add(cc_recipient)
+
+                for attachment in attachments:
+                    attachment.save()
+                    new_email.attachments.add(attachment)
 
                 new_email.save()
 

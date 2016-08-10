@@ -14,8 +14,10 @@
         <div class="mw800 center-block mt30">
             <div class="admin-form theme-alert">
                 <div class="panel panel-alert heading-border">
+
                     <div class="panel-body p25 pt10">
-                        <div class="section mb25 mtn ptn">
+                        <div class="section mb25 mtn ptn" id="subject">
+
                             <h3>{{ email.subject }}</h3>
                         </div>
                         <div class="section mb5 fs13">
@@ -50,39 +52,41 @@
                             {% endfor %}
                         </div>
                         <div class="text-left mt25">
-                                {% if allow_replying %}
-                                    <a href="{% url 'mail:reply' email.id %}" class="btn btn-alert" type="button">Ответить</a>
-                                {% endif %}
-                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#dialog">
-                                    Удалить
-                                </button>
-                                <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
-                                     aria-labelledby="myModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal"
-                                                        aria-label="Close"><span aria-hidden="true">&times;</span>
-                                                </button>
-                                                <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
-                                            </div>
-                                            <div class="modal-body">
-                                                Вы действительно хотите удалить письмо?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <form method="post" action="{% url 'mail:delete' email.id %}">
-                                                     {% csrf_token %}
-                                                    <button type="button" class="btn btn-default" data-dismiss="modal">
-                                                        Отмена
-                                                    </button>
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Удалить
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
+                            {% if allow_replying %}
+                                <a href="{% url 'mail:reply' email.id %}" class="btn btn-alert"
+                                   type="button">Ответить</a>
+                            {% endif %}
+                            <div class="fs10 mt10 pull-right" id="delete" data-toggle="modal" data-target="#dialog">
+                                <span class="glyphicons glyphicons-bin"></span>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
+                             aria-labelledby="myModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        Вы действительно хотите удалить письмо?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form method="post" action="{% url 'mail:delete' email.id %}">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                                Отмена
+                                            </button>
+                                            <button type="submit" class="btn btn-danger">
+                                                Удалить
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 </div>

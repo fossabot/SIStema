@@ -187,6 +187,16 @@ def sent(request):
     })
 
 
+def drafts_list(request):
+    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_DRAFT).filter(
+        sender__sisemailuser__user=request.user,
+    ).order_by('-created_at')
+
+    return render(request, 'mail/drafts.html', {
+        'mail_list': mail_list,
+    })
+
+
 @login_required
 def message(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
@@ -322,7 +332,7 @@ def edit(request, message_id):
 
         form = forms.ComposeForm(initial={
             'recipients': recipients,
-            'email_theme': email.subject,
+            'email_subject': email.subject,
             'email_message': email.html_text,
         })
         return render(request, 'mail/compose.html', {

@@ -174,13 +174,6 @@ class EmailMessage(models.Model):
 
     is_remove = models.BooleanField(default=False)
 
-    @classmethod
-    def get_not_removed(cls):
-        return cls.objects.filter(is_remove=False)
-
-    @classmethod
-    def get_email_by_sender(cls, sender):
-        return cls.objects.filter(sender=sender)
     STATUS_UNKNOWN = 0
     STATUS_ACCEPTED = 1
     STATUS_SENT = 2
@@ -193,6 +186,23 @@ class EmailMessage(models.Model):
         (STATUS_DRAFT, 'Черновик'),
         (STATUS_RAW_DRAFT, 'Новый черновик')
     ), default=STATUS_UNKNOWN)
+
+    @classmethod
+    def get_not_removed(cls):
+        return cls.objects.filter(is_remove=False)
+
+    @classmethod
+    def get_email_by_sender(cls, sender):
+        return cls.objects.filter(sender=sender)
+
+    def is_incoming(self):
+        return self.status == self.STATUS_ACCEPTED
+
+    def is_sent(self):
+        return self.status == self.STATUS_SENT
+
+    def is_draft(self):
+        return self.status == self.STATUS_DRAFT
 
 
 class ContactRecord(models.Model):

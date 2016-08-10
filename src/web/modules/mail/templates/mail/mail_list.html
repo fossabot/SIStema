@@ -24,9 +24,15 @@
                                     <div title="{{ email.sender.email }}" class="ib mr15">
                                         {{ email.sender.display_name }}
                                     </div>
-                                    <a href="{% url 'mail:message' email.id %}">
-                                        <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
-                                    </a>
+                                    {% if email.is_draft %}
+                                        <a href="{% url 'mail:edit' email.id %}">
+                                            <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'mail:message' email.id %}">
+                                            <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
+                                        </a>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         {% else %}

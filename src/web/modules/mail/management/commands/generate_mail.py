@@ -180,7 +180,7 @@ def find_attachments(options):
         test_attachments_dir = os.path.join(os.path.join(os.path.join(project_mail_dir, 'management'), 'commands'), 'test_attachments')
         test_attachments_list = os.listdir(test_attachments_dir)
 
-        for attachment_index in range(options['count_attachments']):
+        for attachment_index in range(sample(test_attachments_list, options['count_attachments'])):
             attachment = create_attachment_to_sistema(os.path.join(test_attachments_dir, test_attachments_list[attachment_index]))
             attachments.append(attachment)
 

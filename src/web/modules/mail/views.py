@@ -2,6 +2,7 @@ from string import whitespace
 import os
 
 from django.contrib.auth.decorators import login_required
+from django.core import urlresolvers
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
@@ -156,7 +157,7 @@ def _is_message_dict_empty(email):
 
 @login_required
 def inbox(request):
-    mail_list = models.EmailMessage.objects.filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
         Q(recipients__sisemailuser__user=request.user) |
         Q(cc_recipients__sisemailuser__user=request.user)
     ).order_by('-created_at')
@@ -168,10 +169,9 @@ def inbox(request):
 
 @login_required
 def sent(request):
-    mail_list = models.EmailMessage.objects.filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
-
     return render(request, 'mail/sent.html', {
         'mail_list': mail_list,
     })
@@ -345,8 +345,9 @@ def delete_email(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
-    email.delete()
-    return redirect('/mail')
+    email.is_remove = True
+    email.save()
+    return redirect(urlresolvers.reverse('mail:inbox'))
 
 
 @login_required

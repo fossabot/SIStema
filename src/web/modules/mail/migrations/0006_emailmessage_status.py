@@ -17,4 +17,9 @@ class Migration(migrations.Migration):
             name='status',
             field=models.IntegerField(choices=[(1, 'Принято'), (2, 'Отправлено'), (3, 'Черновик'), (4, 'Новый черновик')], default=0),
         ),
+        migrations.AddField(
+            model_name='emailmessage',
+            name='is_remove',
+            field=models.BooleanField(default=False),
+        ),
     ]

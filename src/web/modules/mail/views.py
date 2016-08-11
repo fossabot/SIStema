@@ -6,12 +6,13 @@ from django.core import urlresolvers
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import HttpResponse, JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.contrib import messages
 
 from modules.mail.models import get_user_by_hash
 from . import models, forms
@@ -30,7 +31,7 @@ def _get_recipients(string_with_recipients):
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
         ).first()
-        if query() is not None:
+        if query is not None:
             recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(
@@ -351,12 +352,14 @@ def edit(request, message_id):
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
             if email is not None:
-                return redirect(urlresolvers.reverse('mail:sent') + '?type=send&result=ok')
+                messages.success(request, 'Письмо успешно отправлено.')
+                return redirect(urlresolvers.reverse('mail:sent'))
             else:
                 # Error when sending
                 # TODO: readable response
                 pass
         else:
+            messages.info(request, 'Не удалось отправить письмо.')
             return render(request, 'mail/compose.html', {
                 'form': form,
             })
@@ -369,10 +372,12 @@ def edit(request, message_id):
 def delete_email(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
     if not can_user_view_message(request.user, email):
-        return HttpResponseForbidden()
+        messages.info(request, 'Не удалось удалить письмо')
+        return redirect(urlresolvers.reverse('mail:inbox'))
     email.is_remove = True
     email.save()
-    return redirect(urlresolvers.reverse('mail:inbox') + '?type=delete&result=ok')
+    messages.success(request, 'Письмо успешно удалено')
+    return redirect(urlresolvers.reverse('mail:inbox'))
 
 
 @login_required
@@ -459,6 +464,12 @@ def delete_all(request):
     for field in request.POST:
         if 'email_id' in field:
             # get email id from string like 'email_id 13'
-            id_list.append(field.split()[1])
+            email_id = field.split()[1]
+            if can_user_view_message(request.user, models.EmailMessage.objects.get(id=email_id)):
+                id_list.append(email_id)
+            else:
+                messages.info(request, 'Не удалось удалить письма.')
+                return redirect(urlresolvers.reverse('mail:inbox'))
     models.EmailMessage.delete_emails_by_ids(id_list)
+    messages.success(request, 'Письма успешно удалены.')
     return redirect(urlresolvers.reverse('mail:inbox'))

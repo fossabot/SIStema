@@ -25,6 +25,17 @@ $(document).ready(
                     type = 'info';
                     break;
             }
+            switch (params.group_delete) {
+                case 'true':
+                    switch (params.result) {
+                        case 'ok':
+                            text = 'Письма успешно удалены.';
+                            break;
+                        case 'fail':
+                            text = 'Не удалось удалить письма.';
+                            break;
+                    }
+            }
         }
 
         if (params.type == 'send') {
@@ -45,7 +56,9 @@ $(document).ready(
                 title: 'Уведомление',
                 text: text,
                 type: type,
-                hide: false
+                hide: false,
+                delay: 500,
+                animate_speed: 'def'
             });
     }
 );

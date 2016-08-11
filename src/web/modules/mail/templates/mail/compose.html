@@ -40,4 +40,19 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static 'mail/js/user_hints.js' %}"></script>
     <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
+    <script src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                new PNotify({
+                    title: 'Уведомление',
+                    text: '{{ message }}',
+                    type: '{{ message.tags }}',
+                    hide: false,
+                    delay: 500,
+                    animate_speed: 'def'
+                })
+            </script>
+        {% endfor %}
+    {% endif %}
 {% endblock %}

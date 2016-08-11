@@ -23,7 +23,11 @@
                         </div>
                     </div>
                     <div class="panel-body p25 pt10">
+                        {% if message_id %}
+                        <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form" data-submit-url="{% url 'mail:save' message_id %}">
+                        {% else %}
                         <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form">
+                        {% endif %}
                             {% csrf_token %}
                             {{ form }}
                             <div class="text-right mt10">

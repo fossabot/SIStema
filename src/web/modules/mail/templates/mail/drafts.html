@@ -1,0 +1,25 @@
+{% extends 'mail/mail_list.html' %}
+
+{% load staticfiles %}
+
+{% block title %}Почта{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static "mail/css/mail.css" %}">
+{% endblock %}
+
+{% block tabs %}
+    <div class="section mb25 mtn ptn">
+        <h3>
+            <span class="mr10"><a href="{% url 'mail:inbox' %}">Входящие</a></span>
+            <span class="mr10"><a href="{% url 'mail:sent' %}">Отправленные</a></span>
+            <span class="mr10">Черновики</span>
+        </h3>
+    </div>
+{% endblock %}
+{% block if_empty %}
+    <div class="section mb5 fs16">
+        <span class="text-muted">Вы ещё никому не написали.</span>
+        <a href="{% url 'mail:compose' %}">Отправьте письмо</a>.
+    </div>
+{% endblock %}

@@ -2,17 +2,19 @@ from string import whitespace
 import os
 
 from django.contrib.auth.decorators import login_required
-from django.core import urlresolvers
+from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django import forms
 
+from settings import api
 from modules.mail.models import get_user_by_hash
 from . import models, forms
 from sistema.helpers import respond_as_attachment
@@ -26,6 +28,11 @@ def _get_recipients(string_with_recipients):
     for recipient in string_with_recipients.split(', '):
         if recipient == '':
             continue
+        try:
+            validators.validate_email(recipient)
+        except exceptions.ValidationError:
+            # if recipient is not real email, skip it.
+            continue
         query = models.EmailUser.objects.filter(
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
@@ -34,7 +41,8 @@ def _get_recipients(string_with_recipients):
             recipients.append(query.first())
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
+                    full_email=Concat('email_name', Value('-'), 'hash',
+                                      Value(api.get_current_settings('mail', 'mail_domain')),
                                       output_field=TextField())).filter(full_email__iexact=recipient)
             if query.first() is not None:
                 recipients.append(query.first().owner)
@@ -72,6 +80,11 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     email.subject = email_form['email_subject']
     email.id = email_id
     email.created_at = timezone.now()
+
+    # Nazarov Georgiy - Как я понял, в джанге инициализация связей ленивая и происходит только в момент сохранения
+    with transaction.atomic():
+        email.save()
+
     email.recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)
@@ -174,6 +187,7 @@ def inbox(request):
 
     return render(request, 'mail/inbox.html', {
         'mail_list': mail_list,
+        'user': request.user.email_user.first(),
     })
 
 
@@ -183,6 +197,17 @@ def sent(request):
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
     return render(request, 'mail/sent.html', {
+        'mail_list': mail_list,
+        'user': request.user.email_user.first(),
+    })
+
+
+def drafts_list(request):
+    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_DRAFT).filter(
+        sender__sisemailuser__user=request.user,
+    ).order_by('-created_at')
+
+    return render(request, 'mail/drafts.html', {
         'mail_list': mail_list,
     })
 
@@ -322,11 +347,12 @@ def edit(request, message_id):
 
         form = forms.ComposeForm(initial={
             'recipients': recipients,
-            'email_theme': email.subject,
+            'email_subject': email.subject,
             'email_message': email.html_text,
         })
         return render(request, 'mail/compose.html', {
             'form': form,
+            'message_id': message_id,
         })
 
     elif request.method == 'POST':
@@ -336,7 +362,7 @@ def edit(request, message_id):
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
             if email is not None:
-                return redirect(urlresolvers.reverse('mail:sent'))
+                return redirect(urlresolvers.reverse('mail:sent') + '?type=send&result=ok')
             else:
                 # Error when sending
                 # TODO: readable response
@@ -344,6 +370,7 @@ def edit(request, message_id):
         else:
             return render(request, 'mail/compose.html', {
                 'form': form,
+                'message_id': message_id,
             })
 
     else:
@@ -357,7 +384,7 @@ def delete_email(request, message_id):
         return HttpResponseForbidden()
     email.is_remove = True
     email.save()
-    return redirect(urlresolvers.reverse('mail:inbox'))
+    return redirect(urlresolvers.reverse('mail:inbox') + '?type=delete&result=ok')
 
 
 @login_required
@@ -382,7 +409,7 @@ def save_changes(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(models.EmailMessage.objects.filter(
+    return bool(attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |
@@ -409,7 +436,7 @@ def write(request):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form, 'no_draft': False})
+    return render(request, 'mail/compose.html', {'form': form})
 
 
 def write_to(request, recipient_hash):
@@ -422,4 +449,28 @@ def write_to(request, recipient_hash):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+    return render(request, 'mail/compose.html', {'form': form})
+
+
+@login_required
+def preview(request, attachment_id):
+    attachment = get_object_or_404(models.Attachment, id=attachment_id)
+    if not can_user_download_attachment(request.user, attachment):
+        return HttpResponseForbidden()
+    return respond_as_attachment(
+        request,
+        attachment.get_preview_abspath(),
+        attachment.original_file_name
+    )
+
+
+@require_POST
+@login_required
+def delete_all(request):
+    id_list = []
+    for field in request.POST:
+        if 'email_id' in field:
+            # get email id from string like 'email_id 13'
+            id_list.append(field.split()[1])
+    models.EmailMessage.delete_emails_by_ids(id_list)
+    return redirect(urlresolvers.reverse('mail:inbox'))

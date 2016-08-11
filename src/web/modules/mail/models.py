@@ -1,7 +1,7 @@
 import random
 from mimetypes import guess_type
 from trans import trans
-import os.path
+import os
 
 from django.db import models
 from django.conf import settings
@@ -12,6 +12,9 @@ from relativefilepathfield.fields import RelativeFilePathField
 
 from users.models import User
 from schools.models import Session
+from sistema.uploads import _ensure_directory_exists
+
+from PIL import Image, ImageDraw, ImageFont
 
 
 class EmailUser(PolymorphicModel):
@@ -29,6 +32,9 @@ class SisEmailUser(EmailUser):
     @property
     def email(self):
         return self.user.email
+
+    def have_drafts(self):
+        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
@@ -48,6 +54,44 @@ class ExternalEmailUser(EmailUser):
 
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
+
+
+class AbstractPreviewGenerator:
+    template = '__template_not_found__'
+
+    def __init__(self, attachment):
+        self.attachment = attachment
+
+    def generate(self, output_file):
+        raise NotImplementedError
+
+
+class ImagePreviewGenerator(AbstractPreviewGenerator):
+    template = 'image.html'
+
+    def generate(self, output_file):
+        size = (64, 64)
+        preview = Image.open(self.attachment.get_file_abspath())
+        preview.thumbnail(size)
+        preview.save(output_file, 'JPEG')
+
+
+class TextPreviewGenerator(AbstractPreviewGenerator):
+    template = 'text.html'
+
+    def generate(self, output_file):
+        text_file = open(self.attachment.get_file_abspath(), "r")
+        size = (64, 96)
+        image = Image.new('RGBA', size, (255, 255, 255))
+        font_path = os.path.join(settings.BASE_DIR, 'modules/mail/static/mail/fonts/Helvetica.dfont')
+        font = ImageFont.truetype(font_path, size=7)
+        draw = ImageDraw.Draw(image)
+        text = text_file.read(500)
+        split_text = text.split('\n')
+        for counter in range(min(12, len(split_text))):
+            line = split_text[counter] + '\n'
+            draw.text((7, 9 + counter * 7), line, fill=(100, 100, 100), font=font)
+        image.save(output_file, 'JPEG')
 
 
 class Attachment(models.Model):
@@ -75,6 +119,39 @@ class Attachment(models.Model):
             file=file
         )
 
+    preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
+        settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
+        'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
+    ), recursive=True)
+
+    def _generate_preview(self):
+        directory = Attachment._meta.get_field('preview').path
+        _ensure_directory_exists(directory)
+        output_file = '%s_preview' % os.path.splitext(
+            os.path.join(directory, self.file)
+        )[0]
+        preview_generator = self.preview_generator
+        if preview_generator is not None:
+            try:
+                preview_generator.generate(output_file)
+            except Exception:
+                pass
+            self.preview = os.path.relpath(output_file, Attachment._meta.get_field('preview').path)
+        else:
+            self.preview = ''
+
+    def save(self, *args, **kwargs):
+        self._generate_preview()
+        super().save(*args, **kwargs)
+
+    @property
+    def preview_generator(self):
+        if self.content_type[:6] == 'image/':
+            return ImagePreviewGenerator(self)
+        if self.content_type[:5] == 'text/':
+            return TextPreviewGenerator(self)
+        return None
+
     def __str__(self):
         return self.original_file_name
 
@@ -100,13 +177,6 @@ class EmailMessage(models.Model):
 
     is_remove = models.BooleanField(default=False)
 
-    @classmethod
-    def get_not_removed(cls):
-        return cls.objects.filter(is_remove=False)
-
-    @classmethod
-    def get_email_by_sender(cls, sender):
-        return cls.objects.filter(sender=sender)
     STATUS_UNKNOWN = 0
     STATUS_ACCEPTED = 1
     STATUS_SENT = 2
@@ -119,6 +189,29 @@ class EmailMessage(models.Model):
         (STATUS_DRAFT, 'Черновик'),
         (STATUS_RAW_DRAFT, 'Новый черновик')
     ), default=STATUS_UNKNOWN)
+
+    @classmethod
+    def get_not_removed(cls):
+        return cls.objects.filter(is_remove=False)
+
+    @classmethod
+    def get_email_by_sender(cls, sender):
+        return cls.objects.filter(sender=sender)
+
+    @classmethod
+    def delete_emails_by_ids(cls, ids: list):
+        for email in cls.objects.filter(id__in=ids):
+            email.is_remove = True
+            email.save()
+
+    def is_incoming(self):
+        return self.status == self.STATUS_ACCEPTED
+
+    def is_sent(self):
+        return self.status == self.STATUS_SENT
+
+    def is_draft(self):
+        return self.status == self.STATUS_DRAFT
 
 
 class ContactRecord(models.Model):

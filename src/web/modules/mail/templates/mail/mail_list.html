@@ -7,13 +7,32 @@
 {% block css %}
     <link rel="stylesheet" type="text/css" href="{% static "mail/css/mail.css" %}">
 {% endblock %}
-
+{#<div class="text-right"><a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a></div> #}
 {% block content %}
     <div class="container-fluid">
         <div class="mw800 center-block mt30">
             <div class="admin-form theme-alert">
-                <div class="panel panel-alert heading-border">
-                    <div class="panel-body p25 pt10">
+                <div class="panel panel-alert heading-border mbn">
+                    <div class="panel-body p25 pt10 mbn">
+                        <div><ul class="pagination pull-right">
+                                {% if show_previous %}
+                                    <li class="prev"><a href="{{ prev_link }}"><i class="fa fa-angle-left"></i> Previous</a></li>
+                                {% else %}
+                                    <li class="prev disabled"><a><i class="fa fa-angle-left"></i> Previous</a></li>
+                                {% endif %}
+                                {% for link in tab_links %}
+                                    {% if start_page|add:forloop.counter0 == page %}
+                                        <li class="active"><a>{{ start_page|add:forloop.counter0 }}</a></li>
+                                    {% else %}
+                                        <li><a href="{{ link }}">{{ start_page|add:forloop.counter0 }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+	                            {% if show_next %}
+                                    <li class="next"><a href="{{ next_link }}">Next <i class="fa fa-angle-right"></i></a></li>
+                                {% else %}
+                                    <li class="next disabled"><a>Next <i class="fa fa-angle-right"></i></a></li>
+                                {% endif %}
+                        </ul></div>
                         <div class="section mb25 mtn ptn">
                             {% block tabs %}
                             {% endblock %}
@@ -35,9 +54,9 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="text-right">
-                    <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
-                </div>
+                <span class="pull-right mt5">
+                        <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
+                </span>
             </div>
         </div>
     </div>

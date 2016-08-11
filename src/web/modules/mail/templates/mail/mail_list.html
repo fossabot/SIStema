@@ -9,7 +9,21 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'mail/js/popup_notifications.js' %}"></script>
+    <script src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                new PNotify({
+                    title: 'Уведомление',
+                    text: '{{ message }}',
+                    type: '{{ message.tags }}',
+                    hide: false,
+                    delay: 500,
+                    animate_speed: 'def'
+                })
+            </script>
+        {% endfor %}
+    {% endif %}
     <script src="{% static 'mail/js/check_all.js' %}"></script>
 {% endblock %}
 
@@ -87,31 +101,32 @@
                         <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
                     </div>
                     <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
-                             aria-labelledby="myModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal"
-                                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        Вы действительно хотите удалить отмеченные письма?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">
-                                            Отмена
-                                        </button>
-                                        <button type="submit" class="btn btn-danger">
-                                            Удалить
-                                        </button>
-                                    </div>
+                         aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
+                                </div>
+                                <div class="modal-body">
+                                    Вы действительно хотите удалить отмеченные письма?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                                        Отмена
+                                    </button>
+                                    <button type="submit" class="btn btn-danger">
+                                        Удалить
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
             </form>
+
         </div>
     </div>
 {% endblock %}

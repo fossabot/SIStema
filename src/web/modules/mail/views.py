@@ -6,7 +6,7 @@ from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import HttpResponse, JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django import forms
 
+from settings import api
 from modules.mail.models import get_user_by_hash
 from . import models, forms
 from sistema.helpers import respond_as_attachment
@@ -35,15 +36,15 @@ def _get_recipients(string_with_recipients):
         query = models.EmailUser.objects.filter(
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
-        )
-        if query.first() is not None:
-            recipients.append(query.first())
+        ).first()
+        if query is not None:
+            recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
-                                      output_field=TextField())).filter(full_email__iexact=recipient)
-            if query.first() is not None:
-                recipients.append(query.first().owner)
+                full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
+                                  output_field=TextField())).filter(full_email__iexact=recipient).first()
+            if query is not None:
+                recipients.append(query.owner)
             else:
                 external_user = models.ExternalEmailUser()
                 external_user.email = recipient
@@ -185,6 +186,7 @@ def inbox(request):
 
     return render(request, 'mail/inbox.html', {
         'mail_list': mail_list,
+        'user': request.user.email_user.first(),
     })
 
 
@@ -195,11 +197,12 @@ def sent(request):
     ).order_by('-created_at')
     return render(request, 'mail/sent.html', {
         'mail_list': mail_list,
+        'user': request.user.email_user.first(),
     })
 
 
 def drafts_list(request):
-    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_DRAFT).filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_DRAFT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 
@@ -219,6 +222,7 @@ def message(request, message_id):
         'email': email,
         'allow_replying': is_recipient_of_email(request.user, email),
     })
+
 
 MAX_STRING_LENGTH = 70
 
@@ -432,7 +436,7 @@ def write(request):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form})
+    return render(request, 'mail/compose.html', {'form': form, 'no_draft': False})
 
 
 def write_to(request, recipient_hash):
@@ -445,7 +449,7 @@ def write_to(request, recipient_hash):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form})
+    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
 
 
 @login_required

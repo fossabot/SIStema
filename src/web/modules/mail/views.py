@@ -436,7 +436,7 @@ def write(request):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form})
+    return render(request, 'mail/compose.html', {'form': form, 'no_draft': False})
 
 
 def write_to(request, recipient_hash):
@@ -449,7 +449,7 @@ def write_to(request, recipient_hash):
         'email_message': '',
         'text': ''
     })
-    return render(request, 'mail/compose.html', {'form': form})
+    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
 
 
 @login_required

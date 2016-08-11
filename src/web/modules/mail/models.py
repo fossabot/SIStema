@@ -45,9 +45,9 @@ def get_user_by_hash(user_hash):
 
 
 class ExternalEmailUser(EmailUser):
-    display_name = models.TextField()
+    display_name = models.TextField(db_index=True)
 
-    email = models.EmailField()
+    email = models.EmailField(db_index=True)
 
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)

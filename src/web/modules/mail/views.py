@@ -348,6 +348,7 @@ def edit(request, message_id):
         })
         return render(request, 'mail/compose.html', {
             'form': form,
+            'message_id': message_id,
         })
 
     elif request.method == 'POST':
@@ -365,6 +366,7 @@ def edit(request, message_id):
         else:
             return render(request, 'mail/compose.html', {
                 'form': form,
+                'message_id': message_id,
             })
 
     else:

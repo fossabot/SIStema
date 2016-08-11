@@ -1,9 +1,8 @@
 $(document).ready(
     function()
     {
-        function get_mail_data_to_post()
+        function get_mail_data_to_post($form)
         {
-            var $form = $('#mail-composer')
             var form_data = $form.serializeArray()
             var post_data = {}
             for (var i = 0; i < form_data.length; i++)
@@ -11,14 +10,20 @@ $(document).ready(
             return post_data
         }
 
-        function save_current_email_data()
+        function get_submit_url($form)
         {
-            $.post('../save/', get_mail_data_to_post())
+            return $form.data('submit-url')
+        }
+
+        function save_current_email_data($form)
+        {
+            $.post(get_submit_url($form), get_mail_data_to_post($form))
         }
 
         // Draft saving interval in milliseconds
         const SAVING_INTERVAL =  3000
 
-        var timer = setInterval(save_current_email_data, SAVING_INTERVAL)
+        var $form = $('#mail-composer')
+        var timer = setInterval(save_current_email_data, SAVING_INTERVAL, $form)
     }
 )

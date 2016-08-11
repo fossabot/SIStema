@@ -558,4 +558,4 @@ def delete_all(request):
                 return redirect(urlresolvers.reverse('mail:inbox'))
     models.EmailMessage.delete_emails_by_ids(id_list)
     messages.success(request, 'Письма успешно удалены.')
-    return redirect(urlresolvers.reverse('mail:inbox'))
+    return redirect(request.POST['next'])

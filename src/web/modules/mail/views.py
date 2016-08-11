@@ -185,6 +185,7 @@ def inbox(request):
 
     return render(request, 'mail/inbox.html', {
         'mail_list': mail_list,
+        'user': request.user.email_user.first(),
     })
 
 
@@ -195,6 +196,7 @@ def sent(request):
     ).order_by('-created_at')
     return render(request, 'mail/sent.html', {
         'mail_list': mail_list,
+        'user': request.user.email_user.first(),
     })
 
 

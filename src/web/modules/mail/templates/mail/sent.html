@@ -13,7 +13,9 @@
         <h3>
             <span class="mr10"><a href="{% url 'mail:inbox' %}">Входящие</a></span>
             <span class="mr10">Отправленные</span>
+            {% if user.have_drafts %}
             <span class="mr10"><a href="{% url 'mail:drafts' %}">Черновики</a></span>
+            {% endif %}
         </h3>
     </div>
 {% endblock %}

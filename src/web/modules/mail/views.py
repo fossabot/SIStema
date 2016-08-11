@@ -234,7 +234,7 @@ def _get_next_link(view, page_index, mail_count):
 
 
 @login_required
-def inbox(request, page_index="1"):
+def inbox(request, page_index='1'):
     page_index = int(page_index)
     mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
         Q(recipients__sisemailuser__user=request.user) |
@@ -244,7 +244,7 @@ def inbox(request, page_index="1"):
     if not _check_page_index(page_index, len(mail_list)):
         return HttpResponseNotFound()
 
-    params = _get_standard_mail_list_params(mail_list, page_index)
+    params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:inbox_page', page_index)
     params['next_link'] = _get_next_link('mail:inbox_page', page_index, len(mail_list))
@@ -252,7 +252,7 @@ def inbox(request, page_index="1"):
 
 
 @login_required
-def sent(request, page_index="1"):
+def sent(request, page_index='1'):
     page_index = int(page_index)
     mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
         sender__sisemailuser__user=request.user,
@@ -261,22 +261,25 @@ def sent(request, page_index="1"):
     if not _check_page_index(page_index, len(mail_list)):
         return HttpResponseNotFound()
 
-    params = _get_standard_mail_list_params(mail_list, page_index)
+    params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:sent_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:sent_page', page_index)
     params['next_link'] = _get_next_link('mail:sent_page', page_index, len(mail_list))
     return render(request, 'mail/sent.html', params)
 
-def drafts_list(request):
+
+def drafts_list(request, page_index='1'):
+    page_index = int(page_index)
     mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_DRAFT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 
-    params = _get_standard_mail_list_params(mail_list, page_index)
-    params['tab_links'] = _get_links_of_pages_to_show('mail:draft_page', page_index, len(mail_list))
-    params['prev_link'] = _get_prev_link('mail:draft_page', page_index)
-    params['next_link'] = _get_next_link('mail:draft_page', page_index, len(mail_list))
+    params = _get_standard_mail_list_params(mail_list, page_index, request)
+    params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))
+    params['prev_link'] = _get_prev_link('mail:drafts_page', page_index)
+    params['next_link'] = _get_next_link('mail:drafts_page', page_index, len(mail_list))
     return render(request, 'mail/drafts.html', params)
+
 
 @login_required
 def message(request, message_id):

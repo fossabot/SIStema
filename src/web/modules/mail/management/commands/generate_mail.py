@@ -213,7 +213,8 @@ def show_email(new_email):
         print('CC_Recipients:', ' '.join(map(str, new_email.cc_recipients.all())))
     print('Subject:', new_email.subject)
     print('Text:', new_email.html_text)
-    print('Attachments:', ' '.join(map(str, new_email.attachments.all())))
+    if len(new_email.attachments.all()):
+        print('Attachments:', ' '.join(map(str, new_email.attachments.all())))
     print('Created at', str(new_email.created_at))
     print('This email_id is', new_email.id)
 

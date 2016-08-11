@@ -37,7 +37,7 @@ def _get_recipients(string_with_recipients):
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
         ).first()
-        if query() is not None:
+        if query is not None:
             recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(

@@ -8,7 +8,7 @@ from django.db import transaction
 import datetime
 
 from ... import models
-from sistema import uploads
+from sistema import helpers
 from modules.mail.models import EmailUser, EmailMessage
 import os
 import os.path
@@ -188,11 +188,21 @@ def find_attachments(options):
 
 
 def create_attachment_to_sistema(attachment_path):
-    shutil.copy(attachment_path, settings.SISTEMA_MAIL_ATTACHMENTS_DIR)
-    new_path_attachment = os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, os.path.basename(attachment_path))
-    attachment_name = uploads._generate_random_name() + os.path.splitext(new_path_attachment)[1]
-    os.rename(new_path_attachment, os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name))
-    return models.Attachment.from_file(os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name), os.path.basename(attachment_path))
+    """Функция копирует файл с компьютера по пути attachment_path
+       и сохраняет его в системную папку settings.SISTEMA_MAIL_ATTACHMENT_DIR.
+       Функция переименовывает файл, сохраняя original_file_name в модели Attachment."""
+    attachment_name = helpers.generate_random_name() + os.path.splitext(attachment_path)[1]
+    new_attachment_path = os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name)
+    try:
+        shutil.copy(attachment_path, new_attachment_path)
+    except:
+        if os.path.exists(new_attachment_path):
+            os.remove(new_attachment_path)
+        raise
+    return models.Attachment.from_file(
+        os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name),
+        os.path.basename(attachment_path)
+    )
 
 
 def show_email(new_email):
@@ -203,7 +213,8 @@ def show_email(new_email):
         print('CC_Recipients:', ' '.join(map(str, new_email.cc_recipients.all())))
     print('Subject:', new_email.subject)
     print('Text:', new_email.html_text)
-    print('Attachments:', ' '.join(map(str, new_email.attachments.all())))
+    if len(new_email.attachments.all()):
+        print('Attachments:', ' '.join(map(str, new_email.attachments.all())))
     print('Created at', str(new_email.created_at))
     print('This email_id is', new_email.id)
 
@@ -290,7 +301,7 @@ class Command(BaseCommand):
             '--count_attachments',
             dest='count_attachments',
             type=int,
-            help='No more than 11 attachments'
+            help='No more than 19 attachments'
         )
 
         parser.add_argument(

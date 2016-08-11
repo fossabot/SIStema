@@ -2,6 +2,8 @@ import mimetypes
 import os
 import urllib.parse
 import collections
+import random
+import string
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseNotFound
@@ -50,3 +52,6 @@ def group_by(collection, extract_key_function, extract_value_function=None):
         result[key].append(value)
 
     return result
+
+def generate_random_name(length=10, alphabet=string.hexdigits):
+    return ''.join(random.choice(alphabet) for _ in range(length))

@@ -1,13 +1,17 @@
 {% extends 'staff_layout.html' %}
 
 {% load dict_tags %}
+{% load staticfiles %}
 
 {% block title %}Настройки{% endblock %}
 
 {% block topbar %}{% endblock %}
 
+{% block scripts %}
+    <script src="{% static 'settings/settings.js' %}"></script>
+{% endblock %}
+
 {% block content %}
-    <script src="/settings/static/settings.js"></script>
 
     <h1>
         {% if area == 'global' %} Глобальные настройки

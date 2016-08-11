@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -96,6 +96,12 @@ def contacts(request):
     filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
                         for rec in records]
     return JsonResponse({'records': filtered_records})
+
+
+def incoming_webhook(request):
+    message_data = request.POST
+    # Process message data there
+    return HttpResponse('ok')
 
 
 def is_sender_of_email(user, email):

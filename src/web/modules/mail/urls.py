@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^attachment/(?P<attachment_id>[^/]+)/$', views.download_attachment, name='download_attachment'),
     url(r'^attachment/(?P<attachment_id>[^/]+)/preview', views.preview, name='preview'),
     url(r'^drafts/', views.drafts_list, name='drafts'),
+    url(r'^delete/', views.delete_all, name='delete_all'),
     url(r'^(?P<message_id>[^/]+)/delete/', views.delete_email, name='delete'),
     url(r'^(?P<message_id>[^/]+)/save/', views.save_changes, name='save'),
     url(r'^(?P<message_id>[^/]+)/reply/', views.reply, name='reply'),

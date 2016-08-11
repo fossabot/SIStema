@@ -6,7 +6,7 @@ from django.core import urlresolvers
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -450,3 +450,15 @@ def preview(request, attachment_id):
         attachment.get_preview_abspath(),
         attachment.original_file_name
     )
+
+
+@require_POST
+@login_required
+def delete_all(request):
+    id_list = []
+    for field in request.POST:
+        if 'email_id' in field:
+            # get email id from string like 'email_id 13'
+            id_list.append(field.split()[1])
+    models.EmailMessage.delete_emails_by_ids(id_list)
+    return redirect(urlresolvers.reverse('mail:inbox'))

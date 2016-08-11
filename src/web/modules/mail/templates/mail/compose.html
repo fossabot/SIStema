@@ -43,7 +43,7 @@
 
 {% block scripts %}
     <script type="text/javascript" src="{% static 'mail/js/user_hints.js' %}"></script>
-    {% if no_draft %}
+    {% if not no_draft %}
         <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
     {% endif %}
 {% endblock %}

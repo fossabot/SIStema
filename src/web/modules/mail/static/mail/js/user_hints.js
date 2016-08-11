@@ -27,12 +27,12 @@ $(document).ready
                                 label_data = '"' + label_data + '" <' + data.records[i].email + '>';
                                 items.push({
                                     label: label_data,
-                                    value: data.records[i].email + ', '
+                                    value: data.records[i].email
                                 });
                             } else {
                                 items.push({
                                     label: label_data,
-                                    value: label_data + ','
+                                    value: label_data
                                 });
                             }
 

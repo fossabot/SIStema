@@ -11,9 +11,10 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from django.utils.html import strip_tags
 
+from settings import api
 from . import models, forms
 from sistema.helpers import respond_as_attachment
-from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR, MAIL_DOMAIN
+from sistema.settings import SISTEMA_MAIL_ATTACHMENTS_DIR
 
 
 # Parse recipients from string like: a@mail.ru, b@mail.ru, ...
@@ -30,7 +31,8 @@ def _get_recipients(string_with_recipients):
             recipients.append(query.first())
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(MAIL_DOMAIN),
+                    full_email=Concat('email_name', Value('-'), 'hash',
+                                      Value(api.get_current_settings('mail', 'mail_domain')),
                                       output_field=TextField())).filter(full_email__iexact=recipient)
             if query.first() is not None:
                 recipients.append(query.first().owner)

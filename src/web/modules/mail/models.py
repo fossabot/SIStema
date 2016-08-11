@@ -33,6 +33,9 @@ class SisEmailUser(EmailUser):
     def email(self):
         return self.user.email
 
+    def have_drafts(self):
+        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()
+
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
         # TODO figure out what email to return
@@ -194,6 +197,12 @@ class EmailMessage(models.Model):
     @classmethod
     def get_email_by_sender(cls, sender):
         return cls.objects.filter(sender=sender)
+
+    @classmethod
+    def delete_emails_by_ids(cls, ids: list):
+        for email in cls.objects.filter(id__in=ids):
+            email.is_remove = True
+            email.save()
 
     def is_incoming(self):
         return self.status == self.STATUS_ACCEPTED

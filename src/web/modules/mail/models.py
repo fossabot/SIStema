@@ -3,7 +3,7 @@ from mimetypes import guess_type
 from trans import trans
 import os
 
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
 
@@ -35,6 +35,15 @@ class SisEmailUser(EmailUser):
 
     def have_drafts(self):
         return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT, is_remove=False).exists()
+
+    def add_person_to_contacts(self, person):
+        try:
+            new_contact = ContactRecord.objects.get(owner=self, person=person)
+        except ContactRecord.DoesNotExist:
+            new_contact = ContactRecord(owner=self, person=person)
+            with transaction.atomic():
+                new_contact.save()
+        self.contacts.add(new_contact)
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)

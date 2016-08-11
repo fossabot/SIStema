@@ -87,6 +87,8 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     email.recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)
+        if email_status == models.EmailMessage.STATUS_SENT:
+            email.sender.add_person_to_contacts(recipient)
     with transaction.atomic():
         for attachment in attachments:
             attachment.save()

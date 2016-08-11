@@ -6,7 +6,7 @@ from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import HttpResponse, JsonResponse,  HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -36,16 +36,15 @@ def _get_recipients(string_with_recipients):
         query = models.EmailUser.objects.filter(
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
-        )
-        if query.first() is not None:
-            recipients.append(query.first())
+        ).first()
+        if query() is not None:
+            recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash',
-                                      Value(api.get_current_settings('mail', 'mail_domain')),
-                                      output_field=TextField())).filter(full_email__iexact=recipient)
-            if query.first() is not None:
-                recipients.append(query.first().owner)
+                full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
+                                  output_field=TextField())).filter(full_email__iexact=recipient).first()
+            if query is not None:
+                recipients.append(query.owner)
             else:
                 external_user = models.ExternalEmailUser()
                 external_user.email = recipient
@@ -223,6 +222,7 @@ def message(request, message_id):
         'email': email,
         'allow_replying': is_recipient_of_email(request.user, email),
     })
+
 
 MAX_STRING_LENGTH = 70
 

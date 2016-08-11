@@ -3,10 +3,10 @@
 {% load staticfiles %}
 
 {% block css %}
-    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.min.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.theme.min.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.structure.min.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.theme.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'vendor/jquery/jquery_ui/jquery-ui.structure.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css' %}">
 {% endblock %}
 
 {% block title %}Новое письмо{% endblock %}
@@ -43,5 +43,7 @@
 
 {% block scripts %}
     <script type="text/javascript" src="{% static 'mail/js/user_hints.js' %}"></script>
-    <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
+    {% if no_draft %}
+        <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
+    {% endif %}
 {% endblock %}

@@ -9,7 +9,7 @@ import datetime
 
 from ... import models
 from sistema import helpers
-from modules.mail.models import EmailUser
+from modules.mail.models import EmailUser, EmailMessage
 import os
 import os.path
 import shutil
@@ -151,6 +151,19 @@ def find_text(options):
         text = generate_text()
     return text
 
+def find_status(options):
+    STRING_TO_STATUS = {
+        'incoming': EmailMessage.STATUS_ACCEPTED,
+        'sent': EmailMessage.STATUS_SENT,
+        'draft': EmailMessage.STATUS_DRAFT,
+    }
+
+    if options['status'] is not None:
+        status = STRING_TO_STATUS[options['status']]
+    else:
+        status = EmailMessage.STATUS_UNKNOWN
+    return status
+
 
 def find_attachments(options):
     attachments = []
@@ -290,6 +303,13 @@ class Command(BaseCommand):
             help='No more than 19 attachments'
         )
 
+        parser.add_argument(
+            '--status',
+            dest='status',
+            type=str,
+            help='Available values: {incoming, draft, sent}'
+        )
+
     def handle(self, *args, **options):
         # TODO: подумать, что делать, если и в sender, и в одном из полей recipient  cc_recipient есть ExternalEmailUser
         for email_index in range(options['cnt_emails']):
@@ -300,6 +320,7 @@ class Command(BaseCommand):
                 recipients.append(generate_external_email_user())
             subject = find_subject(options)
             text = find_text(options)
+            status = find_status(options)
             attachments = find_attachments(options)
 
             with transaction.atomic():
@@ -308,7 +329,8 @@ class Command(BaseCommand):
                     sender=sender,
                     created_at=generate_date(),
                     subject=subject,
-                    html_text=text
+                    html_text=text,
+                    status=status,
                 )
                 new_email.save()
 

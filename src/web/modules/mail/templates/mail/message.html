@@ -46,9 +46,7 @@
                         </div>
                         <div class="section mt15 mbn">
                             {% for attachment in email.attachments.all %}
-                                <a href="{% url 'mail:download_attachment' attachment.id %}">
-                                    <span class="glyphicons glyphicons-paperclip"></span> {{ attachment }}</a>
-                                {% if not forloop.last %}<br>{% endif %}
+                                {% include 'mail/_message_attachment.html' with attachment=attachment%}
                             {% endfor %}
                         </div>
                         <div class="text-left mt25">
@@ -57,10 +55,8 @@
                                    type="button">Ответить</a>
                             {% endif %}
                             <div class="fs10 mt10 pull-right" id="delete" data-toggle="modal" data-target="#dialog">
-                                <span class="glyphicons glyphicons-bin"></span>
-                            </div>
+                                <span class="glyphicons glyphicons-bin"></span></div>
                         </div>
-
                         <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
                              aria-labelledby="myModalLabel" aria-hidden="true">
                             <div class="modal-dialog">

@@ -41,3 +41,17 @@ class ComposeForm(forms.Form):
                                      'multiple': True,
                                  })
                                  )
+
+
+class WriteForm(ComposeForm):
+    recipients = forms.CharField(max_length=ComposeForm.MAXIMUM_LENGTH_OF_RECIPIENTS,
+                                 required=True,
+                                 label='',
+                                 label_suffix='',
+                                 widget=forms.TextInput(attrs={
+                                     'class': 'form-control mb10',
+                                     'rows': '10',
+                                     'placeholder': 'Начните вводить имя',
+                                     'data-submit-url': '../sis_users/'
+                                 }
+                                 ))

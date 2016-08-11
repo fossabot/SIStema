@@ -201,7 +201,7 @@ def sent(request):
 
 
 def drafts_list(request):
-    mail_list = models.EmailMessage.objects.filter(status=models.EmailMessage.STATUS_DRAFT).filter(
+    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_DRAFT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 

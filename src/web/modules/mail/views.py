@@ -29,15 +29,15 @@ def _get_recipients(string_with_recipients):
         query = models.EmailUser.objects.filter(
             Q(sisemailuser__user__email__iexact=recipient) |
             Q(externalemailuser__email__iexact=recipient)
-        )
-        if query.first() is not None:
-            recipients.append(query.first())
+        ).first()
+        if query() is not None:
+            recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(
                     full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
-                                      output_field=TextField())).filter(full_email__iexact=recipient)
-            if query.first() is not None:
-                recipients.append(query.first().owner)
+                                      output_field=TextField())).filter(full_email__iexact=recipient).first()
+            if query is not None:
+                recipients.append(query.owner)
             else:
                 external_user = models.ExternalEmailUser()
                 external_user.email = recipient

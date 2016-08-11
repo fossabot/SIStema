@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django import forms
 
+from settings import api
 from modules.mail.models import get_user_by_hash
 from . import models, forms
 from sistema.helpers import respond_as_attachment
@@ -40,7 +41,8 @@ def _get_recipients(string_with_recipients):
             recipients.append(query.first())
         else:
             query = models.PersonalEmail.objects.annotate(
-                    full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
+                    full_email=Concat('email_name', Value('-'), 'hash',
+                                      Value(api.get_current_settings('mail', 'mail_domain')),
                                       output_field=TextField())).filter(full_email__iexact=recipient)
             if query.first() is not None:
                 recipients.append(query.first().owner)

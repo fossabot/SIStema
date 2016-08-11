@@ -1,7 +1,10 @@
+from datetime import date
+
+
 class AbstractSettingsItem:
     model_name = None
 
-    def __init__(self, short_name=None, display_name=None, description=None, default_value=None):
+    def __init__(self, short_name, display_name, default_value, description=''):
         self.short_name = short_name
         self.display_name = display_name
         self.description = description
@@ -62,3 +65,12 @@ def get_settings(app_name, setting_name, setting_area=None):
     setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, school=None, session=None)
     if setting_item:
         return setting_item[0].value
+
+
+def get_current_settings(app_name, setting_name):
+    from schools.models import Session
+    today = date.today()
+    sessions = Session.objects.filter(start_date__lte=today, finish_date__gte=today)
+    if len(sessions):
+        return get_settings(app_name, setting_name, sessions[0])
+    return get_settings(app_name, setting_name)

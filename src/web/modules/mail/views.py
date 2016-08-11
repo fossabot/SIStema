@@ -182,6 +182,8 @@ PAGES_ON_PAGINATOR = 5
 
 
 def _get_max_page_num(mail_count):
+    if mail_count == 0:
+        return 1
     if mail_count % EMAILS_PER_PAGE == 0:
         return mail_count // EMAILS_PER_PAGE
     else:
@@ -272,6 +274,9 @@ def drafts_list(request, page_index='1'):
     mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_DRAFT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
+
+    if not _check_page_index(page_index, len(mail_list)):
+        return HttpResponseNotFound()
 
     params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))

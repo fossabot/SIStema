@@ -1,8 +1,7 @@
 import os.path
-import string
-import random
 
 from . import settings
+from sistema import helpers
 
 
 def _ensure_directory_exists(path):
@@ -13,10 +12,6 @@ def _ensure_directory_exists(path):
             raise FileNotFoundError('sistema: %s is not a directory' % path)
 
 
-def _generate_random_name(length=10, alphabet=string.hexdigits):
-    return ''.join(random.choice(alphabet) for _ in range(length))
-
-
 # TODO: by default save extension from uploaded_file
 def save_file(uploaded_file, category, extension=None):
     DEFAULT_EXTENSION = ''
@@ -24,7 +19,7 @@ def save_file(uploaded_file, category, extension=None):
     directory = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, category)
     _ensure_directory_exists(directory)
 
-    file_name = os.path.join(directory, _generate_random_name())
+    file_name = os.path.join(directory, helpers.generate_random_name())
     if extension is None:
         extension = DEFAULT_EXTENSION
     if extension != '':

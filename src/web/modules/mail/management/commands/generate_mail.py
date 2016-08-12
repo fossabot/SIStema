@@ -335,6 +335,8 @@ class Command(BaseCommand):
                 )
                 new_email.save()
 
+                models.PersonalEmailMessage.make_for(new_email)
+
                 for recipient in recipients:
                     recipient.save()
                     new_email.recipients.add(recipient)

@@ -1,14 +1,16 @@
+import datetime
 import random
-import os
 from mimetypes import guess_type
-from trans import trans
+
 import requests
+from django.core.files import File
+from django.db.models import QuerySet
+from trans import trans
+import os
 
 from django.db import models
 from django.conf import settings
 import django.db.migrations.writer
-from django.core.files import File
-from django.core.mail import EmailMessage as DjangoEmailMessage
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -37,7 +39,7 @@ class SisEmailUser(EmailUser):
         return self.user.email
 
     def have_drafts(self):
-        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT, is_remove=False).exists()
+        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
@@ -185,10 +187,6 @@ class EmailMessage(models.Model):
 
     headers = models.TextField(blank=True)
 
-    delivered = models.BooleanField(default=False)
-
-    is_remove = models.BooleanField(default=False)
-
     STATUS_UNKNOWN = 0
     STATUS_ACCEPTED = 1
     STATUS_SENT = 2
@@ -201,20 +199,6 @@ class EmailMessage(models.Model):
         (STATUS_DRAFT, 'Черновик'),
         (STATUS_RAW_DRAFT, 'Новый черновик')
     ), default=STATUS_UNKNOWN)
-
-    @classmethod
-    def get_not_removed(cls):
-        return cls.objects.filter(is_remove=False)
-
-    @classmethod
-    def get_email_by_sender(cls, sender):
-        return cls.objects.filter(sender=sender)
-
-    @classmethod
-    def delete_emails_by_ids(cls, ids: list):
-        for email in cls.objects.filter(id__in=ids):
-            email.is_remove = True
-            email.save()
 
     def is_incoming(self):
         return self.status == self.STATUS_ACCEPTED
@@ -231,8 +215,8 @@ class EmailMessage(models.Model):
 
         email_message = DjangoEmailMessage(
             self.subject, self.html_text, self.sender.email,
-            [str(recipient) for recipient in self.recipients],
-            [str(recipient) for recipient in self.cc_recipients]
+            [str(recipient) for recipient in self.recipients.all()],
+            [str(recipient) for recipient in self.cc_recipients.all()]
         )
 
         try:
@@ -240,6 +224,43 @@ class EmailMessage(models.Model):
             self.delivered = True
         except Exception as error:
             print('Failed while sending message:', error)
+
+
+class PersonalEmailMessage(models.Model):
+    user = models.ForeignKey(EmailUser)
+
+    message = models.ForeignKey(EmailMessage)
+
+    is_removed = models.BooleanField(default=False)
+
+    time_removed = models.DateTimeField(null=True, blank=True, default=None)
+
+    def remove(self):
+        self.is_removed = True
+        self.timestamp_removed = datetime.datetime.now()
+        self.save()
+
+    class Meta:
+        unique_together = ('user', 'message')
+
+    @classmethod
+    def get_not_removed(cls, user=None):
+        if user is None:
+            return cls.objects.filter(is_removed=False)
+        else:
+            return cls.objects.filter(is_removed=False, user=user)
+
+    @classmethod
+    def delete_emails_by_ids(cls, ids: list):
+        for email in cls.objects.filter(message__id__in=ids):
+            email.remove()
+
+    @classmethod
+    def make_for(cls, message: EmailMessage):
+        for recipient in list(message.recipients.all()) + list(message.cc_recipients.all()):
+            if not PersonalEmailMessage.objects.filter(user=recipient, message=message):
+                personal = PersonalEmailMessage(user=recipient, message=message)
+                personal.save()
 
 
 class ContactRecord(models.Model):

@@ -238,6 +238,9 @@ class EmailMessage(models.Model):
         except Exception as error:
             print('Failed while sending message:', error)
 
+    def __str__(self):
+        return str(self.id)
+
 
 class PersonalEmailMessage(models.Model):
     user = models.ForeignKey(EmailUser)
@@ -250,7 +253,7 @@ class PersonalEmailMessage(models.Model):
 
     def remove(self):
         self.is_removed = True
-        self.timestamp_removed = datetime.datetime.now()
+        self.time_removed = datetime.datetime.now()
         self.save()
 
     class Meta:

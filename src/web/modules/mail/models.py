@@ -8,7 +8,7 @@ from django.db import models
 from django.conf import settings
 import django.db.migrations.writer
 from django.core.files import File
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage as DjangoEmailMessage
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -229,7 +229,7 @@ class EmailMessage(models.Model):
         if self.delivered:
             return
 
-        email_message = EmailMessage(
+        email_message = DjangoEmailMessage(
             self.subject, self.html_text, self.sender.email,
             [str(recipient) for recipient in self.recipients],
             [str(recipient) for recipient in self.cc_recipients]

@@ -60,6 +60,14 @@ def _save_email(request, email_form, email_id=None):
     return email
 
 
+def _download_mailbox_attachment(attachment_data):
+    attachment = models.Attachment.download_from_url(attachment_data['url'])
+    attachment.file_size = attachment_data['size']
+    attachment.original_file_name = attachment['name']
+    attachment.content_type = attachment['content-type']
+    return attachment
+
+
 @login_required
 def compose(request):
     if request.method == 'POST':

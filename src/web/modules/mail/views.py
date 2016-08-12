@@ -249,10 +249,11 @@ def _read_page_index(page_index, mail_count):
 
 @login_required
 def inbox(request, page_index='1'):
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
-        Q(recipients__sisemailuser__user=request.user) |
-        Q(cc_recipients__sisemailuser__user=request.user)
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_ACCEPTED).order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -267,9 +268,12 @@ def inbox(request, page_index='1'):
 
 @login_required
 def sent(request, page_index='1'):
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
-        sender__sisemailuser__user=request.user,
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_SENT) \
+        .filter(message__sender__sisemailuser__user=request.user).order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -284,9 +288,12 @@ def sent(request, page_index='1'):
 
 def drafts_list(request, page_index='1'):
     page_index = int(page_index)
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_DRAFT).filter(
-        sender__sisemailuser__user=request.user,
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
+        .order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -459,6 +466,8 @@ def edit(request, message_id):
             message_data = form.cleaned_data
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
+            models.PersonalEmailMessage.make_for(email)
+
             if email is not None:
                 messages.success(request, 'Письмо успешно отправлено.')
                 return redirect(urlresolvers.reverse('mail:sent'))
@@ -484,7 +493,7 @@ def delete_email(request, message_id):
     if not can_user_view_message(request.user, email):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
-    email.is_remove = True
+    email.remove()
     email.save()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(urlresolvers.reverse('mail:inbox'))
@@ -581,6 +590,8 @@ def write(request):
 
             with transaction.atomic():
                 email.save()
+
+             
 
             email.recipients.clear()
             for recipient in recipients:

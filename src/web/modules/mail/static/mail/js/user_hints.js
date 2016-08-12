@@ -14,10 +14,10 @@ $(document).ready
             return split_by_commas(val).pop()
         }
 
-        $('#id_recipients').autocomplete({
+        $('.do_hints').autocomplete({
             source: function (request, response) {
                 var search_value = extract_last(request.term);
-                var submit_url = $('#id_recipients').attr('data-submit-url');
+                var submit_url = $('.do_hints').attr('data-submit-url');
                 var items = [];
 
                 $.get(submit_url + '?search=' + encodeURIComponent(search_value), function (data) {

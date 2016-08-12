@@ -1,6 +1,6 @@
-function get_checked() {
+function get_checked(checkbox_group) {
     var checked = [];
-    var checkboxes = $('input:checkbox');
+    var checkboxes = $('input:checkbox[checkbox_group="' + checkbox_group + '"]');
     for (var i = 1; i < checkboxes.length; ++i) {
         if ($('#' + checkboxes[i].getAttribute('id')).prop('checked')) {
             checked.push(checkboxes[i].getAttribute('id'));
@@ -9,27 +9,7 @@ function get_checked() {
     return checked
 }
 
-$(document).ready(
-    function () {
-        $('#check_all').click(
-            function () {
-                if ($('#check_all').prop('checked')) {
-                    $('input:checkbox').prop('checked', true);
-                    $('label[for="check_all"]').html('Снять выделение');
-                } else {
-                    $('input:checkbox').prop('checked', false);
-                    $('label[for="check_all"]').html('Отметить все');
-                }
-            }
-        );
-
-        $('#delete_all').click(
-            function () {
-                if (get_checked().length > 0) {
-                    $('#dialog').modal({});
-                }
-            }
-        );
-
-    }
-);
+function change_checked(checkbox_group, val) {
+    val = !!val;
+    $('input:checkbox[checkbox_group="' + checkbox_group + '"]').prop('checked', val);
+}

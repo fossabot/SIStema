@@ -18,6 +18,7 @@
             <div class="admin-form theme-alert">
                 <div class="panel panel-alert heading-border">
                     <div class="panel-heading">
+                        <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left mt15 pr20" id="back"></span></a>
                         <div class="panel-title">
                             Новое письмо
                         </div>
@@ -48,19 +49,4 @@
         <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
     {% endif %}
     <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
-    <script type="text/javascript" src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
-    {% if messages %}
-        {% for message in messages %}
-            <script>
-                new PNotify({
-                    title: 'Уведомление',
-                    text: '{{ message }}',
-                    type: '{{ message.tags }}',
-                    hide: false,
-                    delay: 500,
-                    animate_speed: 'def'
-                })
-            </script>
-        {% endfor %}
-    {% endif %}
 {% endblock %}

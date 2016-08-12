@@ -12,6 +12,7 @@
 
 .email-link:hover {
     text-decoration: none;
+}
 
 #back {
     cursor: pointer;
@@ -25,4 +26,13 @@
 
 .panel-title {
     cursor: default;
+}
+
+.checkbox-custom.email-checkbox {
+    transform: scale(0.5);
+    transform-origin: 150% 150%;
+}
+
+.big-checkbox {
+    margin-left: 2px;
 }

@@ -25,14 +25,14 @@
                                 {% endblock %}
                             </div>
                             {% if mail_list %}
-                                <div class="checkbox-custom email-checkbox mb1 mr10">
+                                <div class="checkbox-custom big-checkbox va-m mr10">
                                     <input id="check_all" type="checkbox">
                                     <label for="check_all">Отметить все</label>
                                 </div>
                                 {% for email in mail_list %}
                                     <a class="email-link" href="{% if email.is_draft %}{% url 'mail:edit' email.id %}{% else %}{% url 'mail:message' email.id %}{% endif %}">
                                         <div class="section pb20 mbn email">
-                                            <div class="checkbox-custom email-checkbox mb20 pull-left va-m mr10">
+                                            <div class="checkbox-custom email-checkbox mb20 pull-left mr10">
                                                 <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
                                                 <label for="{{ email.id }}"></label>
                                             </div>
@@ -41,17 +41,6 @@
                                                     {{ email.sender.display_name }}
                                                 </div>
                                                 <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
-                                                {% comment %} #}{% if email.is_draft %}
-                                                    <a href="{% url 'mail:edit' email.id %}">
-                                                        <b>{{ email.subject }}</b>
-                                                        — {{ email.html_text|truncatechars:50|striptags }}
-                                                    </a>
-                                                {% else %}
-                                                    <a href="{% url 'mail:message' email.id %}">
-                                                        <b>{{ email.subject }}</b>
-                                                        — {{ email.html_text|truncatechars:50|striptags }}
-                                                    </a>
-                                                {% endif %}{% endcomment %}
                                             </div>
                                         </div>
                                     </a>
@@ -114,7 +103,6 @@
                     </div>
                 </div>
             </form>
-
         </div>
     </div>
 {% endblock %}

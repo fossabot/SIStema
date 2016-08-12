@@ -28,4 +28,5 @@ sqlparse
 reportlab
 trans
 pillow
+django-anymail[mailgun]
 

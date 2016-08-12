@@ -37,7 +37,7 @@ class SisEmailUser(EmailUser):
         return self.user.email
 
     def have_drafts(self):
-        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()  # TODO filter not removed
+        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT, is_remove=False).exists()
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)
@@ -158,6 +158,13 @@ class Attachment(models.Model):
     def __str__(self):
         return self.original_file_name
 
+    @classmethod
+    def download_from_url(cls, url):
+        response = requests.get(url=url)
+        new_attachment = Attachment()
+        new_attachment.file = File(response.raw)
+        return new_attachment
+
 
 class EmailMessage(models.Model):
     sender = models.ForeignKey(EmailUser, related_name='sent_emails')
@@ -199,6 +206,22 @@ class EmailMessage(models.Model):
 
     def is_draft(self):
         return self.status == self.STATUS_DRAFT
+
+    def send(self):
+        if self.delivered:
+            return
+
+        email_message = DjangoEmailMessage(
+            self.subject, self.html_text, self.sender.email,
+            [str(recipient) for recipient in self.recipients],
+            [str(recipient) for recipient in self.cc_recipients]
+        )
+
+        try:
+            email_message.send()
+            self.delivered = True
+        except Exception as error:
+            print('Failed while sending message:', error)
 
 
 class PersonalEmailMessage(models.Model):

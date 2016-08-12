@@ -4,11 +4,11 @@ from settings.api import IntegerItem, CharItem
 
 
 class MailConfig(AppConfig):
-    name = 'mail'
+    name = 'modules.mail'
     sistema_settings = [
         IntegerItem(short_name='max_letter_size_bytes', display_name='Maximum letter size in bytes',
                     description='', default_value=10 * 1024 * 1024),
-        IntegerItem(short_name='max_letter_size_bytes', display_name='Maximum letter size in bytes',
+        IntegerItem(short_name='max_attachments_size_bytes', display_name='Maximum attachments size in bytes',
                     description='', default_value=10 * 1024 * 1024),
         IntegerItem(short_name='max_attachments', display_name='Maximum number of attachments',
                     description='', default_value=10),

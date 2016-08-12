@@ -13,12 +13,23 @@ class ComposeForm(forms.Form):
                                  label='',
                                  label_suffix='',
                                  widget=forms.TextInput(attrs={
-                                     'class': 'form-control mb10',
+                                     'class': 'form-control mb10 do_hints',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
                                      'data-submit-url': urlresolvers.reverse_lazy('mail:contacts')
                                  }
                                  ))
+    cc_recipients = forms.CharField(max_length=MAXIMUM_LENGTH_OF_RECIPIENTS,
+                                    required=False,
+                                    label='',
+                                    label_suffix='',
+                                    widget=forms.TextInput(attrs={
+                                        'class': 'form-control mb10 do_hints',
+                                        'rows': '10',
+                                        'placeholder': 'Копия: Начните вводить почту',
+                                        'data-submit-url': urlresolvers.reverse_lazy('mail:contacts'),
+                                    }
+                                    ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,
                                     required=False,
                                     label='',

@@ -1,4 +1,6 @@
 from string import whitespace
+import json
+from datetime import datetime
 import os
 
 from django.contrib.auth.decorators import login_required
@@ -6,7 +8,7 @@ from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -91,14 +93,25 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
         email.save()
 
     email.recipients.clear()
+    email.cc_recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)
+    for cc_recipient in _get_recipients(email_form['cc_recipients']):
+        email.cc_recipients.add(cc_recipient)
     with transaction.atomic():
         for attachment in attachments:
             attachment.save()
             email.attachments.add(attachment)
         email.save()
     return email
+
+
+def _download_mailbox_attachment(attachment_data):
+    attachment = models.Attachment.download_from_url(attachment_data['url'])
+    attachment.file_size = attachment_data['size']
+    attachment.original_file_name = attachment['name']
+    attachment.content_type = attachment['content-type']
+    return attachment
 
 
 @login_required
@@ -155,6 +168,70 @@ def sis_users(request):
     )[:NUMBER_OF_RETURNING_RECORDS]
     filtered_records = [{'display_name': rec.display_name} for rec in records]
     return JsonResponse({'records': filtered_records})
+
+
+def create_mail(message_data):
+    """Create mail from message_data"""
+    sender_email = message_data['sender']
+    sender_name = message_data['from'][:message_data['from'].find(' <')]
+    sender = find_user(sender_email, sender_name)
+
+    recipients_email = message_data['recipient'].split(', ')
+    recipients = find_recipients(recipients_email)
+    cc_recipients_email = message_data['Cc'].split(', ')
+    cc_recipients = find_recipients(cc_recipients_email)
+
+    subject = message_data['subject']
+    text = message_data['body-plain']
+    date = datetime.strptime(message_data['Date'], '%a, %d %b %Y %H:%M:%S %z')
+
+    attachments = []
+    for attachment_dict in json.loads(message_data['attachments']):
+        attachments.append(download_attachment(attachment_dict))
+
+    email = models.EmailMessage(
+        sender=sender,
+        subject=subject,
+        html_text=text,
+        created_at=date
+    )
+
+    for recipient in recipients:
+        email.recipients.add(recipient)
+
+    for cc_recipient in cc_recipients:
+        email.cc_recipients.add(cc_recipient)
+
+    for attachment in attachments:
+        email.attachments.add(attachment)
+
+    return email
+
+
+def find_recipients(recipients_email):
+    recipients = []
+    for recipient_email in recipients_email:
+        try:
+            recipient = models.SisEmailUser.objects.get(email=recipient_email)
+        except models.SisEmailUser.DoesNotExist:
+            recipient = find_user(recipient_email)
+        recipients.append(recipient)
+    return recipients
+
+
+def find_user(sender_email, sender_name=''):
+    try:
+        user = models.ExternalEmailUser.objects.get(email=sender_email)
+    except models.ExternalEmailUser.DoesNotExist:
+        user = models.ExternalEmailUser(display_name=sender_name, email=sender_email)
+    return user
+
+
+def incoming_webhook(request):
+    message_data = request.POST
+    email = create_mail(message_data)
+    email.save()
+    return HttpResponse('ok')
 
 
 def is_sender_of_email(user, email):
@@ -399,6 +476,7 @@ def reply(request, message_id):
 
     recipients = list()
     recipients.append(email.sender.email)
+    cc_recipients = list()
 
     for recipient in email.recipients.all():
         if isinstance(recipient, models.ExternalEmailUser) or recipient.user != request.user:
@@ -406,8 +484,7 @@ def reply(request, message_id):
 
     for cc_recipient in email.cc_recipients.all():
         if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
-            recipients.append(cc_recipient.email)
-
+            cc_recipients.append(cc_recipient.email)
     if email.sender.display_name.isspace():
         display_name = email.sender.email
     else:
@@ -417,6 +494,7 @@ def reply(request, message_id):
     form_data = {
         'email_subject': email_subject,
         'recipients': ', '.join(recipients),
+        'cc_recipients': ', '.join(cc_recipients),
         'email_message': text,
     }
 
@@ -446,9 +524,11 @@ def edit(request, message_id):
         EMAILS_SEPARATOR = ', '
 
         recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
+        cc_recipients = EMAILS_SEPARATOR.join([cc_recipient.email for cc_recipient in email.cc_recipients.all()])
 
         form = forms.ComposeForm(initial={
             'recipients': recipients,
+            'cc_recipients': cc_recipients,
             'email_subject': email.subject,
             'email_message': email.html_text,
         })
@@ -487,6 +567,7 @@ def edit(request, message_id):
         return HttpResponseBadRequest('Method is not supported')
 
 
+@login_required
 @require_POST
 def delete_email(request, message_id):
     email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)

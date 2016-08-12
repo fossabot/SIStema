@@ -25,13 +25,13 @@
                                 {% endblock %}
                             </div>
                             {% if mail_list %}
-                                <div class="checkbox-custom mb1 mr10">
+                                <div class="checkbox-custom email-checkbox mb1 mr10">
                                     <input id="check_all" type="checkbox">
                                     <label for="check_all">Отметить все</label>
                                 </div>
                                 {% for email in mail_list %}
                                     <div class="section mb20">
-                                        <div class="checkbox-custom mb1 pull-left va-m mr10">
+                                        <div class="checkbox-custom email-checkbox mb1 pull-left va-m mr10">
                                             <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
                                             <label for="{{ email.id }}"></label>
                                         </div>
@@ -58,7 +58,7 @@
                                 {% block if_empty %}
                                 {% endblock %}
                             {% endif %}
-                            <div><ul class="pagination mbn">
+                            {% if tab_links|length > 1 %}<div><ul class="pagination mbn">
                                 {% if show_previous %}
                                     <li class="prev"><a href="{{ prev_link }}"><i class="fa fa-angle-left"></i></a></li>
                                 {% else %}
@@ -76,7 +76,7 @@
                                 {% else %}
                                     <li class="next disabled"><a><i class="fa fa-angle-right"></i></a></li>
                                 {% endif %}
-                            </ul></div>
+                            </ul></div>{% endif %}
                         </div>
                     </div>
                     <div class="text-right">

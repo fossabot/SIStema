@@ -412,7 +412,6 @@ def reply(request, message_id):
     for cc_recipient in email.cc_recipients.all():
         if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
             cc_recipients.append(cc_recipient.email)
-    print(cc_recipients[0])
     if email.sender.display_name.isspace():
         display_name = email.sender.email
     else:

@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'compat',
     'ipware',
     'polymorphic',
+    'anymail',
 
     'sistema',
 
@@ -209,3 +210,6 @@ HIJACK_REGISTER_ADMIN = False
 HIJACK_ALLOW_GET_REQUESTS = True
 
 MAIL_DOMAIN = '@sistema.lksh.ru'
+
+EMAIL_BACKEND = "anymail.backends.mailgun.MailgunBackend"
+ANYMAIL["MAILGUN_SENDER_DOMAIN"] = 'sandboxb3b7be733f4a4a4c934d36f595d643f1.mailgun.org'

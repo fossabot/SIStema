@@ -1,11 +1,14 @@
 import random
+import os
 from mimetypes import guess_type
 from trans import trans
-import os
+import requests
 
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
+from django.core.files import File
+from django.core.mail import EmailMessage as DjangoEmailMessage
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -164,6 +167,13 @@ class Attachment(models.Model):
     def __str__(self):
         return self.original_file_name
 
+    @classmethod
+    def download_from_url(cls, url):
+        response = requests.get(url=url)
+        new_attachment = Attachment()
+        new_attachment.file = File(response.raw)
+        return new_attachment
+
 
 class EmailMessage(models.Model):
     sender = models.ForeignKey(EmailUser, related_name='sent_emails')
@@ -183,6 +193,8 @@ class EmailMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     headers = models.TextField(blank=True)
+
+    delivered = models.BooleanField(default=False)
 
     is_remove = models.BooleanField(default=False)
 
@@ -221,6 +233,22 @@ class EmailMessage(models.Model):
 
     def is_draft(self):
         return self.status == self.STATUS_DRAFT
+
+    def send(self):
+        if self.delivered:
+            return
+
+        email_message = DjangoEmailMessage(
+            self.subject, self.html_text, self.sender.email,
+            [str(recipient) for recipient in self.recipients],
+            [str(recipient) for recipient in self.cc_recipients]
+        )
+
+        try:
+            email_message.send()
+            self.delivered = True
+        except Exception as error:
+            print('Failed while sending message:', error)
 
 
 class ContactRecord(models.Model):

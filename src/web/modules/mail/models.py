@@ -44,6 +44,7 @@ class SisEmailUser(EmailUser):
             with transaction.atomic():
                 new_contact.save()
         self.contacts.add(new_contact)
+        return new_contact
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)

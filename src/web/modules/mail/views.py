@@ -149,9 +149,40 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def _save_contact(owner: models.SisEmailUser, contact_form):
+    contact = models.ContactRecord.objects.filter(owner=owner).filter(
+        Q(person__sisemailuser__user__email=contact_form['email']) |
+        Q(person__externalemailuser__email=contact_form['email'])
+    ).first()
+    if contact is None:
+        person = models.ExternalEmailUser(email=contact_form['email'], display_name=contact_form['display_name'])
+        with transaction.atomic():
+            person.save()
+        contact = owner.add_person_to_contacts(person)
+    else:
+        with transaction.atomic():
+            contact.person.display_name = contact_form['display_name']
+            contact.person.save()
+    return contact
+
+
+@login_required
 def contact_list(request):
-    contacts = models.ContactRecord.get_users_contacts(request.user.email_user.first())
-    form = forms.ContactEditorForm()
+    email_user = request.user.email_user.first()
+    contacts = models.ContactRecord.get_users_contacts(email_user)
+    if request.method == 'GET':
+        form = forms.ContactEditorForm()
+    elif request.method == 'POST':
+        form = forms.ContactEditorForm(request.POST)
+
+        if form.is_valid():
+            # Saving new contact or editing existing.
+            _save_contact(request.user.email_user.first(), form.cleaned_data)
+        else:
+            pass
+    else:
+        return HttpResponseBadRequest('Unsupported method')
+
     return render(request, 'mail/contact_list.html', {'contacts': contacts, 'form': form})
 
 

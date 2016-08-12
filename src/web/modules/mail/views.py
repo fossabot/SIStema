@@ -334,10 +334,11 @@ def _read_page_index(page_index, mail_count):
 
 @login_required
 def inbox(request, page_index='1'):
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
-        Q(recipients__sisemailuser__user=request.user) |
-        Q(cc_recipients__sisemailuser__user=request.user)
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_ACCEPTED).order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -352,9 +353,12 @@ def inbox(request, page_index='1'):
 
 @login_required
 def sent(request, page_index='1'):
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
-        sender__sisemailuser__user=request.user,
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_SENT) \
+        .filter(message__sender__sisemailuser__user=request.user).order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -369,9 +373,12 @@ def sent(request, page_index='1'):
 
 def drafts_list(request, page_index='1'):
     page_index = int(page_index)
-    mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_DRAFT).filter(
-        sender__sisemailuser__user=request.user,
-    ).order_by('-created_at')
+    personal_mail_list = models.PersonalEmailMessage.get_not_removed().filter(
+        message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
+        .order_by('-message__created_at')
+    mail_list = []
+    for mail in personal_mail_list:
+        mail_list.append(mail.message)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -550,6 +557,8 @@ def edit(request, message_id):
             message_data = form.cleaned_data
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
+            models.PersonalEmailMessage.make_for(email)
+
             if email is not None:
                 messages.success(request, 'Письмо успешно отправлено.')
                 return redirect(urlresolvers.reverse('mail:sent'))
@@ -573,17 +582,16 @@ def edit(request, message_id):
 @login_required
 @require_POST
 def delete_email(request, message_id):
-    email = get_object_or_404(models.EmailMessage, id=message_id)
-    if not can_user_view_message(request.user, email):
+    email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)
+    if not can_user_view_message(request.user, email.message):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
-    email.is_remove = True
-    email.save()
     url = urlresolvers.reverse('mail:inbox')
     if email.is_draft():
         url = urlresolvers.reverse('mail:drafts')
     if email.is_sent():
         url = urlresolvers.reverse('mail:sent')
+    email.remove()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 
@@ -680,6 +688,8 @@ def write(request):
             with transaction.atomic():
                 email.save()
 
+             
+
             email.recipients.clear()
             for recipient in recipients:
                 email.recipients.add(recipient)
@@ -738,6 +748,6 @@ def delete_all(request):
             else:
                 messages.info(request, 'Не удалось удалить письма.')
                 return redirect(urlresolvers.reverse('mail:inbox'))
-    models.EmailMessage.delete_emails_by_ids(id_list)
+    models.PersonalEmailMessage.delete_emails_by_ids(id_list)
     messages.success(request, 'Письма успешно удалены.')
     return redirect(request.POST['next'])

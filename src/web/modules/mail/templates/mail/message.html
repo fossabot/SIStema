@@ -17,8 +17,10 @@
 
                     <div class="panel-body p25 pt10">
                         <div class="section mb25 mtn ptn" id="subject">
-
-                            <h3>{{ email.subject }}</h3>
+                            <h3>
+                                <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left pr20 ib" id="back"></span></a>
+                                {{ email.subject }}
+                            </h3>
                         </div>
                         <div class="section mb5 fs13">
                             <div class="pull-right">
@@ -73,6 +75,8 @@
                                     <div class="modal-footer">
                                         <form method="post" action="{% url 'mail:delete' email.id %}">
                                             {% csrf_token %}
+                                            {% if allow_replying %}
+                                                <input type="hidden" name="link_back" value="{{ request.path }}">                                            {% endif %}
                                             <button type="button" class="btn btn-default" data-dismiss="modal">
                                                 Отмена
                                             </button>

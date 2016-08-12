@@ -300,10 +300,16 @@ def message(request, message_id):
 
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
+    link_back = urlresolvers.reverse('mail:inbox')
+    if email.is_draft():
+        link_back = urlresolvers.reverse('mail:drafts')
+    if email.is_sent():
+        link_back = urlresolvers.reverse('mail:sent')
 
     return render(request, 'mail/message.html', {
         'email': email,
         'allow_replying': is_recipient_of_email(request.user, email),
+        'link_back': link_back,
     })
 
 
@@ -422,6 +428,7 @@ def edit(request, message_id):
     if email.status not in (models.EmailMessage.STATUS_DRAFT, models.EmailMessage.STATUS_RAW_DRAFT):
         # TODO: Make readable error message
         return HttpResponseForbidden()
+    link_back = urlresolvers.reverse('mail:drafts')
 
     if request.method == 'GET':
         EMAILS_SEPARATOR = ', '
@@ -433,9 +440,12 @@ def edit(request, message_id):
             'email_subject': email.subject,
             'email_message': email.html_text,
         })
+        if not email.is_draft():
+            link_back = urlresolvers.reverse('mail:inbox')
         return render(request, 'mail/compose.html', {
             'form': form,
             'message_id': message_id,
+            'link_back': link_back,
         })
 
     elif request.method == 'POST':
@@ -456,6 +466,7 @@ def edit(request, message_id):
             return render(request, 'mail/compose.html', {
                 'form': form,
                 'message_id': message_id,
+                'link_back': link_back
             })
 
     else:

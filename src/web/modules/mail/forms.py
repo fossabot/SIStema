@@ -47,7 +47,9 @@ class ComposeForm(forms.Form):
 
 class WriteForm(ComposeForm):
     MAXIMUM_AUTHOR_LENGTH = 5000
-    ORDER = ('author', 'recipients', 'email_subject', 'email_message', 'attachments')
+    ORDER = (
+        'author_name', 'author_email', 'recipients', 'email_subject', 'email_message', 'attachments'
+    )
 
     def __init__(self, *args, **kwargs):
         super(WriteForm, self).__init__(*args, **kwargs)
@@ -56,15 +58,24 @@ class WriteForm(ComposeForm):
             fields[key] = self.fields.pop(key)
         self.fields = fields
 
-    author = forms.EmailField(max_length=MAXIMUM_AUTHOR_LENGTH,
-                              required=True,
-                              label='',
-                              label_suffix='',
-                              widget=forms.TextInput(attrs={
-                                  'class': 'form-control mb10',
-                                  'rows': '10',
-                                  'placeholder': 'Введите свой e-mail адрес',
-                              }))
+    author_email = forms.EmailField(max_length=MAXIMUM_AUTHOR_LENGTH,
+                                    required=True,
+                                    label='',
+                                    label_suffix='',
+                                    widget=forms.TextInput(attrs={
+                                        'class': 'form-control mb10',
+                                        'rows': '10',
+                                        'placeholder': 'Введите свой e-mail адрес',
+                                    }))
+    author_name = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
+                                  required=True,
+                                  label='',
+                                  label_suffix='',
+                                  widget=forms.TextInput(attrs={
+                                      'class': 'form-control mb10',
+                                      'rows': '10',
+                                      'placeholder': 'Введите свое имя',
+                                  }))
     recipients = forms.CharField(max_length=ComposeForm.MAXIMUM_LENGTH_OF_RECIPIENTS,
                                  required=True,
                                  label='',

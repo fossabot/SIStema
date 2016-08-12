@@ -1,9 +1,11 @@
 import random
 from trans import trans
+import requests
 
 from django.db import models
 from django.conf import settings
 import django.db.migrations.writer
+from django.core.files import File
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -56,6 +58,13 @@ class Attachment(models.Model):
 
     def __str__(self):
         return self.original_file_name + '.' + self.content_type
+
+    @classmethod
+    def download_from_url(cls, url):
+        response = requests.get(url=url)
+        new_attachment = Attachment()
+        new_attachment.file = File(response.raw)
+        return new_attachment
 
 
 class EmailMessage(models.Model):

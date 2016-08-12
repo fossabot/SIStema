@@ -231,6 +231,10 @@ class ContactRecord(models.Model):
     class Meta:
         unique_together = ('person', 'owner')
 
+    @classmethod
+    def get_users_contacts(cls, user: SisEmailUser):
+        return cls.objects.filter(owner=user)
+
     def __str__(self):
         return str(self.person)
 

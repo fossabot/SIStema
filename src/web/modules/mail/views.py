@@ -143,6 +143,12 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def contact_list(request):
+    contacts = models.ContactRecord.get_users_contacts(request.user.email_user.first())
+    form = forms.ContactEditorForm()
+    return render(request, 'mail/contact_list.html', {'contacts': contacts, 'form': form})
+
+
 def sis_users(request):
     NUMBER_OF_RETURNING_RECORDS = 10
     search_request = request.GET['search']

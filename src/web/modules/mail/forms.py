@@ -76,3 +76,21 @@ class WriteForm(ComposeForm):
                                      'data-submit-url': urlresolvers.reverse_lazy('mail:sis_users')
                                  }
                                  ))
+
+class ContactEditorForm(forms.Form):
+    MAXIMUM_NAME_LENGTH = 5000
+
+    display_name = forms.CharField(max_length=MAXIMUM_NAME_LENGTH,
+                                   label='Имя',
+                                   widget=forms.TextInput(attrs={
+                                       'class': 'form-control mb10',
+                                       'id': 'editor-display-name',
+                                       'placeholder': 'Введите имя',
+                                   }))
+
+    email = forms.EmailField(label='Email',
+                             widget=forms.EmailInput(attrs={
+                                 'class': 'form-control mb10',
+                                 'id': 'editor-email',
+                                 'placeholder': 'Введите email',
+                             }))

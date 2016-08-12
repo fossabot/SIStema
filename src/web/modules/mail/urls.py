@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^write/(?P<recipient_hash>[^/]+)/$', views.write_to, name='write'),
     url(r'^compose/', views.compose, name='compose'),
     url(r'^contacts/', views.contacts, name='contacts'),
+    url(r'^contact_list/', views.contact_list, name='contact_list'),
     url(r'^sis_users/', views.sis_users, name='sis_users'),
     url(r'^attachment/(?P<attachment_id>[^/]+)/$', views.download_attachment, name='download_attachment'),
     url(r'^attachment/(?P<attachment_id>[^/]+)/preview', views.preview, name='preview'),

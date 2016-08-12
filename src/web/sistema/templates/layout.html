@@ -53,8 +53,22 @@
     <script src="{% static 'js/common.js' %}"></script>
     <script src="{% static 'js/jquery.form.js' %}"></script>
     <script src="{% static 'js/ajax-csrf.js' %}"></script>
+    <script src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
+    {% for message in messages %}
+            <script>
+                new PNotify({
+                    title: 'Уведомление',
+                    text: '{{ message }}',
+                    type: '{{ message.tags }}',
+                    hide: false,
+                    delay: 500,
+                    animate_speed: 'def'
+                })
+            </script>
+    {% endfor %}
 
     {% block scripts %}
+
     {% endblock %}
 </body>
 

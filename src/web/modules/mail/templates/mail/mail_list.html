@@ -39,10 +39,8 @@
                                             <label for="{{ email.id }}"></label>
                                         </div>
                                         <div class="ml30">
-                                            <div title="{{ email.sender.email }}" class="ib mr15 mt15">
-                                                {{ email.sender.display_name }}
-                                            </div>
-                                            <b>{{ email.subject }}</b>
+                                            <div title="{{ email.sender.email }}" class="ib mr15 mt15">{{ email.sender.display_name }}
+                                            </div><b>{{ email.subject }}</b>
                                             — {{ email.html_text|truncatechars:50|striptags }}
                                         </div>
                                     </div>

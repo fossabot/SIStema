@@ -56,3 +56,9 @@ class AttachmentAdmin(admin.ModelAdmin):
     list_display = ('id', 'original_file_name', 'file_size', 'file', 'preview')
 
 admin.site.register(models.Attachment, AttachmentAdmin)
+
+
+class PersonalEmailMessageAdmin(admin.ModelAdmin):
+    list_display = ('user', 'message', 'is_removed', 'time_removed')
+
+admin.site.register(models.PersonalEmailMessage, PersonalEmailMessageAdmin)

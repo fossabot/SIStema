@@ -10,6 +10,7 @@
 
 {% block scripts %}
     <script src="{% static 'mail/js/check_all.js' %}"></script>
+    <script src="{% static 'mail/js/mail_list.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -26,13 +27,13 @@
                             </div>
                             {% if mail_list %}
                                 <div class="checkbox-custom email-checkbox mb1 mr10">
-                                    <input id="check_all" type="checkbox">
+                                    <input id="check_all" type="checkbox" checkbox_for="email">
                                     <label for="check_all">Отметить все</label>
                                 </div>
                                 {% for email in mail_list %}
                                     <div class="section mb20">
                                         <div class="checkbox-custom email-checkbox mb1 pull-left va-m mr10">
-                                            <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
+                                            <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}" checkbox_group="email">
                                             <label for="{{ email.id }}"></label>
                                         </div>
                                         <div>

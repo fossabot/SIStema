@@ -93,6 +93,8 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     email.recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)
+        if email_status == models.EmailMessage.STATUS_SENT:
+            email.sender.add_person_to_contacts(recipient)
     with transaction.atomic():
         for attachment in attachments:
             attachment.save()
@@ -145,6 +147,12 @@ def contacts(request):
     filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
                         for rec in records]
     return JsonResponse({'records': filtered_records})
+
+
+def contact_list(request):
+    contacts = models.ContactRecord.get_users_contacts(request.user.email_user.first())
+    form = forms.ContactEditorForm()
+    return render(request, 'mail/contact_list.html', {'contacts': contacts, 'form': form})
 
 
 def sis_users(request):

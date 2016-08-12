@@ -8,7 +8,7 @@ And every time I look at you, it’s like the first time.
 I fell in love with a careless man’s careful daughter.
 She is the best thing that’s ever been mine."
 """
-TEST_MAIL_SENDER = "Anymail Sender <taylor@mg.sistema.lksh.ru>"
+TEST_MAIL_SENDER = "Anymail Sender <taylor@sandboxb3b7be733f4a4a4c934d36f595d643f1.mailgun.org>"
 
 
 class Command(BaseCommand):
@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            send_mail(TEST_MAIL_SUBJECT, TEST_MAIL_TEXT, TEST_MAIL_SENDER, [options['recipient']])
+            send_mail(TEST_MAIL_SUBJECT, TEST_MAIL_TEXT, TEST_MAIL_SENDER, [' '.join(options['recipient'])])
         except exceptions.AnymailAPIError as error:
             print(error.response.text)
         self.stdout.write(self.style.SUCCESS('Message sent'))

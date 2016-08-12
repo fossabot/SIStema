@@ -5,3 +5,11 @@
 #delete {
     cursor: pointer;
 }
+
+.email {
+    border-bottom: thin solid black;
+}
+
+.email-link:hover {
+    text-decoration: none;
+}

@@ -30,29 +30,31 @@
                                     <label for="check_all">Отметить все</label>
                                 </div>
                                 {% for email in mail_list %}
-                                    <div class="section mb20">
-                                        <div class="checkbox-custom email-checkbox mb1 pull-left va-m mr10">
-                                            <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
-                                            <label for="{{ email.id }}"></label>
-                                        </div>
-                                        <div>
-                                            <div title="{{ email.sender.email }}" class="ib mr15 ml10 mt15">
-
-                                                {{ email.sender.display_name }}
+                                    <a class="email-link" href="{% if email.is_draft %}{% url 'mail:edit' email.id %}{% else %}{% url 'mail:message' email.id %}{% endif %}">
+                                        <div class="section pb20 mbn email">
+                                            <div class="checkbox-custom email-checkbox mb20 pull-left va-m mr10">
+                                                <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
+                                                <label for="{{ email.id }}"></label>
                                             </div>
-                                            {% if email.is_draft %}
-                                                <a href="{% url 'mail:edit' email.id %}">
-                                                    <b>{{ email.subject }}</b>
-                                                    — {{ email.html_text|truncatechars:50|striptags }}
-                                                </a>
-                                            {% else %}
-                                                <a href="{% url 'mail:message' email.id %}">
-                                                    <b>{{ email.subject }}</b>
-                                                    — {{ email.html_text|truncatechars:50|striptags }}
-                                                </a>
-                                            {% endif %}
+                                            <div class="ml30">
+                                                <div title="{{ email.sender.email }}" class="ib mr15 mt15">
+                                                    {{ email.sender.display_name }}
+                                                </div>
+                                                <b>{{ email.subject }}</b> — {{ email.html_text|truncatechars:50|striptags }}
+                                                {% comment %} #}{% if email.is_draft %}
+                                                    <a href="{% url 'mail:edit' email.id %}">
+                                                        <b>{{ email.subject }}</b>
+                                                        — {{ email.html_text|truncatechars:50|striptags }}
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'mail:message' email.id %}">
+                                                        <b>{{ email.subject }}</b>
+                                                        — {{ email.html_text|truncatechars:50|striptags }}
+                                                    </a>
+                                                {% endif %}{% endcomment %}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 {% block if_empty %}

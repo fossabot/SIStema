@@ -20,16 +20,19 @@
                         </div>
                     </div>
                     <div class="panel-body p25 pt10">
-                        {% if contacts %}
                             <div class="row">
                             <div class="col-lg-7">
-                                <div class="checkbox-custom mb1 mr10">
-                                    <input id="check_all" type="checkbox" checkbox_for="contact">
-                                    <label for="check_all">Отметить все</label>
-                                </div>
+                                {% if contacts %}
+                                    <div class="checkbox-custom mb1 mr10">
+                                        <input id="check_all" type="checkbox" checkbox_for="contact">
+                                        <label for="check_all">Отметить все</label>
+                                    </div>
+                                {% endif %}
                                 <form method="post">
+                                    {% csrf_token %}
                                     {% for contact in contacts %}
                                         <div class="section mb20">
+
                                             <div class="checkbox-custom mb1 pull-left va-m mr10">
                                                 <input id="{{ contact.id }}" type="checkbox"
                                                        name="contact_id_{{ contact.id }}" checkbox_group="contact">
@@ -47,7 +50,7 @@
 
                                         </div>
                                     {% endfor %}
-                                    <button class="btn btn-danger pull-left" id="delete_all">Удалить контакты</button>
+                                    <button class="btn btn-danger pull-left" id="delete_all" type="button">Удалить контакты</button>
                                     <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
                                          aria-labelledby="myModalLabel" aria-hidden="true">
                                         <div class="modal-dialog">
@@ -62,8 +65,6 @@
                                                     Вы действительно хотите удалить отмеченные контакты?
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <form method="post">
-                                                        {% csrf_token %}
                                                         <button type="button" class="btn btn-default"
                                                                 data-dismiss="modal">
                                                             Отмена
@@ -72,7 +73,6 @@
                                                         <button type="submit" class="btn btn-danger">
                                                             Удалить
                                                         </button>
-                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -88,9 +88,6 @@
                                            id="save_contact"/>
                                 </form>
                             </div>
-                        {% else %}
-                            <!-- empty -->
-                        {% endif %}
                         </div>
                     </div>
                 </div>

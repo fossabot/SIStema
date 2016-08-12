@@ -91,10 +91,13 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
         email.save()
 
     email.recipients.clear()
+    email.cc_recipients.clear()
     for recipient in _get_recipients(email_form['recipients']):
         email.recipients.add(recipient)
         if email_status == models.EmailMessage.STATUS_SENT:
             email.sender.add_person_to_contacts(recipient)
+    for cc_recipient in _get_recipients(email_form['cc_recipients']):
+        email.cc_recipients.add(cc_recipient)
     with transaction.atomic():
         for attachment in attachments:
             attachment.save()
@@ -400,6 +403,7 @@ def reply(request, message_id):
 
     recipients = list()
     recipients.append(email.sender.email)
+    cc_recipients = list()
 
     for recipient in email.recipients.all():
         if isinstance(recipient, models.ExternalEmailUser) or recipient.user != request.user:
@@ -407,8 +411,8 @@ def reply(request, message_id):
 
     for cc_recipient in email.cc_recipients.all():
         if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
-            recipients.append(cc_recipient.email)
-
+            cc_recipients.append(cc_recipient.email)
+    print(cc_recipients[0])
     if email.sender.display_name.isspace():
         display_name = email.sender.email
     else:
@@ -418,6 +422,7 @@ def reply(request, message_id):
     form_data = {
         'email_subject': email_subject,
         'recipients': ', '.join(recipients),
+        'cc_recipients': ', '.join(cc_recipients),
         'email_message': text,
     }
 
@@ -447,9 +452,11 @@ def edit(request, message_id):
         EMAILS_SEPARATOR = ', '
 
         recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
+        cc_recipients = EMAILS_SEPARATOR.join([cc_recipient.email for cc_recipient in email.cc_recipients.all()])
 
         form = forms.ComposeForm(initial={
             'recipients': recipients,
+            'cc_recipients': cc_recipients,
             'email_subject': email.subject,
             'email_message': email.html_text,
         })

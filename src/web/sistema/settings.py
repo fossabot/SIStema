@@ -209,4 +209,4 @@ HIJACK_ALLOW_GET_REQUESTS = True
 MAIL_DOMAIN = '@sistema.lksh.ru'
 
 EMAIL_BACKEND = "anymail.backends.mailgun.MailgunBackend"
-ANYMAIL["MAILGUN_SENDER_DOMAIN"] = 'sandbox7087a9b094724d199298237b86905760.mailgun.org'
+ANYMAIL["MAILGUN_SENDER_DOMAIN"] = 'sandboxb3b7be733f4a4a4c934d36f595d643f1.mailgun.org'

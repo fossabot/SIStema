@@ -184,7 +184,7 @@ def _is_message_dict_empty(email):
 
 
 EMAILS_PER_PAGE = 20
-PAGES_ON_PAGINATOR = 5
+PAGES_ON_PAGINATOR = 5  # Should be odd (i.e. 3, 5, 7 etc.)
 
 
 def _get_max_page_num(mail_count):
@@ -213,10 +213,6 @@ def _get_links_of_pages_to_show(view, page_index, mail_count):
     return links
 
 
-def _check_page_index(page_index, mail_count):
-    return page_index <= _get_max_page_num(mail_count)
-
-
 def _get_standard_mail_list_params(mail_list, page_index, request):
     params = dict()
     params['mail_list'] = mail_list[(page_index - 1) * EMAILS_PER_PAGE: page_index * EMAILS_PER_PAGE]
@@ -240,16 +236,27 @@ def _get_next_link(view, page_index, mail_count):
     return ''
 
 
+def _read_page_index(page_index, mail_count):
+    try:
+        page_index = int(page_index)
+        if page_index > _get_max_page_num(mail_count):
+            return True, _get_max_page_num(mail_count)
+        else:
+            return False, page_index
+    except ValueError:
+        return True, 1
+
+
 @login_required
 def inbox(request, page_index='1'):
-    page_index = int(page_index)
     mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_ACCEPTED).filter(
         Q(recipients__sisemailuser__user=request.user) |
         Q(cc_recipients__sisemailuser__user=request.user)
     ).order_by('-created_at')
 
-    if not _check_page_index(page_index, len(mail_list)):
-        return HttpResponseNotFound()
+    do_redirect, page_index = _read_page_index(page_index, len(mail_list))
+    if do_redirect:
+        return redirect(urlresolvers.reverse('mail:inbox_page', kwargs={'page_index': page_index}))
 
     params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
@@ -260,13 +267,13 @@ def inbox(request, page_index='1'):
 
 @login_required
 def sent(request, page_index='1'):
-    page_index = int(page_index)
     mail_list = models.EmailMessage.get_not_removed().filter(status=models.EmailMessage.STATUS_SENT).filter(
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 
-    if not _check_page_index(page_index, len(mail_list)):
-        return HttpResponseNotFound()
+    do_redirect, page_index = _read_page_index(page_index, len(mail_list))
+    if do_redirect:
+        return redirect(urlresolvers.reverse('mail:sent_page', kwargs={'page_index': page_index}))
 
     params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:sent_page', page_index, len(mail_list))
@@ -281,8 +288,9 @@ def drafts_list(request, page_index='1'):
         sender__sisemailuser__user=request.user,
     ).order_by('-created_at')
 
-    if not _check_page_index(page_index, len(mail_list)):
-        return HttpResponseNotFound()
+    do_redirect, page_index = _read_page_index(page_index, len(mail_list))
+    if do_redirect:
+        return redirect(urlresolvers.reverse('mail:drafts_page', kwargs={'page_index': page_index}))
 
     params = _get_standard_mail_list_params(mail_list, page_index, request)
     params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))

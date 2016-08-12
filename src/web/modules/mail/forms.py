@@ -69,7 +69,7 @@ class WriteForm(ComposeForm):
             fields[key] = self.fields.pop(key)
         self.fields = fields
 
-    author_email = forms.EmailField(max_length=MAXIMUM_AUTHOR_LENGTH,
+    author_email = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
                                     required=True,
                                     label='',
                                     label_suffix='',
@@ -92,12 +92,13 @@ class WriteForm(ComposeForm):
                                  label='',
                                  label_suffix='',
                                  widget=forms.TextInput(attrs={
-                                     'class': 'form-control mb10',
+                                     'class': 'form-control mb10 do_hints',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить имя',
                                      'data-submit-url': urlresolvers.reverse_lazy('mail:sis_users')
                                  }
                                  ))
+
 
 class ContactEditorForm(forms.Form):
     MAXIMUM_NAME_LENGTH = 5000

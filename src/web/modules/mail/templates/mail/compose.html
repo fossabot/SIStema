@@ -18,7 +18,9 @@
             <div class="admin-form theme-alert">
                 <div class="panel panel-alert heading-border">
                     <div class="panel-heading">
-                        <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left mt15 pr20" id="back"></span></a>
+                        {% if not no_draft %}
+                            <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left mt15 pr20" id="back"></span></a>
+                        {% endif %}
                         <div class="panel-title">
                             Новое письмо
                         </div>

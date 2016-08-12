@@ -489,12 +489,11 @@ def edit(request, message_id):
 
 @require_POST
 def delete_email(request, message_id):
-    email = get_object_or_404(models.EmailMessage, id=message_id)
-    if not can_user_view_message(request.user, email):
+    email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)
+    if not can_user_view_message(request.user, email.message):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
     email.remove()
-    email.save()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(urlresolvers.reverse('mail:inbox'))
 
@@ -651,6 +650,6 @@ def delete_all(request):
             else:
                 messages.info(request, 'Не удалось удалить письма.')
                 return redirect(urlresolvers.reverse('mail:inbox'))
-    models.EmailMessage.delete_emails_by_ids(id_list)
+    models.PersonalEmailMessage.delete_emails_by_ids(id_list)
     messages.success(request, 'Письма успешно удалены.')
     return redirect(request.POST['next'])

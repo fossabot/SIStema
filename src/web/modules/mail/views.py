@@ -31,13 +31,18 @@ def _get_recipients(string_with_recipients):
             continue
         try:
             validators.validate_email(recipient)
+            query = models.EmailUser.objects.filter(
+                Q(sisemailuser__user__email__iexact=recipient) |
+                Q(externalemailuser__email__iexact=recipient)
+            ).first()
         except exceptions.ValidationError:
-            # if recipient is not real email, skip it.
-            continue
-        query = models.EmailUser.objects.filter(
-            Q(sisemailuser__user__email__iexact=recipient) |
-            Q(externalemailuser__email__iexact=recipient)
-        ).first()
+            # if recipient is not real email, it is probably name of a SIS user
+            query = None
+            for user in models.SisEmailUser.objects.all():
+                if user.display_name == recipient:
+                    query = user
+                    break
+
         if query is not None:
             recipients.append(query)
         else:
@@ -303,10 +308,16 @@ def message(request, message_id):
 
     if not can_user_view_message(request.user, email):
         return HttpResponseForbidden()
+    link_back = urlresolvers.reverse('mail:inbox')
+    if email.is_draft():
+        link_back = urlresolvers.reverse('mail:drafts')
+    if email.is_sent():
+        link_back = urlresolvers.reverse('mail:sent')
 
     return render(request, 'mail/message.html', {
         'email': email,
         'allow_replying': is_recipient_of_email(request.user, email),
+        'link_back': link_back,
     })
 
 
@@ -427,6 +438,7 @@ def edit(request, message_id):
     if email.status not in (models.EmailMessage.STATUS_DRAFT, models.EmailMessage.STATUS_RAW_DRAFT):
         # TODO: Make readable error message
         return HttpResponseForbidden()
+    link_back = urlresolvers.reverse('mail:drafts')
 
     if request.method == 'GET':
         EMAILS_SEPARATOR = ', '
@@ -440,9 +452,12 @@ def edit(request, message_id):
             'email_subject': email.subject,
             'email_message': email.html_text,
         })
+        if not email.is_draft():
+            link_back = urlresolvers.reverse('mail:inbox')
         return render(request, 'mail/compose.html', {
             'form': form,
             'message_id': message_id,
+            'link_back': link_back,
         })
 
     elif request.method == 'POST':
@@ -463,6 +478,7 @@ def edit(request, message_id):
             return render(request, 'mail/compose.html', {
                 'form': form,
                 'message_id': message_id,
+                'link_back': link_back
             })
 
     else:
@@ -524,13 +540,73 @@ def download_attachment(request, attachment_id):
 
 
 def write(request):
-    form = forms.WriteForm(initial={
-        'email_subject': '',
-        'recipients': '',
-        'email_message': '',
-        'text': ''
-    })
-    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+    def new_form():
+        return forms.WriteForm(initial={
+            'email_subject': '',
+            'recipients': '',
+            'email_message': '',
+            'text': ''
+        })
+
+    if request.method == 'GET':
+        form = new_form()
+        return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+
+    elif request.method == 'POST':
+        form = forms.WriteForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+
+            uploaded_files = data['attachments']
+            attachments = []
+            if uploaded_files is not None:
+                for file in uploaded_files:
+                    saved_attachment_filename = os.path.relpath(
+                        save_file(file, 'mail-attachments'),
+                        models.Attachment._meta.get_field('file').path
+                    )
+                    attachments.append(models.Attachment(
+                        original_file_name=file.name,
+                        file_size=file.size,
+                        content_type=file.content_type,
+                        file=saved_attachment_filename,
+                    ))
+
+            email_subject = data['email_subject']
+            email_message = data['email_message']
+            recipients = _get_recipients(data['recipients'])
+            author = models.ExternalEmailUser.objects.filter(display_name=data['author_name'],
+                                                             email=data['author_email']).first()
+            if author is None:
+                author = models.ExternalEmailUser(display_name=data['author_name'], email=data['author_email'])
+                author.save()
+
+            email = models.EmailMessage()
+            email.subject = email_subject
+            email.html_text = email_message
+            email.sender = author
+
+            with transaction.atomic():
+                email.save()
+
+            email.recipients.clear()
+            for recipient in recipients:
+                email.recipients.add(recipient)
+            with transaction.atomic():
+                for attachment in attachments:
+                    attachment.save()
+                    email.attachments.add(attachment)
+                email.status = models.EmailMessage.STATUS_ACCEPTED
+                email.save()
+
+            form = new_form()
+            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+        else:
+            messages.info(request, 'Не удалось отправить письмо.')
+            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+
+    else:
+        return HttpResponseBadRequest('Method is not supported')
 
 
 def write_to(request, recipient_hash):

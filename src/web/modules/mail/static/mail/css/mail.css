@@ -12,4 +12,17 @@
 
 .email-link:hover {
     text-decoration: none;
+
+#back {
+    cursor: pointer;
+    font-size: 12pt;
+    color: #999;
+}
+
+#back:hover{
+    color: #595959;
+}
+
+.panel-title {
+    cursor: default;
 }

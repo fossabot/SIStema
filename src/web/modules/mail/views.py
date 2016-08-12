@@ -1,4 +1,6 @@
 from string import whitespace
+import json
+from datetime import datetime
 import os
 
 from django.contrib.auth.decorators import login_required
@@ -106,12 +108,66 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
-def email_verification(message_data):
-    pass
+def create_mail(message_data):
+    """Create mail from message_data"""
+    sender_email = message_data['sender']
+    sender_name = message_data['from'][:message_data['from'].find(' <')]
+    sender = find_user(sender_email, sender_name)
+
+    recipients_email = message_data['recipient'].split(', ')
+    recipients = find_recipients(recipients_email)
+    cc_recipients_email = message_data['Cc'].split(', ')
+    cc_recipients = find_recipients(cc_recipients_email)
+
+    subject = message_data['subject']
+    text = message_data['body-plain']
+    date = datetime.strptime(message_data['Date'], '%a, %d %b %Y %H:%M:%S %z')
+
+    attachments = []
+    for attachment_dict in json.loads(message_data['attachments']):
+        attachments.append(download_attachment(attachment_dict))
+
+    email = models.EmailMessage(
+        sender=sender,
+        subject=subject,
+        html_text=text,
+        created_at=date
+    )
+
+    for recipient in recipients:
+        email.recipients.add(recipient)
+
+    for cc_recipient in cc_recipients:
+        email.cc_recipients.add(cc_recipient)
+
+    for attachment in attachments:
+        email.attachments.add(attachment)
+
+    return email
+
+
+def find_recipients(recipients_email):
+    recipients = []
+    for recipient_email in recipients_email:
+        try:
+            recipient = models.SisEmailUser.objects.get(email=recipient_email)
+        except models.SisEmailUser.DoesNotExist:
+            recipient = find_user(recipient_email)
+        recipients.append(recipient)
+    return recipients
+
+
+def find_user(sender_email, sender_name=''):
+    try:
+        user = models.ExternalEmailUser.objects.get(email=sender_email)
+    except models.ExternalEmailUser.DoesNotExist:
+        user = models.ExternalEmailUser(display_name=sender_name, email=sender_email)
+    return user
 
 
 def incoming_webhook(request):
     message_data = request.POST
+    email = create_mail(message_data)
     return HttpResponse('ok')
 
 

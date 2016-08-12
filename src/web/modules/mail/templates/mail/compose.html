@@ -24,15 +24,16 @@
                     </div>
                     <div class="panel-body p25 pt10">
                         {% if message_id %}
-                        <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form" data-submit-url="{% url 'mail:save' message_id %}">
+                            <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form"
+                                  data-submit-url="{% url 'mail:save' message_id %}">
                         {% else %}
-                        <form enctype="multipart/form-data" method="post" id="mail-composer" class="centered-form">
+                            <form action="{% url 'mail:write' %}" enctype="multipart/form-data" method="post" id="mail-writer" class="centered-form">
                         {% endif %}
-                            {% csrf_token %}
-                            {{ form }}
-                            <div class="text-right mt10">
-                                <button class="btn btn-alert" type="submit">Отправить</button>
-                            </div>
+                        {% csrf_token %}
+                        {{ form }}
+                        <div class="text-right mt10">
+                            <button class="btn btn-alert" type="submit">Отправить</button>
+                        </div>
                         </form>
                     </div>
                 </div>
@@ -47,7 +48,7 @@
         <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
     {% endif %}
     <script type="text/javascript" src="{% static 'mail/js/draft_saver.js' %}"></script>
-    <script src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
     {% if messages %}
         {% for message in messages %}
             <script>

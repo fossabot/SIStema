@@ -180,10 +180,14 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
 
 
 def _delete_contact(owner: models.SisEmailUser, contact_form):
-    return models.ContactRecord.objects.filter(owner=owner).filter(
-        Q(person__sisemailuser__user__email=contact_form['email']) |
-        Q(person__externalemailuser__email=contact_form['email'])
-    ).delete()
+    for item in contact_form:
+        if item.startswith('contact_id_') and contact_form[item] == 'on':
+            id_ = int(item[11:])
+            models.ContactRecord.objects.filter(id=id_).delete()
+    # return models.ContactRecord.objects.filter(owner=owner).filter(
+    #     Q(person__sisemailuser__user__email=contact_form['email']) |
+    #     Q(person__externalemailuser__email=contact_form['email'])
+    # ).delete()
 
 
 @login_required
@@ -194,6 +198,7 @@ def contact_list(request):
         form = forms.ContactEditorForm()
     elif request.method == 'POST':
         if request.POST.get('type', False):
+            form = forms.ContactEditorForm()
             _delete_contact(request.user.email_user.first(), request.POST)
             contacts = models.ContactRecord.get_users_contacts(email_user)
         else:

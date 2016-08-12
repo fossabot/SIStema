@@ -538,7 +538,6 @@ def write(request):
         form = forms.WriteForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            print('data', data)
 
             uploaded_files = data['attachments']
             attachments = []
@@ -563,7 +562,6 @@ def write(request):
             if author is None:
                 author = models.ExternalEmailUser(display_name=data['author_name'], email=data['author_email'])
                 author.save()
-            print('re', recipients)
 
             email = models.EmailMessage()
             email.subject = email_subject

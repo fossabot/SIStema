@@ -213,8 +213,8 @@ class EmailMessage(models.Model):
 
         email_message = DjangoEmailMessage(
             self.subject, self.html_text, self.sender.email,
-            [str(recipient) for recipient in self.recipients],
-            [str(recipient) for recipient in self.cc_recipients]
+            [str(recipient) for recipient in self.recipients.all()],
+            [str(recipient) for recipient in self.cc_recipients.all()]
         )
 
         try:

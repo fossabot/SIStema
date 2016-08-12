@@ -103,6 +103,9 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
             attachment.save()
             email.attachments.add(attachment)
         email.save()
+
+    email.send()
+
     return email
 
 

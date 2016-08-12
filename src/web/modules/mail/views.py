@@ -98,9 +98,12 @@ def contacts(request):
     return JsonResponse({'records': filtered_records})
 
 
+def email_verification(message_data):
+    pass
+
+
 def incoming_webhook(request):
     message_data = request.POST
-    # Process message data there
     return HttpResponse('ok')
 
 

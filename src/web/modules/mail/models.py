@@ -2,6 +2,8 @@ import datetime
 import random
 from mimetypes import guess_type
 
+import requests
+from django.core.files import File
 from django.db.models import QuerySet
 from trans import trans
 import os
@@ -37,7 +39,7 @@ class SisEmailUser(EmailUser):
         return self.user.email
 
     def have_drafts(self):
-        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT, is_remove=False).exists()
+        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()
 
     def __str__(self):
         return '"%s %s" <%s>' % (self.user.first_name, self.user.last_name, self.user.email)

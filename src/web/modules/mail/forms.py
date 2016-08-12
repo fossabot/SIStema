@@ -95,13 +95,11 @@ class ContactEditorForm(forms.Form):
                                    label='Имя',
                                    widget=forms.TextInput(attrs={
                                        'class': 'form-control mb10',
-                                       'id': 'editor-display-name',
                                        'placeholder': 'Введите имя',
                                    }))
 
     email = forms.EmailField(label='Email',
                              widget=forms.EmailInput(attrs={
                                  'class': 'form-control mb10',
-                                 'id': 'editor-email',
                                  'placeholder': 'Введите email',
                              }))

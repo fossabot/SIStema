@@ -33,15 +33,12 @@
                                                 <label for="{{ contact.id }}"></label>
                                             </div>
 
-                                            <div>
-                                                <a id="contact-id-{{ forloop.counter }}" class="ib mr15 ml10 mt15 contact-item">
-                                                    {% if contact.person.display_name and contact.person.email %}
-                                                    <div class="contact-name ib">{{ contact.person.display_name }}</div> — <div class="contact-email ib">{{ contact.person.email }}</div>
-                                                    {% else %}
-                                                    <div class="contact-name"></div>
-                                                    <div class="contact-email">{{ contact.person.email }}</div>
-                                                    {% endif %}
-                                                </a>
+                                            <div id="contact-id-{{ forloop.counter }}" class="ib mr15 ml10 mt15 contact-item">
+                                                <div class="contact_name ib">{{ contact.person.display_name }}</div>
+                                                {% if contacts.person.display_name %}
+                                                    <span>-</span>
+                                                {% endif %}
+                                                <div class="contact_email ib">{{ contact.person.email }}</div>
                                             </div>
 
                                         </div>
@@ -52,7 +49,7 @@
                                     <form class="centered-form" id="contact-editor" method="post">
                                         {% csrf_token %}
                                         {{ form }}
-                                        <input class="btn btn-alert pull-right" type="submit" value="Сохранить" />
+                                        <input class="btn btn-alert pull-right" type="submit" value="Сохранить" id="save_contact" />
                                     </form>
                                 </div>
                         {% else %}

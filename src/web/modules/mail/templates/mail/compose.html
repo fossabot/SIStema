@@ -21,9 +21,13 @@
                         {% if not no_draft %}
                             <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left mt15 pr20" id="back"></span></a>
                         {% endif %}
-                        <div class="panel-title">
-                            Новое письмо
-                        </div>
+                        {% if draft %}
+                            <div class="panel-title">Черновик</div>
+                        {% else %}
+                            <div class="panel-title">
+                                Новое письмо
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="panel-body p25 pt10">
                         {% if message_id %}

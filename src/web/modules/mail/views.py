@@ -521,6 +521,8 @@ def edit(request, message_id):
         return HttpResponseForbidden()
     link_back = urlresolvers.reverse('mail:drafts')
 
+    draft = email.is_draft()
+
     if request.method == 'GET':
         EMAILS_SEPARATOR = ', '
 
@@ -539,6 +541,7 @@ def edit(request, message_id):
             'form': form,
             'message_id': message_id,
             'link_back': link_back,
+            'draft': draft,
         })
 
     elif request.method == 'POST':
@@ -559,7 +562,8 @@ def edit(request, message_id):
             return render(request, 'mail/compose.html', {
                 'form': form,
                 'message_id': message_id,
-                'link_back': link_back
+                'link_back': link_back,
+                'draft': draft,
             })
 
     else:
@@ -575,8 +579,13 @@ def delete_email(request, message_id):
         return redirect(urlresolvers.reverse('mail:inbox'))
     email.is_remove = True
     email.save()
+    url = urlresolvers.reverse('mail:inbox')
+    if email.is_draft():
+        url = urlresolvers.reverse('mail:drafts')
+    if email.is_sent():
+        url = urlresolvers.reverse('mail:sent')
     messages.success(request, 'Письмо успешно удалено')
-    return redirect(urlresolvers.reverse('mail:inbox'))
+    return redirect(url)
 
 
 @login_required

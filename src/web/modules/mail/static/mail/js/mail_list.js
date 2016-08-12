@@ -3,7 +3,7 @@ $(document).ready(function () {
     var group_name = button.attr('checkbox_for');
     $('#delete_all').hide().click(
         function () {
-            if (get_checked($('#check_all').attr('checkbox_for')).length > 0) {
+            if (number_of_checked(group_name) > 0) {
                 $('#dialog').modal({});
             }
         }
@@ -19,8 +19,8 @@ $(document).ready(function () {
             $('label[for="' + this.id + '"]').html('Выделить все');
     });
 
-    $('[checkbox_group="' + group_name + '"]').click(function () {
-        if (get_checked(group_name).length > 0)
+    $('input:checkbox[checkbox_group="' + group_name + '"]').click(function () {
+        if (number_of_checked(group_name) > 0)
             $('#delete_all').show();
         else
             $('#delete_all').hide();

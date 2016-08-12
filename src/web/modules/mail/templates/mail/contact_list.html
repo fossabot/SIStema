@@ -8,6 +8,9 @@
     <script src="{% static 'mail/js/check_all.js' %}"></script>
     <script type="text/javascript" src="{% static 'mail/js/contacts.js' %}"></script>
 {% endblock %}
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'mail/css/mail.css' %}">
+{% endblock %}
 
 {% block content %}
     <div class="container-fluid">
@@ -33,7 +36,7 @@
                                     {% for contact in contacts %}
                                         <div class="section mb20">
 
-                                            <div class="checkbox-custom mb1 pull-left va-m mr10">
+                                            <div class="checkbox-custom email-checkbox sm-checkbox mb20 pull-left mr10">
                                                 <input id="{{ contact.id }}" type="checkbox"
                                                        name="contact_id_{{ contact.id }}" checkbox_group="contact">
                                                 <label for="{{ contact.id }}"></label>

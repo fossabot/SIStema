@@ -15,6 +15,11 @@
             {% if user.have_drafts %}
             <span class="mr10"><a href="{% url 'mail:drafts' %}">Черновики</a></span>
             {% endif %}
+            <span class="pull-right">
+                <a href="{% url 'mail:contact_list' %}">
+                Ваши контакты
+                </a>
+            </span>
         </h3>
     </div>
 {% endblock %}

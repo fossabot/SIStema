@@ -5,6 +5,7 @@
 {% block title %}Контакты{% endblock %}
 
 {% block scripts %}
+    <script src="{% static 'mail/js/check_all.js' %}"></script>
     <script type="text/javascript" src="{% static 'mail/js/contacts.js' %}"></script>
 {% endblock %}
 
@@ -23,13 +24,13 @@
                             <div class="row">
                                 <div class="col-lg-7">
                                     <div class="checkbox-custom mb1 mr10">
-                                        <input id="check_all" type="checkbox">
+                                        <input id="check_all" type="checkbox" checkbox_for="contact">
                                         <label for="check_all">Отметить все</label>
                                     </div>
                                     {% for contact in contacts %}
                                         <div class="section mb20">
                                             <div class="checkbox-custom mb1 pull-left va-m mr10">
-                                                <input id="{{ contact.id }}" type="checkbox" name="contact_id {{ contact.id }}">
+                                                <input id="{{ contact.id }}" type="checkbox" name="contact_id {{ contact.id }}" checkbox_group="contact">
                                                 <label for="{{ contact.id }}"></label>
                                             </div>
 
@@ -43,6 +44,7 @@
 
                                         </div>
                                     {% endfor %}
+                                    <button class="btn btn-danger pull-left" id="delete_all">Удалить контакты</button>
                                 </div>
                                 <div class="col-lg-5">
                                     <!-- Contact edition form -->

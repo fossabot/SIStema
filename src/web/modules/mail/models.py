@@ -11,6 +11,7 @@ import os
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
+from django.core.mail import EmailMessage as DjangoEmailMessage
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -196,6 +197,8 @@ class EmailMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     headers = models.TextField(blank=True)
+
+    delivered = models.BooleanField(default=False)
 
     STATUS_UNKNOWN = 0
     STATUS_ACCEPTED = 1

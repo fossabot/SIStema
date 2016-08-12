@@ -35,6 +35,8 @@ $(document).ready(function () {
     });
 
     $('#delete_all').hide().click(function () {
-
+        if (number_of_checked(group_name) > 0) {
+                $('#dialog').modal({});
+        }
     })
 });

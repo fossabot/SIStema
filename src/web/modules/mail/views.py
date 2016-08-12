@@ -179,6 +179,13 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
     return contact
 
 
+def _delete_contact(owner: models.SisEmailUser, contact_form):
+    return models.ContactRecord.objects.filter(owner=owner).filter(
+        Q(person__sisemailuser__user__email=contact_form['email']) |
+        Q(person__externalemailuser__email=contact_form['email'])
+    ).delete()
+
+
 @login_required
 def contact_list(request):
     email_user = request.user.email_user.first()
@@ -186,13 +193,17 @@ def contact_list(request):
     if request.method == 'GET':
         form = forms.ContactEditorForm()
     elif request.method == 'POST':
-        form = forms.ContactEditorForm(request.POST)
-
-        if form.is_valid():
-            # Saving new contact or editing existing.
-            _save_contact(request.user.email_user.first(), form.cleaned_data)
+        if request.POST.get('type', False):
+            _delete_contact(request.user.email_user.first(), request.POST)
+            contacts = models.ContactRecord.get_users_contacts(email_user)
         else:
-            pass
+            form = forms.ContactEditorForm(request.POST)
+
+            if form.is_valid():
+                # Saving new contact or editing existing.
+                _save_contact(request.user.email_user.first(), form.cleaned_data)
+            else:
+                pass
     else:
         return HttpResponseBadRequest('Unsupported method')
 

@@ -28,11 +28,11 @@
     cursor: default;
 }
 
-.checkbox-custom.email-checkbox {
+.checkbox-custom.sm-checkbox {
     transform: scale(0.5);
     transform-origin: 150% 150%;
 }
 
-.big-checkbox {
+.bg-checkbox {
     margin-left: 2px;
 }

@@ -15,105 +15,97 @@
 
 {% block content %}
     <div class="container-fluid">
-        <div class="mw800 center-block mt30">
-            <form id="email_list" method="post" action="{% url 'mail:delete_all' %}">
-                {% csrf_token %}
-                <div class="admin-form theme-alert">
-                    <div class="panel panel-alert heading-border">
-                        <div class="panel-body mbn p25 pt10">
-                            <div class="section mb25 mtn ptn">
-                                {% block tabs %}
-                                {% endblock %}
-                            </div>
+    <div class="mw800 center-block mt30">
+        <form id="email_list" method="post" action="{% url 'mail:delete_all' %}">
+            {% csrf_token %}
+            <div class="admin-form theme-alert">
+                <div class="panel panel-alert heading-border">
+                    <div class="panel-body mbn p25 pt10">
+                        <div class="section mb25 mtn ptn">
+                            {% block tabs %}
+                            {% endblock %}
+                        </div>
                             {% if mail_list %}
                                 <div class="checkbox-custom email-checkbox mb1 mr10">
                                     <input id="check_all" type="checkbox" checkbox_for="email">
                                     <label for="check_all">Отметить все</label>
                                 </div>
-                                {% for email in mail_list %}
-                                    <div class="section mb20">
-                                        <div class="checkbox-custom email-checkbox mb1 pull-left va-m mr10">
-                                            <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}" checkbox_group="email">
+                            {% for email in mail_list %}
+                                <a class="email-link" href="{% if email.is_draft %}{% url 'mail:edit' email.id %}
+                                {% else %}{% url 'mail:message' email.id %}{% endif %}">
+                                    <div class="section pb20 mbn email">
+                                        <div class="checkbox-custom email-checkbox sm-checkbox mb20 pull-left mr10" checkbox_group="email">
+                                            <input id="{{ email.id }}" type="checkbox" name="email_id {{ email.id }}">
                                             <label for="{{ email.id }}"></label>
                                         </div>
-                                        <div>
-                                            <div title="{{ email.sender.email }}" class="ib mr15 ml10 mt15">
-
+                                        <div class="ml30">
+                                            <div title="{{ email.sender.email }}" class="ib mr15 mt15">
                                                 {{ email.sender.display_name }}
                                             </div>
-                                            {% if email.is_draft %}
-                                                <a href="{% url 'mail:edit' email.id %}">
-                                                    <b>{{ email.subject }}</b>
-                                                    — {{ email.html_text|truncatechars:50|striptags }}
-                                                </a>
-                                            {% else %}
-                                                <a href="{% url 'mail:message' email.id %}">
-                                                    <b>{{ email.subject }}</b>
-                                                    — {{ email.html_text|truncatechars:50|striptags }}
-                                                </a>
-                                            {% endif %}
+                                            <b>{{ email.subject }}</b>
+                                            — {{ email.html_text|truncatechars:50|striptags }}
                                         </div>
                                     </div>
-                                {% endfor %}
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            {% block if_empty %}
+                            {% endblock %}
+                        {% endif %}
+                        {% if tab_links|length > 1 %}<div><ul class="pagination mbn">
+                            {% if show_previous %}
+                                <li class="prev"><a href="{{ prev_link }}"><i class="fa fa-angle-left"></i></a></li>
                             {% else %}
-                                {% block if_empty %}
-                                {% endblock %}
+                                <li class="prev disabled"><a><i class="fa fa-angle-left"></i></a></li>
                             {% endif %}
-                            {% if tab_links|length > 1 %}<div><ul class="pagination mbn">
-                                {% if show_previous %}
-                                    <li class="prev"><a href="{{ prev_link }}"><i class="fa fa-angle-left"></i></a></li>
+                            {% for link in tab_links %}
+                                {% if start_page|add:forloop.counter0 == page %}
+                                    <li class="active"><a>{{ start_page|add:forloop.counter0 }}</a></li>
                                 {% else %}
-                                    <li class="prev disabled"><a><i class="fa fa-angle-left"></i></a></li>
+                                    <li><a href="{{ link }}">{{ start_page|add:forloop.counter0 }}</a></li>
                                 {% endif %}
-                                {% for link in tab_links %}
-                                    {% if start_page|add:forloop.counter0 == page %}
-                                        <li class="active"><a>{{ start_page|add:forloop.counter0 }}</a></li>
-                                    {% else %}
-                                        <li><a href="{{ link }}">{{ start_page|add:forloop.counter0 }}</a></li>
-                                    {% endif %}
-                                {% endfor %}
-	                            {% if show_next %}
-                                    <li class="next"><a href="{{ next_link }}"><i class="fa fa-angle-right"></i></a></li>
-                                {% else %}
-                                    <li class="next disabled"><a><i class="fa fa-angle-right"></i></a></li>
-                                {% endif %}
-                            </ul></div>{% endif %}
-                        </div>
+                            {% endfor %}
+                            {% if show_next %}
+                                <li class="next"><a href="{{ next_link }}"><i class="fa fa-angle-right"></i></a></li>
+                            {% else %}
+                                <li class="next disabled"><a><i class="fa fa-angle-right"></i></a></li>
+                            {% endif %}
+                        </ul></div>{% endif %}
                     </div>
-                    <div class="text-right">
-                        <div class="pull-left">
-                            <button type="button" class="btn btn-danger" id="delete_all">Удалить отмеченные</button>
-                        </div>
-                        <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
+                </div>
+                <div class="text-right">
+                    <div class="pull-left">
+                        <button type="button" class="btn btn-danger" id="delete_all">Удалить отмеченные</button>
                     </div>
-                    <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
-                         aria-labelledby="myModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal"
-                                            aria-label="Close"><span aria-hidden="true">&times;</span>
-                                    </button>
-                                    <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
-                                </div>
-                                <div class="modal-body">
-                                    Вы действительно хотите удалить отмеченные письма?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">
-                                        Отмена
-                                    </button>
-                                    <input type="hidden" name="next" value="{{ request.path }}">
-                                    <button type="submit" class="btn btn-danger">
-                                        Удалить
-                                    </button>
-                                </div>
+                    <a href="{% url 'mail:compose' %}" class="button btn-success">Написать письмо</a>
+                </div>
+                <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
+                     aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
+                            </div>
+                            <div class="modal-body">
+                                Вы действительно хотите удалить отмеченные письма?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">
+                                    Отмена
+                                </button>
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" class="btn btn-danger">
+                                    Удалить
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </form>
-
-        </div>
+            </div>
+        </form>
     </div>
+</div>
 {% endblock %}

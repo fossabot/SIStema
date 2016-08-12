@@ -168,6 +168,7 @@ def find_user(sender_email, sender_name=''):
 def incoming_webhook(request):
     message_data = request.POST
     email = create_mail(message_data)
+    email.save()
     return HttpResponse('ok')
 
 

@@ -335,15 +335,20 @@ class Command(BaseCommand):
                 )
                 new_email.save()
 
-                models.PersonalEmailMessage.make_for(new_email)
+                if isinstance(sender, models.SisEmailUser):
+                    models.PersonalEmailMessage.make_for(new_email, sender.user)
 
                 for recipient in recipients:
                     recipient.save()
                     new_email.recipients.add(recipient)
+                    if isinstance(recipient, models.SisEmailUser):
+                        models.PersonalEmailMessage.make_for(new_email, recipient.user)
 
                 for cc_recipient in cc_recipients:
                     cc_recipient.save()
                     new_email.cc_recipients.add(cc_recipient)
+                    if isinstance(cc_recipient, models.SisEmailUser):
+                        models.PersonalEmailMessage.make_for(new_email, cc_recipient.user)
 
                 for attachment in attachments:
                     attachment.save()

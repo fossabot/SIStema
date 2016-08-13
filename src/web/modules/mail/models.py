@@ -243,7 +243,7 @@ class EmailMessage(models.Model):
 
 
 class PersonalEmailMessage(models.Model):
-    user = models.ForeignKey(EmailUser)
+    user = models.ForeignKey(User)
 
     message = models.ForeignKey(EmailMessage)
 
@@ -267,16 +267,14 @@ class PersonalEmailMessage(models.Model):
             return cls.objects.filter(is_removed=False, user=user)
 
     @classmethod
-    def delete_emails_by_ids(cls, ids: list):
-        for email in cls.objects.filter(message__id__in=ids):
+    def delete_emails_by_ids(cls, ids, user):
+        for email in cls.objects.filter(message__id__in=ids, user=user):
             email.remove()
 
     @classmethod
-    def make_for(cls, message: EmailMessage):
-        for recipient in list(message.recipients.all()) + list(message.cc_recipients.all()):
-            if not PersonalEmailMessage.objects.filter(user=recipient, message=message):
-                personal = PersonalEmailMessage(user=recipient, message=message)
-                personal.save()
+    def make_for(cls, message, user):
+        personal = PersonalEmailMessage(user=user, message=message)
+        personal.save()
 
 
 class ContactRecord(models.Model):

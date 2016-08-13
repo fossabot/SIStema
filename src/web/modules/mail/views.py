@@ -204,12 +204,14 @@ def contact_list(request):
             form = forms.ContactEditorForm()
             _delete_contact(request.user.email_user.first(), request.POST)
             contacts = models.ContactRecord.get_users_contacts(email_user)
+            messages.success(request, 'Контакты успешно удалены')
         else:
             form = forms.ContactEditorForm(request.POST)
 
             if form.is_valid():
                 # Saving new contact or editing existing.
                 _save_contact(request.user.email_user.first(), form.cleaned_data)
+                messages.success(request, 'Контакт успешно добавлен.')
             else:
                 pass
     else:

@@ -36,3 +36,8 @@
 .bg-checkbox {
     margin-left: 2px;
 }
+
+.contact_name, .contact_email {
+    cursor: pointer;
+}
+

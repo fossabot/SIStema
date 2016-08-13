@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-from settings.api import IntegerItem, CharItem
+from settings.api import IntegerItem, CharItem, BooleanItem
 
 
 class MailConfig(AppConfig):
@@ -19,4 +19,7 @@ class MailConfig(AppConfig):
                     default_value=50 * 1024 * 1024),
         CharItem(short_name='mail_domain', display_name='Mail domain',
                     description='', default_value='@sistema.lksh.ru'),
+        BooleanItem(short_name='send_mails', display_name='Message send',
+                    description='Is messages sends to real world.',
+                    default_value=False),
     ]

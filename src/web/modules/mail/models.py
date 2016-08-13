@@ -16,6 +16,7 @@ from django.core.mail import EmailMessage as DjangoEmailMessage
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
 
+from settings.api import get_current_settings
 from users.models import User
 from schools.models import Session
 from sistema.uploads import _ensure_directory_exists
@@ -233,10 +234,14 @@ class EmailMessage(models.Model):
         )
 
         try:
-            email_message.send()
+            if get_current_settings('modules.mail', 'send_mails'):
+                email_message.send()
             self.delivered = True
         except Exception as error:
             print('Failed while sending message:', error)
+            return False
+
+        return True
 
     def __str__(self):
         return str(self.id)

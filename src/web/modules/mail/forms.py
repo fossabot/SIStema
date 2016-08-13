@@ -101,10 +101,11 @@ class WriteForm(ComposeForm):
 
 
 class ContactEditorForm(forms.Form):
-    MAXIMUM_NAME_LENGTH = 5000
+    MAXIMUM_NAME_LENGTH = 300
 
     display_name = forms.CharField(max_length=MAXIMUM_NAME_LENGTH,
                                    label='Имя',
+                                   required=False,
                                    widget=forms.TextInput(attrs={
                                        'class': 'form-control mb10',
                                        'placeholder': 'Введите имя',
@@ -115,4 +116,5 @@ class ContactEditorForm(forms.Form):
                              widget=forms.EmailInput(attrs={
                                  'class': 'form-control mb10',
                                  'placeholder': 'Введите email',
-                             }))
+                             }),
+                             )

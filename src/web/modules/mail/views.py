@@ -436,6 +436,7 @@ def inbox(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:inbox_page', page_index)
     params['next_link'] = _get_next_link('mail:inbox_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/inbox.html', params)
 
 
@@ -457,6 +458,7 @@ def sent(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:sent_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:sent_page', page_index)
     params['next_link'] = _get_next_link('mail:sent_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/sent.html', params)
 
 
@@ -479,6 +481,7 @@ def drafts_list(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:drafts_page', page_index)
     params['next_link'] = _get_next_link('mail:drafts_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/drafts.html', params)
 
 
@@ -612,8 +615,9 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
-    def _sending_error():
-        messages.info(request, 'Не удалось отправить письмо.')
+    def _sending_error(show_message=True):
+        if show_message:
+            messages.info(request, 'Не удалось отправить письмо.')
         return render(request, 'mail/compose.html', {
             'form': form,
             'message_id': message_id,
@@ -672,7 +676,7 @@ def edit(request, message_id):
                 # TODO: readable response
                 return _sending_error()
         else:
-            return _sending_error()
+            return _sending_error(False)
 
     else:
         return HttpResponseBadRequest('Method is not supported')
@@ -811,10 +815,7 @@ def _write(request, new_form):
                 email.save()
 
             form = new_form()
-            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
-        else:
-            messages.info(request, 'Не удалось отправить письмо.')
-            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+        return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
 
     else:
         return HttpResponseBadRequest('Method is not supported')

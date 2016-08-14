@@ -16,8 +16,6 @@
 {% block content %}
     <div class="container-fluid">
         <div class="mw800 center-block mt30">
-
-
             <div class="admin-form theme-alert">
                 <div class="panel panel-alert heading-border">
                     <div class="panel-body mbn p25 pt10">
@@ -25,10 +23,12 @@
                             {% block tabs %}
                             {% endblock %}
                         </div>
+                        {% if mail_list %}
                         <form id="searcher" role="form" class="mb10">
                             <input type="text" class="form-control" name="search_request"
-                                   placeholder="Текст для поиска">
+                                   placeholder="Текст для поиска" value="{{ search }}">
                         </form>
+                        {% endif %}
                         <form id="email_list" method="post" action="{% url 'mail:delete_all' %}">
                             {% csrf_token %}
                             {% if mail_list %}

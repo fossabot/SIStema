@@ -100,3 +100,13 @@ class EmailMessageHtmlCleaningTests(TestCase):
         self.message.html_text = "<<script>script> alert(\"XSS.\"); </</script>script>"
         self.message.save()
         self.assertEqual(self.message.html_text, '&lt;&lt;script&gt;script&gt; alert("XSS."); script&gt;')
+
+    def test_escape_style_tag(self):
+        self.message.html_text = "<b style='position: 0 0;'>Hello</b>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '<b>Hello</b>')
+
+    def test_large_mail(self):
+        self.message.html_text = "<script>alert('XSS');</script>" * 5000
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;script&gt;alert(\'XSS\');&lt;/script&gt;' * 5000)

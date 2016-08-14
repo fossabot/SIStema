@@ -358,7 +358,7 @@ def _get_standard_mail_list_params(mail_list, page_index, request):
     params['show_previous'] = (page_index != 1)
     params['show_next'] = (page_index != _get_max_page_num(len(mail_list)))
     params['start_page'] = _get_start_and_end_page(page_index, _get_max_page_num(len(mail_list)))[0]
-    params['user'] = request.user.email_user.first()
+    params['email_user'] = request.user.email_user.first()
     return params
 
 

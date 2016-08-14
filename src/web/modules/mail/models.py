@@ -278,8 +278,9 @@ class PersonalEmailMessage(models.Model):
 
     @classmethod
     def make_for(cls, message, user):
-        personal = PersonalEmailMessage(user=user, message=message)
-        personal.save()
+        if not PersonalEmailMessage.objects.all().filter(user=user, message=message):
+            personal = PersonalEmailMessage(user=user, message=message)
+            personal.save()
 
 
 class ContactRecord(models.Model):

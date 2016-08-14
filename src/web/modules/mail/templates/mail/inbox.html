@@ -25,7 +25,11 @@
 {% endblock %}
 {% block if_empty %}
     <div class="section mb5 fs16">
-        <span class="text-muted">Вам ещё никто не написал.</span>
-        <a href="{% url 'mail:compose' %}">Отправьте письмо</a>.
+        {% if not search %}
+            <span class="text-muted">Вам ещё никто не написал.</span>
+            <a href="{% url 'mail:compose' %}">Отправьте письмо</a>.
+        {% else %}
+            <span class="text-muted">Результатов нет</span>
+        {% endif %}
     </div>
 {% endblock %}

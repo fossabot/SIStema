@@ -842,4 +842,4 @@ def download_all(request, message_id):
     archive.close()
 
     semaphore.release()
-    return respond_as_attachment(request, archive_path, 'attachments.zip')
+    return respond_as_attachment(request, archive_path, 'msg' + str(message_id) + '-attachments.zip')

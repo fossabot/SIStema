@@ -436,6 +436,8 @@ def sent(request, page_index='1'):
 
 @login_required
 def drafts_list(request, page_index='1'):
+    if not request.user.email_user.first().have_drafts():
+        return redirect(urlresolvers.reverse('mail:inbox'))
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
         message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
@@ -662,7 +664,7 @@ def delete_email(request, message_id):
         if request.user.email_user.first().have_drafts():
             url = urlresolvers.reverse('mail:drafts')
         else:
-            url = urlresolvers.reverse('mail:sent')
+            url = urlresolvers.reverse('mail:inbox')
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
     messages.success(request, 'Письмо успешно удалено')

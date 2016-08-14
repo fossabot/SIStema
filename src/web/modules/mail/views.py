@@ -215,7 +215,7 @@ def contact_list(request):
             form = forms.ContactEditorForm()
             if _delete_contact(request.user.email_user.first(), request.POST):
                 contacts = models.ContactRecord.get_users_contacts(email_user)
-                messages.success(request, 'Контакты успешно удалены')
+                messages.success(request, 'Контакты удалены')
             else:
                 return HttpResponseForbidden('Вы не можете удалить этот контакт.')
         else:

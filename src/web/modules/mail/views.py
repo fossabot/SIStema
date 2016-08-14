@@ -459,8 +459,8 @@ def drafts_list(request, page_index='1'):
 def message(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
-    if not can_user_view_message(request.user, email):
-        return HttpResponseForbidden()
+    if not can_user_view_message(request.user, email) or email.is_email_removed():
+        return HttpResponseForbidden('Вы не можете просматривать это письмо.')
     link_back = urlresolvers.reverse('mail:inbox')
     if email.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')

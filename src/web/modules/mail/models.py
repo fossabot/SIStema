@@ -223,6 +223,10 @@ class EmailMessage(models.Model):
     def is_draft(self):
         return self.status == self.STATUS_DRAFT
 
+    def is_email_removed(self):
+        personal_email_message = PersonalEmailMessage.objects.filter(message=self).first()
+        return personal_email_message.is_removed
+
     def send(self):
         if self.delivered:
             return

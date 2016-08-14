@@ -439,6 +439,7 @@ def inbox(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:inbox_page', page_index)
     params['next_link'] = _get_next_link('mail:inbox_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/inbox.html', params)
 
 
@@ -460,6 +461,7 @@ def sent(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:sent_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:sent_page', page_index)
     params['next_link'] = _get_next_link('mail:sent_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/sent.html', params)
 
 
@@ -484,6 +486,7 @@ def drafts_list(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:drafts_page', page_index)
     params['next_link'] = _get_next_link('mail:drafts_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/drafts.html', params)
 
 

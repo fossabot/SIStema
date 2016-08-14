@@ -2,6 +2,7 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
+import re
 import zipfile
 import threading
 
@@ -28,13 +29,15 @@ from sistema.helpers import respond_as_attachment
 from django.conf import settings
 from sistema.uploads import save_file
 
+RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,; ] *')
+
 
 def _parse_recipients(string_with_recipients):
     """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
     If there is external user which hasn't record in DB, than
     create new ExternalEmailUser for him."""
     recipients = []
-    for recipient in string_with_recipients.split(', '):
+    for recipient in re.split(RECIPIENTS_LIST_SEPARATOR, string_with_recipients):
         if recipient == '':
             continue
         try:
@@ -436,6 +439,8 @@ def sent(request, page_index='1'):
 
 @login_required
 def drafts_list(request, page_index='1'):
+    if not request.user.email_user.first().have_drafts():
+        return redirect(urlresolvers.reverse('mail:inbox'))
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
         message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
@@ -656,11 +661,14 @@ def delete_email(request, message_id):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
     url = urlresolvers.reverse('mail:inbox')
+    email.remove()
     if email.message.is_draft():
-        url = urlresolvers.reverse('mail:drafts')
+        if request.user.email_user.first().have_drafts():
+            url = urlresolvers.reverse('mail:drafts')
+        else:
+            url = urlresolvers.reverse('mail:inbox')
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
-    email.remove()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 
@@ -677,9 +685,22 @@ def save_changes(request, message_id):
 
     SUCCESS_LABEL = 'is_successful'
     if is_raw_draft:
+        try:
+            email = models.PersonalEmailMessage.objects.get(user=request.user,
+                                                            message__id=message_id)
+        except models.PersonalEmailMessage.DoesNotExist:
+            pass
+        else:
+            email.remove()
         return JsonResponse({SUCCESS_LABEL: True})
 
     email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_DRAFT)
+
+    personal_email = models.PersonalEmailMessage.objects.get(message=email, user=request.user)
+    if personal_email.is_removed:
+        with transaction.atomic():
+            personal_email.is_removed = False
+            personal_email.save()
 
     if email is None:
         return JsonResponse({SUCCESS_LABEL: False})

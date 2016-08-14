@@ -44,7 +44,9 @@ class SisEmailUser(EmailUser):
         return self.user.email
 
     def have_drafts(self):
-        return self.sent_emails.filter(status=EmailMessage.STATUS_DRAFT).exists()
+        return PersonalEmailMessage.objects.filter(user=self.user,
+                                                   message__status=EmailMessage.STATUS_DRAFT,
+                                                   is_removed=False).exists()
 
     def add_person_to_contacts(self, person):
         try:

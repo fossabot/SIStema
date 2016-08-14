@@ -111,8 +111,6 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
         email.save()
         models.PersonalEmailMessage.make_for(email, request.user)
 
-    email.send()
-
     return email
 
 
@@ -586,6 +584,16 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
+
+    def _sending_error():
+        messages.info(request, 'Не удалось отправить письмо.')
+        return render(request, 'mail/compose.html', {
+            'form': form,
+            'message_id': message_id,
+            'link_back': link_back,
+            'draft': draft,
+        })
+
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
     if not is_sender_of_email(request.user, email):
@@ -625,23 +633,19 @@ def edit(request, message_id):
             message_data = form.cleaned_data
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
-            models.PersonalEmailMessage.make_for(email, request.user)
 
             if email is not None:
+                if not email.send():
+                    return
+                models.PersonalEmailMessage.make_for(email, request.user)
                 messages.success(request, 'Письмо успешно отправлено.')
                 return redirect(urlresolvers.reverse('mail:sent'))
             else:
                 # Error when sending
                 # TODO: readable response
-                pass
+                return _sending_error()
         else:
-            messages.info(request, 'Не удалось отправить письмо.')
-            return render(request, 'mail/compose.html', {
-                'form': form,
-                'message_id': message_id,
-                'link_back': link_back,
-                'draft': draft,
-            })
+            return _sending_error()
 
     else:
         return HttpResponseBadRequest('Method is not supported')

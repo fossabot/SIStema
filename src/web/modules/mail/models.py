@@ -294,6 +294,10 @@ class ContactRecord(models.Model):
     def get_users_contacts(cls, user: SisEmailUser):
         return cls.objects.filter(owner=user)
 
+    @classmethod
+    def is_contact_belong_to_user(cls, id_contact, user: SisEmailUser):
+        return cls.objects.filter(id=id_contact, owner=user).exists()
+
     def __str__(self):
         return str(self.person)
 

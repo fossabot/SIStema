@@ -595,8 +595,9 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
-    def _sending_error():
-        messages.info(request, 'Не удалось отправить письмо.')
+    def _sending_error(show_message=True):
+        if show_message:
+            messages.info(request, 'Не удалось отправить письмо.')
         return render(request, 'mail/compose.html', {
             'form': form,
             'message_id': message_id,
@@ -655,7 +656,7 @@ def edit(request, message_id):
                 # TODO: readable response
                 return _sending_error()
         else:
-            return _sending_error()
+            return _sending_error(False)
 
     else:
         return HttpResponseBadRequest('Method is not supported')
@@ -793,10 +794,7 @@ def _write(request, new_form):
                 email.save()
 
             form = new_form()
-            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
-        else:
-            messages.info(request, 'Не удалось отправить письмо.')
-            return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+        return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
 
     else:
         return HttpResponseBadRequest('Method is not supported')

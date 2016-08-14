@@ -31,7 +31,7 @@ from sistema.helpers import respond_as_attachment
 from django.conf import settings
 from sistema.uploads import save_file
 
-RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,; ] *')
+RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 
 
 def _parse_recipients(string_with_recipients):
@@ -136,6 +136,7 @@ def _verify_mailgun_request(api_key, token, timestamp, signature):
         msg='{}{}'.format(timestamp, token),
         digestmod=hashlib.sha256
     ).hexdigest()
+
 
 @login_required
 def compose(request):
@@ -830,6 +831,9 @@ def _write(request, new_form):
                     email.attachments.add(attachment)
                 email.status = models.EmailMessage.STATUS_ACCEPTED
                 email.save()
+
+                for user in recipients:
+                    models.PersonalEmailMessage.make_for(email, user.user)
 
             form = new_form()
         return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})

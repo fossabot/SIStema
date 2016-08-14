@@ -43,11 +43,7 @@ def _get_recipients(string_with_recipients):
             ).first()
         except exceptions.ValidationError:
             # if recipient is not real email, it is probably name of a SIS user
-            query = None
-            for user in models.SisEmailUser.objects.all():
-                if user.display_name == recipient:
-                    query = user
-                    break
+            query = models.SisEmailUser.find(display_name=recipient).first()
 
         if query is not None:
             recipients.append(query)
@@ -461,8 +457,8 @@ def drafts_list(request, page_index='1'):
 def message(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
-    if not can_user_view_message(request.user, email):
-        return HttpResponseForbidden()
+    if not can_user_view_message(request.user, email) or email.is_email_removed():
+        return HttpResponseForbidden('Вы не можете просматривать это письмо.')
     link_back = urlresolvers.reverse('mail:inbox')
     if email.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')

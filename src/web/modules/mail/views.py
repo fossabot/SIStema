@@ -824,7 +824,6 @@ def download_all(request, message_id):
     semaphore.acquire()
 
     archive_path = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, 'attachments.zip')
-    print(archive_path)
     archive = zipfile.ZipFile(archive_path, mode='w')
     for attachment in attachments:
         path = attachment.get_file_abspath()

@@ -582,7 +582,6 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
-
     def _sending_error():
         messages.info(request, 'Не удалось отправить письмо.')
         return render(request, 'mail/compose.html', {
@@ -712,15 +711,7 @@ def download_attachment(request, attachment_id):
     )
 
 
-def write(request):
-    def new_form():
-        return forms.WriteForm(initial={
-            'email_subject': '',
-            'recipients': '',
-            'email_message': '',
-            'text': ''
-        })
-
+def _write(request, new_form):
     if request.method == 'GET':
         form = new_form()
         return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
@@ -762,8 +753,6 @@ def write(request):
             with transaction.atomic():
                 email.save()
 
-             
-
             email.recipients.clear()
             for recipient in recipients:
                 email.recipients.add(recipient)
@@ -784,17 +773,32 @@ def write(request):
         return HttpResponseBadRequest('Method is not supported')
 
 
+def write(request):
+    def new_form():
+        return forms.WriteForm(initial={
+            'email_subject': '',
+            'recipients': '',
+            'email_message': '',
+            'text': ''
+        })
+
+    return _write(request, new_form)
+
+
 def write_to(request, recipient_hash):
     recipient = get_user_by_hash(recipient_hash)
     if recipient is None:
         return HttpResponseNotFound()
-    form = forms.WriteForm(initial={
-        'email_subject': '',
-        'recipients': recipient.display_name,
-        'email_message': '',
-        'text': ''
-    })
-    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+
+    def new_form():
+        return forms.WriteForm(initial={
+            'email_subject': '',
+            'recipients': recipient.display_name,
+            'email_message': '',
+            'text': ''
+        })
+
+    return _write(request, new_form)
 
 
 @login_required

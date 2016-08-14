@@ -2,6 +2,8 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
+import hashlib
+import hmac
 import re
 import zipfile
 import threading
@@ -127,6 +129,13 @@ def _download_mailbox_attachment(attachment_data):
     attachment.content_type = attachment['content-type']
     return attachment
 
+
+def _verify_mailgun_request(api_key, token, timestamp, signature):
+    return signature == hmac.new(
+        key=api_key,
+        msg='{}{}'.format(timestamp, token),
+        digestmod=hashlib.sha256
+    ).hexdigest()
 
 @login_required
 def compose(request):
@@ -306,6 +315,10 @@ def find_user(sender_email, sender_name=''):
 
 def incoming_webhook(request):
     message_data = request.POST
+    if not _verify_mailgun_request(settings.ANYMAIL['MAILGUN_API_KEY'],
+                                   message_data['token'], message_data['timestamp'],
+                                   message_data['signature']):
+        return HttpResponseBadRequest()
     email = create_mail(message_data)
     email.save()
     return HttpResponse('ok')

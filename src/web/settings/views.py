@@ -80,6 +80,7 @@ def edit_settings_item(request, id):
     item = get_object_or_404(models.SettingsItem, id=id)
     form = get_form(item, request.POST)
     if form.is_valid():
+        print(form.cleaned_data)
         item.value = form.cleaned_data['value_field']
         item.save()
         return JsonResponse({'status': 'ok'})
@@ -108,7 +109,7 @@ def clone_settings_item(request, id, school_name, session_name):
 
 
 def get_form(settings_item, data=None):
-    form_class = type('SettingsItemForm', (forms.Form,), {'value': settings_item.get_form_field()})
+    form_class = type('SettingsItemForm', (forms.Form,), {'value_field': settings_item.get_form_field()})
     return form_class(data)
 
 
@@ -116,7 +117,7 @@ def process_edit_request(request, settings_item_id, school_name=None, session_na
     item = get_object_or_404(models.SettingsItem, id=settings_item_id)
     if item.school is None and item.session is None:
         if school_name is None and session_name is None:
-            return edit_settings_item(request)
+            return edit_settings_item(request, settings_item_id)
         return clone_settings_item(request, settings_item_id, school_name, session_name)
     if item.session is None:
         if school_name is None and session_name is None:

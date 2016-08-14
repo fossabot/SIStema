@@ -56,6 +56,7 @@ def get_settings(app_name, setting_name, setting_area=None):
         setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, session__id=setting_area.id)
         if setting_item:
             return setting_item[0].value
+        setting_area = setting_area.school
 
     if type(setting_area) is School:
         setting_item = SettingsItem.objects.filter(short_name=setting_name, app=app_name, school__id=setting_area.id)

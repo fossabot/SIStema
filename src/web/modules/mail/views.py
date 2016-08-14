@@ -822,7 +822,6 @@ def delete_all(request):
 
 
 @login_required
-@require_POST
 def download_all(request, message_id):
     email_message = get_object_or_404(models.EmailMessage, id=message_id)
 

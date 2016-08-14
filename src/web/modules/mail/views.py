@@ -391,6 +391,8 @@ def _read_page_index(page_index, mail_count):
         page_index = int(page_index)
         if page_index > _get_max_page_num(mail_count):
             return True, _get_max_page_num(mail_count)
+        if page_index < 1:
+            return True, 1
         else:
             return False, page_index
     except ValueError:

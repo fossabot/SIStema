@@ -184,10 +184,16 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
 
 
 def _delete_contact(owner: models.SisEmailUser, contact_form):
+    # Префикс имени чекбокса в форме удаления контактов
+    prefix = 'contact_id_'
     for item in contact_form:
-        if item.startswith('contact_id_') and contact_form[item] == 'on':
-            id_ = int(item[11:])
-            models.ContactRecord.objects.filter(id=id_).delete()
+        if item.startswith(prefix) and contact_form[item] == 'on':
+            contact_id = int(item.replace(prefix, ''))
+            if models.ContactRecord.is_contact_belong_to_user(contact_id, owner):
+                models.ContactRecord.objects.filter(id=contact_id).delete()
+            else:
+                return False
+    return True
     # return models.ContactRecord.objects.filter(owner=owner).filter(
     #     Q(person__sisemailuser__user__email=contact_form['email']) |
     #     Q(person__externalemailuser__email=contact_form['email'])
@@ -203,9 +209,11 @@ def contact_list(request):
     elif request.method == 'POST':
         if request.POST.get('type', False):
             form = forms.ContactEditorForm()
-            _delete_contact(request.user.email_user.first(), request.POST)
-            contacts = models.ContactRecord.get_users_contacts(email_user)
-            messages.success(request, 'Контакты успешно удалены')
+            if _delete_contact(request.user.email_user.first(), request.POST):
+                contacts = models.ContactRecord.get_users_contacts(email_user)
+                messages.success(request, 'Контакты успешно удалены')
+            else:
+                return HttpResponseForbidden('Вы не можете удалить этот контакт.')
         else:
             form = forms.ContactEditorForm(request.POST)
 

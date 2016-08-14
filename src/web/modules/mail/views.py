@@ -43,11 +43,7 @@ def _get_recipients(string_with_recipients):
             ).first()
         except exceptions.ValidationError:
             # if recipient is not real email, it is probably name of a SIS user
-            query = None
-            for user in models.SisEmailUser.objects.all():
-                if user.display_name == recipient:
-                    query = user
-                    break
+            query = models.SisEmailUser.find(display_name=recipient).first()
 
         if query is not None:
             recipients.append(query)

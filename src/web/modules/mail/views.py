@@ -188,14 +188,20 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
 
 
 def _delete_contact(owner: models.SisEmailUser, contact_form):
+    # Префикс имени чекбокса в форме удаления контактов
+    prefix = 'contact_id_'
     for item in contact_form:
-        if item.startswith('contact_id_') and contact_form[item] == 'on':
-            id_ = int(item[11:])
-            models.ContactRecord.objects.filter(id=id_).delete()
-            # return models.ContactRecord.objects.filter(owner=owner).filter(
-            #     Q(person__sisemailuser__user__email=contact_form['email']) |
-            #     Q(person__externalemailuser__email=contact_form['email'])
-            # ).delete()
+        if item.startswith(prefix) and contact_form[item] == 'on':
+            contact_id = int(item.replace(prefix, ''))
+            if models.ContactRecord.is_contact_belong_to_user(contact_id, owner):
+                models.ContactRecord.objects.filter(id=contact_id).delete()
+            else:
+                return False
+    return True
+    # return models.ContactRecord.objects.filter(owner=owner).filter(
+    #     Q(person__sisemailuser__user__email=contact_form['email']) |
+    #     Q(person__externalemailuser__email=contact_form['email'])
+    # ).delete()
 
 
 @login_required
@@ -207,9 +213,11 @@ def contact_list(request):
     elif request.method == 'POST':
         if request.POST.get('type', False):
             form = forms.ContactEditorForm()
-            _delete_contact(request.user.email_user.first(), request.POST)
-            contacts = models.ContactRecord.get_users_contacts(email_user)
-            messages.success(request, 'Контакты успешно удалены')
+            if _delete_contact(request.user.email_user.first(), request.POST):
+                contacts = models.ContactRecord.get_users_contacts(email_user)
+                messages.success(request, 'Контакты успешно удалены')
+            else:
+                return HttpResponseForbidden('Вы не можете удалить этот контакт.')
         else:
             form = forms.ContactEditorForm(request.POST)
 
@@ -362,7 +370,7 @@ def _get_standard_mail_list_params(mail_list, page_index, request):
     params['show_previous'] = (page_index != 1)
     params['show_next'] = (page_index != _get_max_page_num(len(mail_list)))
     params['start_page'] = _get_start_and_end_page(page_index, _get_max_page_num(len(mail_list)))[0]
-    params['user'] = request.user.email_user.first()
+    params['email_user'] = request.user.email_user.first()
     return params
 
 
@@ -428,6 +436,7 @@ def sent(request, page_index='1'):
     return render(request, 'mail/sent.html', params)
 
 
+@login_required
 def drafts_list(request, page_index='1'):
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
@@ -745,6 +754,8 @@ def write(request):
             with transaction.atomic():
                 email.save()
 
+             
+
             email.recipients.clear()
             for recipient in recipients:
                 email.recipients.add(recipient)
@@ -793,7 +804,6 @@ def preview(request, attachment_id):
 @require_POST
 @login_required
 def delete_all(request):
-    print(request)
     id_list = []
     for field in request.POST:
         if 'email_id' in field:

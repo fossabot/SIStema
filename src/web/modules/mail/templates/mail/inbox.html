@@ -12,7 +12,7 @@
         <h3>
             <span class="mr10">Входящие</span>
             <span class="mr10"><a href="{% url 'mail:sent' %}">Отправленные</a></span>
-            {% if user.have_drafts %}
+            {% if email_user.have_drafts %}
             <span class="mr10"><a href="{% url 'mail:drafts' %}">Черновики</a></span>
             {% endif %}
             <span class="pull-right">

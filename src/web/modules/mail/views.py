@@ -9,7 +9,7 @@ import threading
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers, validators, exceptions
 from django.db.models import Q, TextField
-from django.db.models.expressions import Value
+from django.db.models.expressions import Value, Case
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.http.response import FileResponse
@@ -403,10 +403,30 @@ def _read_page_index(page_index, mail_count):
         return True, 1
 
 
+def _get_email_list(current_user, status, search_request=''):
+    email_list = models.PersonalEmailMessage.get_not_removed(user=current_user).filter(
+        message__status=status).order_by('-message__created_at')
+    if search_request:
+        email_list = email_list.annotate(
+            full_text=Concat('message__subject', Value(' '),
+                             'message__sender__externalemailuser__display_name', Value(' '),
+                             'message__sender__externalemailuser__email', Value(' '),
+                             'message__sender__sisemailuser__user__email', Value(' '),
+                             'message__sender__sisemailuser__user__last_name', Value(' '),
+                             'message__sender__sisemailuser__user__first_name', Value(' '),
+                             'message__html_text', output_field=TextField()),
+        ).filter(
+            full_text__icontains=search_request
+        )
+    return email_list
+
+
 @login_required
 def inbox(request, page_index='1'):
-    personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
-        message__status=models.EmailMessage.STATUS_ACCEPTED).order_by('-message__created_at')
+    search = ''
+    if 'search_request' in request.GET:
+        search = request.GET['search_request']
+    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_ACCEPTED, search)
     mail_list = []
     for mail in personal_mail_list:
         mail_list.append(mail.message)
@@ -419,14 +439,16 @@ def inbox(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:inbox_page', page_index)
     params['next_link'] = _get_next_link('mail:inbox_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/inbox.html', params)
 
 
 @login_required
 def sent(request, page_index='1'):
-    personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
-        message__status=models.EmailMessage.STATUS_SENT) \
-        .filter(message__sender__sisemailuser__user=request.user).order_by('-message__created_at')
+    search = ''
+    if 'search_request' in request.GET:
+        search = request.GET['search_request']
+    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_SENT, search)
     mail_list = []
     for mail in personal_mail_list:
         mail_list.append(mail.message)
@@ -439,6 +461,7 @@ def sent(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:sent_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:sent_page', page_index)
     params['next_link'] = _get_next_link('mail:sent_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/sent.html', params)
 
 
@@ -447,9 +470,10 @@ def drafts_list(request, page_index='1'):
     if not request.user.email_user.first().have_drafts():
         return redirect(urlresolvers.reverse('mail:inbox'))
     page_index = int(page_index)
-    personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
-        message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
-        .order_by('-message__created_at')
+    search = ''
+    if 'search_request' in request.GET:
+        search = request.GET['search_request']
+    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_DRAFT, search)
     mail_list = []
     for mail in personal_mail_list:
         mail_list.append(mail.message)
@@ -462,6 +486,7 @@ def drafts_list(request, page_index='1'):
     params['tab_links'] = _get_links_of_pages_to_show('mail:drafts_page', page_index, len(mail_list))
     params['prev_link'] = _get_prev_link('mail:drafts_page', page_index)
     params['next_link'] = _get_next_link('mail:drafts_page', page_index, len(mail_list))
+    params['search'] = search
     return render(request, 'mail/drafts.html', params)
 
 

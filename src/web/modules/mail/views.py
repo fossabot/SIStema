@@ -655,11 +655,14 @@ def delete_email(request, message_id):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
     url = urlresolvers.reverse('mail:inbox')
+    email.remove()
     if email.message.is_draft():
-        url = urlresolvers.reverse('mail:drafts')
+        if request.user.email_user.first().have_drafts():
+            url = urlresolvers.reverse('mail:drafts')
+        else:
+            url = urlresolvers.reverse('mail:sent')
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
-    email.remove()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 

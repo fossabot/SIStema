@@ -21,7 +21,7 @@ from users.models import User
 from schools.models import Session
 from sistema.uploads import _ensure_directory_exists
 
-from PIL import Image, ImageDraw, ImageFont
+from . import previews
 
 
 class EmailUser(PolymorphicModel):
@@ -71,45 +71,6 @@ class ExternalEmailUser(EmailUser):
 
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
-
-
-class AbstractPreviewGenerator:
-    template = '__template_not_found__'
-
-    def __init__(self, attachment):
-        self.attachment = attachment
-
-    def generate(self, output_file):
-        raise NotImplementedError
-
-
-class ImagePreviewGenerator(AbstractPreviewGenerator):
-    template = 'image.html'
-
-    def generate(self, output_file):
-        size = (64, 64)
-        preview = Image.open(self.attachment.get_file_abspath())
-        preview.thumbnail(size)
-        preview.save(output_file, 'JPEG')
-
-
-class TextPreviewGenerator(AbstractPreviewGenerator):
-    template = 'text.html'
-
-    def generate(self, output_file):
-        text_file = open(self.attachment.get_file_abspath(), "r")
-        size = (64, 96)
-        image = Image.new('RGBA', size, (255, 255, 255))
-        font_path = os.path.join(settings.BASE_DIR, 'modules/mail/static/mail/fonts/Helvetica.dfont')
-        font = ImageFont.truetype(font_path, size=7)
-        draw = ImageDraw.Draw(image)
-        text = text_file.read(500)
-        split_text = text.split('\n')
-        for counter in range(min(12, len(split_text))):
-            line = split_text[counter] + '\n'
-            draw.text((7, 9 + counter * 7), line, fill=(100, 100, 100), font=font)
-        image.save(output_file, 'JPEG')
-
 
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
@@ -164,9 +125,9 @@ class Attachment(models.Model):
     @property
     def preview_generator(self):
         if self.content_type[:6] == 'image/':
-            return ImagePreviewGenerator(self)
+            return previews.ImagePreviewGenerator(self)
         if self.content_type[:5] == 'text/':
-            return TextPreviewGenerator(self)
+            return previews.TextPreviewGenerator(self)
         return None
 
     def __str__(self):

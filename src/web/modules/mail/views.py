@@ -147,7 +147,9 @@ def compose(request):
 @login_required
 def contacts(request):
     NUMBER_OF_RETURNING_RECORDS = 10
-    search_request = request.GET['search']
+    search_request = request.GET.get('search', None)
+    if search_request is None:
+        return HttpResponseBadRequest('Bad request - Param "search" not found')
     try:
         email_user = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:

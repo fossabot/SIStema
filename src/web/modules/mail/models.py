@@ -244,6 +244,10 @@ class PersonalEmailMessage(models.Model):
     @classmethod
     def delete_emails_by_ids(cls, ids, user):
         for email in cls.objects.filter(message__id__in=ids, user=user):
+            for attachment in email.message.attachments.all():
+                path = attachment.get_file_abspath()
+                os.remove(path)
+                attachment.delete()
             email.remove()
 
     @classmethod

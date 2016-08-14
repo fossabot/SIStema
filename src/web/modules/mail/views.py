@@ -2,7 +2,6 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
-import re
 import zipfile
 import threading
 
@@ -29,15 +28,13 @@ from sistema.helpers import respond_as_attachment
 from django.conf import settings
 from sistema.uploads import save_file
 
-RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,; ] *')
-
 
 def _parse_recipients(string_with_recipients):
     """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
     If there is external user which hasn't record in DB, than
     create new ExternalEmailUser for him."""
     recipients = []
-    for recipient in re.split(RECIPIENTS_LIST_SEPARATOR, string_with_recipients):
+    for recipient in string_with_recipients.split(', '):
         if recipient == '':
             continue
         try:
@@ -439,8 +436,6 @@ def sent(request, page_index='1'):
 
 @login_required
 def drafts_list(request, page_index='1'):
-    if not request.user.email_user.first().have_drafts():
-        return redirect(urlresolvers.reverse('mail:inbox'))
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
         message__status=models.EmailMessage.STATUS_DRAFT).filter(message__sender__sisemailuser__user=request.user) \
@@ -662,14 +657,15 @@ def delete_email(request, message_id):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
     url = urlresolvers.reverse('mail:inbox')
-    email.remove()
     if email.message.is_draft():
-        if request.user.email_user.first().have_drafts():
-            url = urlresolvers.reverse('mail:drafts')
-        else:
-            url = urlresolvers.reverse('mail:inbox')
+        url = urlresolvers.reverse('mail:drafts')
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
+    for attachment in email.message.attachments.all():
+        path = attachment.get_file_abspath()
+        os.remove(path)
+        attachment.delete()
+    email.remove()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 

@@ -424,6 +424,7 @@ def sent(request, page_index='1'):
     return render(request, 'mail/sent.html', params)
 
 
+@login_required
 def drafts_list(request, page_index='1'):
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(

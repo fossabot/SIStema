@@ -148,7 +148,7 @@ def compose(request):
 
 
 @login_required
-def contacts(request):
+def contacts_search(request):
     NUMBER_OF_RETURNING_RECORDS = 10
     search_request = request.GET['search']
     try:

@@ -16,7 +16,7 @@ class ComposeForm(forms.Form):
                                      'class': 'form-control mb10 do_hints',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
-                                     'data-submit-url': urlresolvers.reverse_lazy('mail:contacts')
+                                     'data-submit-url': urlresolvers.reverse_lazy('mail:contacts_search')
                                  }
                                  ))
     cc_recipients = forms.CharField(max_length=MAXIMUM_LENGTH_OF_RECIPIENTS,
@@ -27,7 +27,7 @@ class ComposeForm(forms.Form):
                                         'class': 'form-control mb10 do_hints',
                                         'rows': '10',
                                         'placeholder': 'Копия: Начните вводить почту',
-                                        'data-submit-url': urlresolvers.reverse_lazy('mail:contacts'),
+                                        'data-submit-url': urlresolvers.reverse_lazy('mail:contacts_search'),
                                     }
                                     ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,

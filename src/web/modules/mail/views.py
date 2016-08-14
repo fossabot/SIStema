@@ -839,6 +839,7 @@ def download_all(request, message_id):
     for attachment in attachments:
         path = attachment.get_file_abspath()
         archive.write(path, attachment.original_file_name)
+    archive.close()
 
     semaphore.release()
     return respond_as_attachment(request, archive_path, 'attachments.zip')

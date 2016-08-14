@@ -172,7 +172,7 @@ def find_attachments(options):
         attachments_path = convert_to_list(options['attachments_path'])
 
         for attachment_path in attachments_path:
-            attachment = create_attachment_to_sistema(attachment_path)
+            attachment = create_attachment_to_sis_dir(attachment_path)
             attachments.append(attachment)
 
     if options['count_attachments'] is not None:
@@ -180,16 +180,16 @@ def find_attachments(options):
         test_attachments_dir = os.path.join(os.path.join(os.path.join(project_mail_dir, 'management'), 'commands'), 'test_attachments')
         test_attachments_list = os.listdir(test_attachments_dir)
 
-        for attachment_index in range(sample(test_attachments_list, options['count_attachments'])):
-            attachment = create_attachment_to_sistema(os.path.join(test_attachments_dir, test_attachments_list[attachment_index]))
+        for attachment_index in sample(test_attachments_list, options['count_attachments']):
+            attachment = create_attachment_to_sis_dir(os.path.join(test_attachments_dir, attachment_index))
             attachments.append(attachment)
 
     return attachments
 
 
-def create_attachment_to_sistema(attachment_path):
+def create_attachment_to_sis_dir(attachment_path):
     """Функция копирует файл с компьютера по пути attachment_path
-       и сохраняет его в системную папку settings.SISTEMA_MAIL_ATTACHMENT_DIR.
+       и сохраняет его в системную папку sis_dir=settings.SISTEMA_MAIL_ATTACHMENT_DIR.
        Функция переименовывает файл, сохраняя original_file_name в модели Attachment."""
     attachment_name = helpers.generate_random_name() + os.path.splitext(attachment_path)[1]
     new_attachment_path = os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name)

@@ -683,9 +683,22 @@ def save_changes(request, message_id):
 
     SUCCESS_LABEL = 'is_successful'
     if is_raw_draft:
+        try:
+            email = models.PersonalEmailMessage.objects.get(user=request.user,
+                                                            message__id=message_id)
+        except models.PersonalEmailMessage.DoesNotExist:
+            pass
+        else:
+            email.remove()
         return JsonResponse({SUCCESS_LABEL: True})
 
     email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_DRAFT)
+
+    personal_email = models.PersonalEmailMessage.objects.get(message=email, user=request.user)
+    if personal_email.is_removed:
+        with transaction.atomic():
+            personal_email.is_removed = False
+            personal_email.save()
 
     if email is None:
         return JsonResponse({SUCCESS_LABEL: False})

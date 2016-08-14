@@ -28,10 +28,10 @@
                     {% for item in group.items.all %}
                         {% include 'settings/_settings_item.html' with item=item %}
                     {% endfor %}
-                    <hr>
+                    <hr/>
                 </div>
             {% endfor %}
-            <br>
+            <br/>
         {% endif %}
         {% if apps|get_item:app|get_item:'non_groups' %}
             {% for item in apps|get_item:app|get_item:'non_groups' %}

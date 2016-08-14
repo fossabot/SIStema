@@ -661,11 +661,11 @@ def delete_email(request, message_id):
         url = urlresolvers.reverse('mail:drafts')
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
-    email.remove()
-    """Если мы не удаляем письмо из реальной системы, то почему бы и не удалять и аттачменты.
-    for attachment in email.attachments.all():
+    for attachment in email.message.attachments.all():
         path = attachment.get_file_abspath()
-        os.remove(path)"""
+        os.remove(path)
+        attachment.delete()
+    email.remove()
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 

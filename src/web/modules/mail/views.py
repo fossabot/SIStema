@@ -776,7 +776,7 @@ def _write(request, new_form):
         if form.is_valid():
             data = form.cleaned_data
 
-            uploaded_files = data['attachments']
+            uploaded_files = request.FILES.getlist('attachments')
             attachments = []
             if uploaded_files is not None:
                 for file in uploaded_files:

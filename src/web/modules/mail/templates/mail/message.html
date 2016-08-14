@@ -18,7 +18,8 @@
                     <div class="panel-body p25 pt10">
                         <div class="section mb25 mtn ptn" id="subject">
                             <h3>
-                                <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left pr20 ib" id="back"></span></a>
+                                <a href="{{ link_back }}"><span class="glyphicon glyphicon-arrow-left pull-left pr20 ib"
+                                                                id="back"></span></a>
                                 {{ email.subject }}
                             </h3>
                         </div>
@@ -47,8 +48,12 @@
                             {{ email.html_text|safe|linebreaks }}
                         </div>
                         <div class="section mt15 mbn">
+                            {% if email.attachments.all %}
+                                <a class="btn" href="download_all/">Скачать все</a>
+                            {% endif %}
+
                             {% for attachment in email.attachments.all %}
-                                {% include 'mail/_message_attachment.html' with attachment=attachment%}
+                                {% include 'mail/_message_attachment.html' with attachment=attachment %}
                             {% endfor %}
                         </div>
                         <div class="text-left mt25">
@@ -76,7 +81,8 @@
                                         <form method="post" action="{% url 'mail:delete' email.id %}">
                                             {% csrf_token %}
                                             {% if allow_replying %}
-                                                <input type="hidden" name="link_back" value="{{ request.path }}">                                            {% endif %}
+                                                <input type="hidden" name="link_back"
+                                                       value="{{ request.path }}">                                            {% endif %}
                                             <button type="button" class="btn btn-default" data-dismiss="modal">
                                                 Отмена
                                             </button>

@@ -2,6 +2,8 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
+import zipfile
+import threading
 
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers, validators, exceptions
@@ -9,6 +11,7 @@ from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http.response import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -16,6 +19,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django import forms
 from django.contrib import messages
+from relativefilepathfield.fields import RelativeFilePathField
 
 from settings import api
 from modules.mail.models import get_user_by_hash
@@ -188,10 +192,10 @@ def _delete_contact(owner: models.SisEmailUser, contact_form):
         if item.startswith('contact_id_') and contact_form[item] == 'on':
             id_ = int(item[11:])
             models.ContactRecord.objects.filter(id=id_).delete()
-    # return models.ContactRecord.objects.filter(owner=owner).filter(
-    #     Q(person__sisemailuser__user__email=contact_form['email']) |
-    #     Q(person__externalemailuser__email=contact_form['email'])
-    # ).delete()
+            # return models.ContactRecord.objects.filter(owner=owner).filter(
+            #     Q(person__sisemailuser__user__email=contact_form['email']) |
+            #     Q(person__externalemailuser__email=contact_form['email'])
+            # ).delete()
 
 
 @login_required
@@ -741,8 +745,6 @@ def write(request):
             with transaction.atomic():
                 email.save()
 
-             
-
             email.recipients.clear()
             for recipient in recipients:
                 email.recipients.add(recipient)
@@ -791,6 +793,7 @@ def preview(request, attachment_id):
 @require_POST
 @login_required
 def delete_all(request):
+    print(request)
     id_list = []
     for field in request.POST:
         if 'email_id' in field:
@@ -804,3 +807,28 @@ def delete_all(request):
     models.PersonalEmailMessage.delete_emails_by_ids(id_list, request.user)
     messages.success(request, 'Письма успешно удалены.')
     return redirect(request.POST['next'])
+
+
+@login_required
+@require_POST
+def download_all(request, message_id):
+    email_message = get_object_or_404(models.EmailMessage, id=message_id)
+
+    attachments = list(email_message.attachments.all())
+
+    for attachment in attachments:
+        if not can_user_download_attachment(request.user, attachment):
+            return HttpResponseForbidden()
+
+    semaphore = threading.BoundedSemaphore()
+    semaphore.acquire()
+
+    archive_path = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, 'attachments.zip')
+    print(archive_path)
+    archive = zipfile.ZipFile(archive_path, mode='w')
+    for attachment in attachments:
+        path = attachment.get_file_abspath()
+        archive.write(path, attachment.original_file_name)
+
+    semaphore.release()
+    return respond_as_attachment(request, archive_path, 'attachments.zip')

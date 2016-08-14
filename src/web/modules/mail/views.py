@@ -2,6 +2,7 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
+import re
 import zipfile
 import threading
 
@@ -28,13 +29,15 @@ from sistema.helpers import respond_as_attachment
 from django.conf import settings
 from sistema.uploads import save_file
 
+RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,; ] *')
+
 
 def _parse_recipients(string_with_recipients):
     """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
     If there is external user which hasn't record in DB, than
     create new ExternalEmailUser for him."""
     recipients = []
-    for recipient in string_with_recipients.split(', '):
+    for recipient in re.split(RECIPIENTS_LIST_SEPARATOR, string_with_recipients):
         if recipient == '':
             continue
         try:

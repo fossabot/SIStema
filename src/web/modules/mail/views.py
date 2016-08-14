@@ -660,6 +660,10 @@ def delete_email(request, message_id):
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
     email.remove()
+    """Если мы не удаляем письмо из реальной системы, то почему бы и не удалять и аттачменты.
+    for attachment in email.attachments.all():
+        path = attachment.get_file_abspath()
+        os.remove(path)"""
     messages.success(request, 'Письмо успешно удалено')
     return redirect(url)
 

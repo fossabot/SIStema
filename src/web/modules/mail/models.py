@@ -7,11 +7,14 @@ from django.core.files import File
 from django.db.models import QuerySet
 from trans import trans
 import os
+import bleach
 
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
 from django.core.mail import EmailMessage as DjangoEmailMessage
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -21,7 +24,7 @@ from users.models import User
 from schools.models import Session
 from sistema.uploads import _ensure_directory_exists
 
-from PIL import Image, ImageDraw, ImageFont
+from . import previews
 
 
 class EmailUser(PolymorphicModel):
@@ -71,45 +74,6 @@ class ExternalEmailUser(EmailUser):
 
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
-
-
-class AbstractPreviewGenerator:
-    template = '__template_not_found__'
-
-    def __init__(self, attachment):
-        self.attachment = attachment
-
-    def generate(self, output_file):
-        raise NotImplementedError
-
-
-class ImagePreviewGenerator(AbstractPreviewGenerator):
-    template = 'image.html'
-
-    def generate(self, output_file):
-        size = (64, 64)
-        preview = Image.open(self.attachment.get_file_abspath())
-        preview.thumbnail(size)
-        preview.save(output_file, 'JPEG')
-
-
-class TextPreviewGenerator(AbstractPreviewGenerator):
-    template = 'text.html'
-
-    def generate(self, output_file):
-        text_file = open(self.attachment.get_file_abspath(), "r")
-        size = (64, 96)
-        image = Image.new('RGBA', size, (255, 255, 255))
-        font_path = os.path.join(settings.BASE_DIR, 'modules/mail/static/mail/fonts/Helvetica.dfont')
-        font = ImageFont.truetype(font_path, size=7)
-        draw = ImageDraw.Draw(image)
-        text = text_file.read(500)
-        split_text = text.split('\n')
-        for counter in range(min(12, len(split_text))):
-            line = split_text[counter] + '\n'
-            draw.text((7, 9 + counter * 7), line, fill=(100, 100, 100), font=font)
-        image.save(output_file, 'JPEG')
-
 
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
@@ -164,9 +128,9 @@ class Attachment(models.Model):
     @property
     def preview_generator(self):
         if self.content_type[:6] == 'image/':
-            return ImagePreviewGenerator(self)
+            return previews.ImagePreviewGenerator(self)
         if self.content_type[:5] == 'text/':
-            return TextPreviewGenerator(self)
+            return previews.TextPreviewGenerator(self)
         return None
 
     def __str__(self):
@@ -223,6 +187,10 @@ class EmailMessage(models.Model):
     def is_draft(self):
         return self.status == self.STATUS_DRAFT
 
+    def is_email_removed(self):
+        personal_email_message = PersonalEmailMessage.objects.filter(message=self).first()
+        return personal_email_message.is_removed
+
     def send(self):
         if self.delivered:
             return
@@ -278,8 +246,9 @@ class PersonalEmailMessage(models.Model):
 
     @classmethod
     def make_for(cls, message, user):
-        personal = PersonalEmailMessage(user=user, message=message)
-        personal.save()
+        if not PersonalEmailMessage.objects.all().filter(user=user, message=message):
+            personal = PersonalEmailMessage(user=user, message=message)
+            personal.save()
 
 
 class ContactRecord(models.Model):
@@ -293,6 +262,10 @@ class ContactRecord(models.Model):
     @classmethod
     def get_users_contacts(cls, user: SisEmailUser):
         return cls.objects.filter(owner=user)
+
+    @classmethod
+    def is_contact_belong_to_user(cls, id_contact, user: SisEmailUser):
+        return cls.objects.filter(id=id_contact, owner=user).exists()
 
     def __str__(self):
         return str(self.person)
@@ -381,3 +354,10 @@ class PersonalEmail(models.Model):
         email = cls(email_name=email_name, hash=unique_hash, owner=owner)
         email.save()
         return email
+
+
+@receiver(pre_save, sender=EmailMessage)
+def clean_html_text(instance, **kwargs):
+    """Delete dangerous tags from email message text"""
+    if instance.html_text:
+        instance.html_text = bleach.clean(instance.html_text)

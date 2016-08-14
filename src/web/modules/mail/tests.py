@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from . import views
+from .models import EmailMessage, ExternalEmailUser
 
 
 class EmailCitationTests(TestCase):
@@ -62,3 +63,99 @@ class EmailCitationTests(TestCase):
         text = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaa'
         expected_text = '> aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n> aaaaaaaaaa'
         self.assertEqual(views.cite_text(text), expected_text)
+
+
+class PageNumberTests(TestCase):
+
+    def test_simple_correct_usage(self):
+        """
+        Testing a correct page number
+        """
+        page_input = "2"
+        expected_result = (False, 2)  # do_redirect=False, page_index=2
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_too_big(self):
+        """
+        If the page index is too big you should be redirected to the last page
+        """
+        page_input = "3"
+        expected_result = (True, 2)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_too_small(self):
+        """
+        If the page index is too small you should be redirected to the first page
+        """
+        page_input = "-1"
+        expected_result = (True, 1)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_float(self):
+        """
+        If the page index is a float you should be redirected to the first page
+        """
+        page_input = "2.5"
+        expected_result = (True, 1)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_non_decimal(self):
+        """
+        If the page index is not a decimal or integer you should be redirected to the first page
+        """
+        page_input = "abacaba"
+        expected_result = (True, 1)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_float_inf(self):
+        """
+        If the page index is "inf" or "-inf" etc. you should be redirected to the first page
+        """
+        page_input = "inf"
+        expected_result = (True, 1)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+    def test_nan_string(self):
+        """
+        If the page index is "nan" you should be redirected to the first page
+        """
+        page_input = "nan"
+        expected_result = (True, 1)
+        self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+
+class EmailMessageHtmlCleaningTests(TestCase):
+    def setUp(self):
+        sender = ExternalEmailUser(email='test@test.ru', display_name='John Doe')
+        sender.save()
+        self.message = EmailMessage(sender=sender)
+
+    def test_escape_javascript_block(self):
+        self.message.html_text = "<script>alert('XSS');</script>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;script&gt;alert(\'XSS\');&lt;/script&gt;')
+
+    def test_not_escape_text_format(self):
+        self.message.html_text = "<b>Hi!</b><i>Lol</i>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '<b>Hi!</b><i>Lol</i>')
+
+    def test_escape_inline_xss(self):
+        self.message.html_text = "<IMG SRC=\"javascript:alert(\'XSS\');\">"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img src="javascript:alert(\'XSS\');"&gt;')
+
+    def test_case_sensitive_xss(self):
+        self.message.html_text = "<IMG SRC=JaVaScRiPt:alert('XSS')>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img src="JaVaScRiPt:alert(\'XSS\')"&gt;')
+
+    def test_escape_onclick(self):
+        self.message.html_text = "<img onclick>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img onclick=""&gt;')
+
+    def test_escape_nesting_script(self):
+        self.message.html_text = "<<script>script> alert(\"XSS.\"); </</script>script>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;&lt;script&gt;script&gt; alert("XSS."); script&gt;')

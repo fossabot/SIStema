@@ -2,6 +2,8 @@ from string import whitespace
 import json
 from datetime import datetime
 import os
+import zipfile
+import threading
 
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers, validators, exceptions
@@ -9,6 +11,7 @@ from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
+from django.http.response import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.views.decorators.http import require_POST
@@ -16,6 +19,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django import forms
 from django.contrib import messages
+from relativefilepathfield.fields import RelativeFilePathField
 
 from settings import api
 from modules.mail.models import get_user_by_hash
@@ -25,8 +29,10 @@ from django.conf import settings
 from sistema.uploads import save_file
 
 
-# Parse recipients from string like: a@mail.ru, b@mail.ru, ...
-def _get_recipients(string_with_recipients):
+def _parse_recipients(string_with_recipients):
+    """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
+    If there is external user which hasn't record in DB, than
+    create new ExternalEmailUser for him."""
     recipients = []
     for recipient in string_with_recipients.split(', '):
         if recipient == '':
@@ -39,11 +45,7 @@ def _get_recipients(string_with_recipients):
             ).first()
         except exceptions.ValidationError:
             # if recipient is not real email, it is probably name of a SIS user
-            query = None
-            for user in models.SisEmailUser.objects.all():
-                if user.display_name == recipient:
-                    query = user
-                    break
+            query = models.SisEmailUser.find(display_name=recipient).first()
 
         if query is not None:
             recipients.append(query)
@@ -94,11 +96,11 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
 
     email.recipients.clear()
     email.cc_recipients.clear()
-    for recipient in _get_recipients(email_form['recipients']):
+    for recipient in _parse_recipients(email_form['recipients']):
         email.recipients.add(recipient)
         if email_status == models.EmailMessage.STATUS_SENT:
             email.sender.add_person_to_contacts(recipient)
-    for cc_recipient in _get_recipients(email_form['cc_recipients']):
+    for cc_recipient in _parse_recipients(email_form['cc_recipients']):
         email.cc_recipients.add(cc_recipient)
     with transaction.atomic():
         for attachment in attachments:
@@ -106,8 +108,6 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
             email.attachments.add(attachment)
         email.save()
         models.PersonalEmailMessage.make_for(email, request.user)
-
-    email.send()
 
     return email
 
@@ -184,10 +184,16 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
 
 
 def _delete_contact(owner: models.SisEmailUser, contact_form):
+    # Префикс имени чекбокса в форме удаления контактов
+    prefix = 'contact_id_'
     for item in contact_form:
-        if item.startswith('contact_id_') and contact_form[item] == 'on':
-            id_ = int(item[11:])
-            models.ContactRecord.objects.filter(id=id_).delete()
+        if item.startswith(prefix) and contact_form[item] == 'on':
+            contact_id = int(item.replace(prefix, ''))
+            if models.ContactRecord.is_contact_belong_to_user(contact_id, owner):
+                models.ContactRecord.objects.filter(id=contact_id).delete()
+            else:
+                return False
+    return True
     # return models.ContactRecord.objects.filter(owner=owner).filter(
     #     Q(person__sisemailuser__user__email=contact_form['email']) |
     #     Q(person__externalemailuser__email=contact_form['email'])
@@ -203,9 +209,11 @@ def contact_list(request):
     elif request.method == 'POST':
         if request.POST.get('type', False):
             form = forms.ContactEditorForm()
-            _delete_contact(request.user.email_user.first(), request.POST)
-            contacts = models.ContactRecord.get_users_contacts(email_user)
-            messages.success(request, 'Контакты успешно удалены')
+            if _delete_contact(request.user.email_user.first(), request.POST):
+                contacts = models.ContactRecord.get_users_contacts(email_user)
+                messages.success(request, 'Контакты удалены')
+            else:
+                return HttpResponseForbidden('Вы не можете удалить этот контакт.')
         else:
             form = forms.ContactEditorForm(request.POST)
 
@@ -358,7 +366,7 @@ def _get_standard_mail_list_params(mail_list, page_index, request):
     params['show_previous'] = (page_index != 1)
     params['show_next'] = (page_index != _get_max_page_num(len(mail_list)))
     params['start_page'] = _get_start_and_end_page(page_index, _get_max_page_num(len(mail_list)))[0]
-    params['user'] = request.user.email_user.first()
+    params['email_user'] = request.user.email_user.first()
     return params
 
 
@@ -379,6 +387,8 @@ def _read_page_index(page_index, mail_count):
         page_index = int(page_index)
         if page_index > _get_max_page_num(mail_count):
             return True, _get_max_page_num(mail_count)
+        if page_index < 1:
+            return True, 1
         else:
             return False, page_index
     except ValueError:
@@ -424,6 +434,7 @@ def sent(request, page_index='1'):
     return render(request, 'mail/sent.html', params)
 
 
+@login_required
 def drafts_list(request, page_index='1'):
     page_index = int(page_index)
     personal_mail_list = models.PersonalEmailMessage.get_not_removed(user=request.user).filter(
@@ -448,8 +459,8 @@ def drafts_list(request, page_index='1'):
 def message(request, message_id):
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
-    if not can_user_view_message(request.user, email):
-        return HttpResponseForbidden()
+    if not can_user_view_message(request.user, email) or email.is_email_removed():
+        return HttpResponseForbidden('Вы не можете просматривать это письмо.')
     link_back = urlresolvers.reverse('mail:inbox')
     if email.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')
@@ -571,6 +582,16 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
+
+    def _sending_error():
+        messages.info(request, 'Не удалось отправить письмо.')
+        return render(request, 'mail/compose.html', {
+            'form': form,
+            'message_id': message_id,
+            'link_back': link_back,
+            'draft': draft,
+        })
+
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
     if not is_sender_of_email(request.user, email):
@@ -610,23 +631,19 @@ def edit(request, message_id):
             message_data = form.cleaned_data
             uploaded_files = request.FILES.getlist('attachments')
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
-            models.PersonalEmailMessage.make_for(email, request.user)
 
             if email is not None:
+                if not email.send():
+                    return
+                models.PersonalEmailMessage.make_for(email, request.user)
                 messages.success(request, 'Письмо успешно отправлено.')
                 return redirect(urlresolvers.reverse('mail:sent'))
             else:
                 # Error when sending
                 # TODO: readable response
-                pass
+                return _sending_error()
         else:
-            messages.info(request, 'Не удалось отправить письмо.')
-            return render(request, 'mail/compose.html', {
-                'form': form,
-                'message_id': message_id,
-                'link_back': link_back,
-                'draft': draft,
-            })
+            return _sending_error()
 
     else:
         return HttpResponseBadRequest('Method is not supported')
@@ -671,12 +688,16 @@ def save_changes(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(attachment.emailmessage_set.filter(
+    emails = attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |
          Q(cc_recipients__sisemailuser__user=user))
-    ))
+    )
+    for email in emails:
+        if email.personalemailmessage_set.filter(is_removed=False):
+            return True
+    return False
 
 
 @login_required
@@ -726,7 +747,7 @@ def write(request):
 
             email_subject = data['email_subject']
             email_message = data['email_message']
-            recipients = _get_recipients(data['recipients'])
+            recipients = _parse_recipients(data['recipients'])
             author = models.ExternalEmailUser.objects.filter(display_name=data['author_name'],
                                                              email=data['author_email']).first()
             if author is None:
@@ -804,3 +825,27 @@ def delete_all(request):
     models.PersonalEmailMessage.delete_emails_by_ids(id_list, request.user)
     messages.success(request, 'Письма успешно удалены.')
     return redirect(request.POST['next'])
+
+
+@login_required
+def download_all(request, message_id):
+    email_message = get_object_or_404(models.EmailMessage, id=message_id)
+
+    attachments = list(email_message.attachments.all())
+
+    for attachment in attachments:
+        if not can_user_download_attachment(request.user, attachment):
+            return HttpResponseForbidden()
+
+    semaphore = threading.BoundedSemaphore()
+    semaphore.acquire()
+
+    archive_path = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, 'attachments.zip')
+    archive = zipfile.ZipFile(archive_path, mode='w')
+    for attachment in attachments:
+        path = attachment.get_file_abspath()
+        archive.write(path, attachment.original_file_name)
+    archive.close()
+
+    semaphore.release()
+    return respond_as_attachment(request, archive_path, 'msg' + str(message_id) + '-attachments.zip')

@@ -686,12 +686,16 @@ def save_changes(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(attachment.emailmessage_set.filter(
+    emails = attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |
          Q(cc_recipients__sisemailuser__user=user))
-    ))
+    )
+    for email in emails:
+        if email.personalemailmessage_set.filter(is_removed=False):
+            return True
+    return False
 
 
 @login_required

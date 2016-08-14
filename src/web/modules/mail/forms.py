@@ -70,14 +70,14 @@ class WriteForm(ComposeForm):
         self.fields = fields
 
     author_email = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
-                                    required=True,
-                                    label='',
-                                    label_suffix='',
-                                    widget=forms.TextInput(attrs={
-                                        'class': 'form-control mb10',
-                                        'rows': '10',
-                                        'placeholder': 'Введите свой e-mail адрес',
-                                    }))
+                                   required=True,
+                                   label='',
+                                   label_suffix='',
+                                   widget=forms.TextInput(attrs={
+                                       'class': 'form-control mb10',
+                                       'rows': '10',
+                                       'placeholder': 'Введите свой e-mail адрес',
+                                   }))
     author_name = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
                                   required=True,
                                   label='',
@@ -107,14 +107,14 @@ class ContactEditorForm(forms.Form):
                                    label='Имя',
                                    required=False,
                                    widget=forms.TextInput(attrs={
-                                       'class': 'form-control mb10',
+                                       'class': 'form-control',
                                        'placeholder': 'Введите имя',
                                    }),
-                                    )
+                                   )
 
     email = forms.EmailField(label='Email',
                              widget=forms.EmailInput(attrs={
-                                 'class': 'form-control mb10',
+                                 'class': 'form-control',
                                  'placeholder': 'Введите email',
                              }),
                              )

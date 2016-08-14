@@ -633,6 +633,7 @@ def edit(request, message_id):
     if email.status not in (models.EmailMessage.STATUS_DRAFT, models.EmailMessage.STATUS_RAW_DRAFT):
         # TODO: Make readable error message
         return HttpResponseForbidden()
+
     link_back = urlresolvers.reverse('mail:drafts')
 
     draft = email.is_draft()
@@ -649,8 +650,10 @@ def edit(request, message_id):
             'email_subject': email.subject,
             'email_message': email.html_text,
         })
+
         if not email.is_draft():
             link_back = urlresolvers.reverse('mail:inbox')
+
         return render(request, 'mail/compose.html', {
             'form': form,
             'message_id': message_id,
@@ -666,6 +669,18 @@ def edit(request, message_id):
             email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_SENT, uploaded_files)
 
             if email is not None:
+                for recipient in email.recipients.all():
+                    try:
+                        validators.validate_email(recipient.email)
+                    except exceptions.ValidationError:
+                        return _sending_error()
+
+                for cc_recipient in email.cc_recipients.all():
+                    try:
+                        validators.validate_email(cc_recipient.email)
+                    except exceptions.ValidationError:
+                        return _sending_error()
+
                 if not email.send():
                     return
                 models.PersonalEmailMessage.make_for(email, request.user)
@@ -686,20 +701,27 @@ def edit(request, message_id):
 @require_POST
 def delete_email(request, message_id):
     email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)
+
     if not can_user_view_message(request.user, email.message):
         messages.info(request, 'Не удалось удалить письмо')
         return redirect(urlresolvers.reverse('mail:inbox'))
+
     url = urlresolvers.reverse('mail:inbox')
+
     if email.message.is_draft():
         url = urlresolvers.reverse('mail:drafts')
+
     if email.message.is_sent():
         url = urlresolvers.reverse('mail:sent')
+
     for attachment in email.message.attachments.all():
         path = attachment.get_file_abspath()
         os.remove(path)
         attachment.delete()
     email.remove()
+
     messages.success(request, 'Письмо успешно удалено')
+
     return redirect(url)
 
 

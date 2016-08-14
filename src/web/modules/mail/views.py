@@ -545,7 +545,10 @@ def reply(request, message_id):
     email_subject = 'Re: %s' % email.subject
 
     recipients = list()
-    recipients.append(email.sender.email)
+    if email.reply_to is None:
+        recipients.append(email.sender.email)
+    else:
+        recipients.append(email.reply_to.email)
     cc_recipients = list()
 
     for recipient in email.recipients.all():

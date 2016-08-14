@@ -45,7 +45,12 @@ def _parse_recipients(string_with_recipients):
             ).first()
         except exceptions.ValidationError:
             # if recipient is not real email, it is probably name of a SIS user
-            query = models.SisEmailUser.find(display_name=recipient).first()
+            # do not try to create query from this loop
+            query = None
+            for user in models.SisEmailUser.objects.all():
+                if user.display_name == recipient:
+                    query = user
+                    break
 
         if query is not None:
             recipients.append(query)
@@ -145,7 +150,7 @@ def compose(request):
 
 
 @login_required
-def contacts(request):
+def contacts_search(request):
     NUMBER_OF_RETURNING_RECORDS = 10
     search_request = request.GET['search']
     try:
@@ -547,7 +552,10 @@ def reply(request, message_id):
     email_subject = 'Re: %s' % email.subject
 
     recipients = list()
-    recipients.append(email.sender.email)
+    if email.reply_to is None:
+        recipients.append(email.sender.email)
+    else:
+        recipients.append(email.reply_to.email)
     cc_recipients = list()
 
     for recipient in email.recipients.all():
@@ -582,7 +590,6 @@ def reply(request, message_id):
 
 @login_required
 def edit(request, message_id):
-
     def _sending_error():
         messages.info(request, 'Не удалось отправить письмо.')
         return render(request, 'mail/compose.html', {
@@ -682,9 +689,22 @@ def save_changes(request, message_id):
 
     SUCCESS_LABEL = 'is_successful'
     if is_raw_draft:
+        try:
+            email = models.PersonalEmailMessage.objects.get(user=request.user,
+                                                            message__id=message_id)
+        except models.PersonalEmailMessage.DoesNotExist:
+            pass
+        else:
+            email.remove()
         return JsonResponse({SUCCESS_LABEL: True})
 
     email = _save_email(request, message_data, message_id, models.EmailMessage.STATUS_DRAFT)
+
+    personal_email = models.PersonalEmailMessage.objects.get(message=email, user=request.user)
+    if personal_email.is_removed:
+        with transaction.atomic():
+            personal_email.is_removed = False
+            personal_email.save()
 
     if email is None:
         return JsonResponse({SUCCESS_LABEL: False})
@@ -716,15 +736,7 @@ def download_attachment(request, attachment_id):
     )
 
 
-def write(request):
-    def new_form():
-        return forms.WriteForm(initial={
-            'email_subject': '',
-            'recipients': '',
-            'email_message': '',
-            'text': ''
-        })
-
+def _write(request, new_form):
     if request.method == 'GET':
         form = new_form()
         return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
@@ -766,8 +778,6 @@ def write(request):
             with transaction.atomic():
                 email.save()
 
-             
-
             email.recipients.clear()
             for recipient in recipients:
                 email.recipients.add(recipient)
@@ -788,17 +798,32 @@ def write(request):
         return HttpResponseBadRequest('Method is not supported')
 
 
+def write(request):
+    def new_form():
+        return forms.WriteForm(initial={
+            'email_subject': '',
+            'recipients': '',
+            'email_message': '',
+            'text': ''
+        })
+
+    return _write(request, new_form)
+
+
 def write_to(request, recipient_hash):
     recipient = get_user_by_hash(recipient_hash)
     if recipient is None:
         return HttpResponseNotFound()
-    form = forms.WriteForm(initial={
-        'email_subject': '',
-        'recipients': recipient.display_name,
-        'email_message': '',
-        'text': ''
-    })
-    return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
+
+    def new_form():
+        return forms.WriteForm(initial={
+            'email_subject': '',
+            'recipients': recipient.display_name,
+            'email_message': '',
+            'text': ''
+        })
+
+    return _write(request, new_form)
 
 
 @login_required

@@ -18,8 +18,8 @@ class MailConfig(AppConfig):
                     description='Size which each user has per one session. It\'s spent on sending e-mails.',
                     default_value=50 * 1024 * 1024),
         CharItem(short_name='mail_domain', display_name='Mail domain',
-                    description='', default_value='@sistema.lksh.ru'),
+                 description='', default_value='@sistema.lksh.ru'),
         BooleanItem(short_name='send_mails', display_name='Message send',
-                    description='Is messages sends to real world.',
+                    description='Are messages being sent to the outer world.',
                     default_value=False),
     ]

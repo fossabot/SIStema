@@ -3,9 +3,12 @@
     <button class="btn btn-default btn-xs ib m-left" data-toggle="collapse" aria-expanded="false"
             aria-controls="edit-block-{{ item.id }}" href="#edit-block-{{ item.id }}">Изменить
     </button>
+    {% if item.description %}
+        <p>{{ item.description }}</p>
+    {% endif %}
     <p class="lead" id="setting-{{ item.id }}">{{ item.value }}</p>
     <div class="collapse" id="edit-block-{{ item.id }}">
-        <form onsubmit="saveEdit({{ item.id }}); return false;" id="form-{{ item.id }}">
+        <form onsubmit="saveEdit({{ item.id }}); return false;" id="form-{{ item.id }}" method="post">
             {% csrf_token %}
             {{ item.form }}
             <input class="form-control btn btn-default" type="submit" value="Сохранить">

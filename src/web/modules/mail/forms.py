@@ -16,7 +16,7 @@ class ComposeForm(forms.Form):
                                      'class': 'form-control mb10 do_hints',
                                      'rows': '10',
                                      'placeholder': 'Начните вводить почту',
-                                     'data-submit-url': urlresolvers.reverse_lazy('mail:contacts')
+                                     'data-submit-url': urlresolvers.reverse_lazy('mail:contacts_search')
                                  }
                                  ))
     cc_recipients = forms.CharField(max_length=MAXIMUM_LENGTH_OF_RECIPIENTS,
@@ -27,7 +27,7 @@ class ComposeForm(forms.Form):
                                         'class': 'form-control mb10 do_hints',
                                         'rows': '10',
                                         'placeholder': 'Копия: Начните вводить почту',
-                                        'data-submit-url': urlresolvers.reverse_lazy('mail:contacts'),
+                                        'data-submit-url': urlresolvers.reverse_lazy('mail:contacts_search'),
                                     }
                                     ))
     email_subject = forms.CharField(max_length=MAXIMUM_SUBJECT_LENGTH,
@@ -70,14 +70,14 @@ class WriteForm(ComposeForm):
         self.fields = fields
 
     author_email = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
-                                    required=True,
-                                    label='',
-                                    label_suffix='',
-                                    widget=forms.TextInput(attrs={
-                                        'class': 'form-control mb10',
-                                        'rows': '10',
-                                        'placeholder': 'Введите свой e-mail адрес',
-                                    }))
+                                   required=True,
+                                   label='',
+                                   label_suffix='',
+                                   widget=forms.TextInput(attrs={
+                                       'class': 'form-control mb10',
+                                       'rows': '10',
+                                       'placeholder': 'Введите свой e-mail адрес',
+                                   }))
     author_name = forms.CharField(max_length=MAXIMUM_AUTHOR_LENGTH,
                                   required=True,
                                   label='',
@@ -107,14 +107,14 @@ class ContactEditorForm(forms.Form):
                                    label='Имя',
                                    required=False,
                                    widget=forms.TextInput(attrs={
-                                       'class': 'form-control mb10',
+                                       'class': 'form-control',
                                        'placeholder': 'Введите имя',
                                    }),
-                                    )
+                                   )
 
     email = forms.EmailField(label='Email',
                              widget=forms.EmailInput(attrs={
-                                 'class': 'form-control mb10',
+                                 'class': 'form-control',
                                  'placeholder': 'Введите email',
                              }),
                              )

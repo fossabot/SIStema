@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="panel-body p25 pt10">
-                            <div class="row">
+                        <div class="row">
                                 {% if contacts %}
                                     <div class="col-lg-7">
                                             <div class="checkbox-custom mr10">
@@ -83,11 +83,20 @@
                             {% endif %}
                             <div class="col-lg-5">
                                 <!-- Contact edition form -->
-                                <form class="centered-form" id="contact-editor" method="post">
+                                <h4 class="text-center mb15">Новый контакт</h4>
+                                <form class="form-horizontal centered-form" id="contact-editor" method="post">
                                     {% csrf_token %}
-                                    {{ form }}
-                                    <input class="btn btn-alert pull-right" type="submit" value="Добавить"
-                                           id="save_contact"/>
+                                    {% for field in form %}
+                                        <div class="form-group">
+                                            <label class="col-sm-2 control-label" for="{{ field.name }}">
+                                                {{ field.label }}</label>
+                                            <div class="col-sm-10">{{ field }}</div>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="text-center">
+                                        <input class="btn btn-alert" type="submit" value="Добавить"
+                                               id="save_contact"/>
+                                    </div>
                                 </form>
                             </div>
                         </div>

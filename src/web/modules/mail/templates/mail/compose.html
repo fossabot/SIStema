@@ -38,10 +38,21 @@
                         {% endif %}
                         {% csrf_token %}
                         {{ form }}
-                        <div class="text-right mt10">
-                            <button class="btn btn-alert" type="submit">Отправить</button>
+
+                        <div class="text-left mt10">
+                            <div class="pull-right">
+                                <button class="btn btn-alert" type="submit">Отправить</button>
+                            </div>
+                            {% if draft %}
+                            <div class="fs10 mt10 ib" id="delete" data-toggle="modal" data-target="#dialog">
+                                <span class="glyphicons glyphicons-bin"></span>
+                            </div>
+                            {% endif %}
                         </div>
                         </form>
+                        {% if draft %}
+                        {% include 'mail/_deletion_modal.html' %}
+                        {% endif %}
                     </div>
                 </div>
             </div>

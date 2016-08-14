@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from . import views
+from .models import EmailMessage, ExternalEmailUser
 
 
 class EmailCitationTests(TestCase):
@@ -121,3 +122,40 @@ class PageNumberTests(TestCase):
         page_input = "nan"
         expected_result = (True, 1)
         self.assertEqual(views._read_page_index(page_input, 2 * views.EMAILS_PER_PAGE), expected_result)
+
+
+class EmailMessageHtmlCleaningTests(TestCase):
+    def setUp(self):
+        sender = ExternalEmailUser(email='test@test.ru', display_name='John Doe')
+        sender.save()
+        self.message = EmailMessage(sender=sender)
+
+    def test_escape_javascript_block(self):
+        self.message.html_text = "<script>alert('XSS');</script>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;script&gt;alert(\'XSS\');&lt;/script&gt;')
+
+    def test_not_escape_text_format(self):
+        self.message.html_text = "<b>Hi!</b><i>Lol</i>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '<b>Hi!</b><i>Lol</i>')
+
+    def test_escape_inline_xss(self):
+        self.message.html_text = "<IMG SRC=\"javascript:alert(\'XSS\');\">"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img src="javascript:alert(\'XSS\');"&gt;')
+
+    def test_case_sensitive_xss(self):
+        self.message.html_text = "<IMG SRC=JaVaScRiPt:alert('XSS')>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img src="JaVaScRiPt:alert(\'XSS\')"&gt;')
+
+    def test_escape_onclick(self):
+        self.message.html_text = "<img onclick>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;img onclick=""&gt;')
+
+    def test_escape_nesting_script(self):
+        self.message.html_text = "<<script>script> alert(\"XSS.\"); </</script>script>"
+        self.message.save()
+        self.assertEqual(self.message.html_text, '&lt;&lt;script&gt;script&gt; alert("XSS."); script&gt;')

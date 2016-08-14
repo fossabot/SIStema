@@ -29,8 +29,10 @@ from django.conf import settings
 from sistema.uploads import save_file
 
 
-# Parse recipients from string like: a@mail.ru, b@mail.ru, ...
-def _get_recipients(string_with_recipients):
+def _parse_recipients(string_with_recipients):
+    """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
+    If there is external user which hasn't record in DB, than
+    create new ExternalEmailUser for him."""
     recipients = []
     for recipient in string_with_recipients.split(', '):
         if recipient == '':
@@ -94,11 +96,11 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
 
     email.recipients.clear()
     email.cc_recipients.clear()
-    for recipient in _get_recipients(email_form['recipients']):
+    for recipient in _parse_recipients(email_form['recipients']):
         email.recipients.add(recipient)
         if email_status == models.EmailMessage.STATUS_SENT:
             email.sender.add_person_to_contacts(recipient)
-    for cc_recipient in _get_recipients(email_form['cc_recipients']):
+    for cc_recipient in _parse_recipients(email_form['cc_recipients']):
         email.cc_recipients.add(cc_recipient)
     with transaction.atomic():
         for attachment in attachments:
@@ -689,12 +691,16 @@ def save_changes(request, message_id):
 
 
 def can_user_download_attachment(user, attachment):
-    return bool(attachment.emailmessage_set.filter(
+    emails = attachment.emailmessage_set.filter(
         Q(attachments=attachment) &
         (Q(sender__sisemailuser__user=user) |
          Q(recipients__sisemailuser__user=user) |
          Q(cc_recipients__sisemailuser__user=user))
-    ))
+    )
+    for email in emails:
+        if email.personalemailmessage_set.filter(is_removed=False):
+            return True
+    return False
 
 
 @login_required
@@ -744,7 +750,7 @@ def write(request):
 
             email_subject = data['email_subject']
             email_message = data['email_message']
-            recipients = _get_recipients(data['recipients'])
+            recipients = _parse_recipients(data['recipients'])
             author = models.ExternalEmailUser.objects.filter(display_name=data['author_name'],
                                                              email=data['author_email']).first()
             if author is None:

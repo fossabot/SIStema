@@ -42,14 +42,16 @@
                                                 <label for="{{ contact.id }}"></label>
                                             </div>
 
-                                            <div id="contact-id-{{ forloop.counter }}"
-                                                 class="ib mr15 ml10 mt15 contact-item">
-                                                <div class="contact_name ib">{{ contact.person.display_name }}</div>
-                                                {% if contacts.person.display_name %}
-                                                    <span>-</span>
-                                                {% endif %}
-                                                <div class="contact_email ib">{{ contact.person.email }}</div>
-                                            </div>
+                                            <label for="{{ contact.id }}">
+                                                <div id="contact-id-{{ forloop.counter }}"
+                                                     class="ib mr15 ml10 mt15 contact-item">
+                                                    <div class="contact_name ib">{{ contact.person.display_name }}</div>
+                                                    {% if contacts.person.display_name %}
+                                                        <span>-</span>
+                                                    {% endif %}
+                                                    <div class="contact_email ib">{{ contact.person.email }}</div>
+                                                </div>
+                                            </label>
 
                                         </div>
                                     {% endfor %}

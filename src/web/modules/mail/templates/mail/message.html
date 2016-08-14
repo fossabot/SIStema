@@ -59,35 +59,7 @@
                             <div class="fs10 mt10 pull-right" id="delete" data-toggle="modal" data-target="#dialog">
                                 <span class="glyphicons glyphicons-bin"></span></div>
                         </div>
-                        <div class="modal fade" id="dialog" tabindex="-1" role="dialog"
-                             aria-labelledby="myModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal"
-                                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h4 class="modal-title" id="myModalLabel">Вы уверены?</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        Вы действительно хотите удалить письмо?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <form method="post" action="{% url 'mail:delete' email.id %}">
-                                            {% csrf_token %}
-                                            {% if allow_replying %}
-                                                <input type="hidden" name="link_back" value="{{ request.path }}">                                            {% endif %}
-                                            <button type="button" class="btn btn-default" data-dismiss="modal">
-                                                Отмена
-                                            </button>
-                                            <button type="submit" class="btn btn-danger">
-                                                Удалить
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {% include 'mail/_deletion_modal.html' %}
                     </div>
                 </div>
             </div>

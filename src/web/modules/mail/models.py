@@ -6,14 +6,11 @@ from django.core.files import File
 from django.db.models import QuerySet
 from trans import trans
 import os
-import bleach
 
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
 from django.core.mail import EmailMessage as DjangoEmailMessage
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -360,19 +357,3 @@ class PersonalEmail(models.Model):
         email.save()
         return email
 
-
-@receiver(pre_save, sender=EmailMessage)
-def clean_html_text(instance, **kwargs):
-    """Delete dangerous tags from email message text"""
-    # Bleach is a whitelist-based HTML sanitizing library that escapes or strips markup and attributes.
-    # Bleach is intended for sanitizing text from untrusted sources.
-    # Whitelist could be found there:
-    # https://github.com/mozilla/bleach/blob/master/bleach/__init__.py
-    # There is a large discussion about sanitizing html in Python projects:
-    # http://stackoverflow.com/questions/699468/python-html-sanitizer-scrubber-filter/812785
-    # So in that discussion Bleach is most upvoted solution that passes tests.
-    # Also, it's made by Mozilla and it's ready to production.
-    # bleach.clean method deletes all dangerous tags and attributes,
-    # but saves not dangerous like strong or i.
-    if instance.html_text:
-        instance.html_text = bleach.clean(instance.html_text)

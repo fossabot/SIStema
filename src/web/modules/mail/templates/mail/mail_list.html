@@ -43,7 +43,7 @@
                                        href="{% if email.message.is_draft %}{% url 'mail:edit' email.message.id %}
                                 {% else %}{% url 'mail:message' email.message.id %}{% endif %}">
                                         <div class="section pb20 mbn email{% if not email.is_read %} read {% endif %}">
-                                            <div class="checkbox-custom email-checkbox sm-checkbox mb20 pull-left mr10">
+                                            <div class="checkbox-custom email-checkbox sm-checkbox mb20 va-m pull-left mr10">
                                                 <input id="{{ email.message.id }}" type="checkbox"
                                                        name="email_id {{ email.message.id }}" checkbox_group="email">
                                                 <label for="{{ email.message.id }}"></label>

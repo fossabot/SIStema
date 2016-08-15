@@ -252,7 +252,7 @@ class PersonalEmailMessage(models.Model):
     def make_for(cls, message: EmailMessage, user):
         if not PersonalEmailMessage.objects.all().filter(user=user, message=message):
             is_read = True
-            if message.status == EmailMessage.STATUS_ACCEPTED:
+            if message.status == EmailMessage.STATUS_RECEIVED:
                 is_read = False
             personal = PersonalEmailMessage(user=user, message=message, is_read=is_read)
             personal.save()

@@ -7,8 +7,8 @@ import zipfile
 from datetime import datetime
 from io import BytesIO
 from string import whitespace
-
 import zipstream
+
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -28,6 +28,9 @@ from modules.mail.models import get_user_by_hash
 from sistema.helpers import respond_as_attachment, respond_as_zip, respond_as_zip_bytes
 from sistema.uploads import save_file
 from . import models, forms
+import sistema.staff
+import schools.models
+from modules.entrance.models import EntranceStatus
 
 RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 
@@ -452,13 +455,15 @@ def _get_email_list(current_user, status, search_request='', not_read=None):
         message__status=status).order_by('-message__created_at')
     if search_request:
         personal_email_list = personal_email_list.annotate(
-            full_text=Concat('message__subject', Value(' '),
-                             'message__sender__externalemailuser__display_name', Value(' '),
-                             'message__sender__externalemailuser__email', Value(' '),
-                             'message__sender__sisemailuser__user__email', Value(' '),
-                             'message__sender__sisemailuser__user__last_name', Value(' '),
-                             'message__sender__sisemailuser__user__first_name', Value(' '),
-                             'message__html_text', output_field=TextField()),
+            full_text=Concat(
+                'message__subject', Value(' '),
+                'message__sender__externalemailuser__display_name', Value(' '),
+                'message__sender__externalemailuser__email', Value(' '),
+                'message__sender__sisemailuser__user__email', Value(' '),
+                'message__sender__sisemailuser__user__last_name', Value(' '),
+                'message__sender__sisemailuser__user__first_name', Value(' '),
+                'message__html_text', output_field=TextField()
+            )
         ).filter(full_text__icontains=search_request)
     if not_read is not None:
         return personal_email_list.filter(is_read=not not_read)
@@ -552,15 +557,20 @@ def drafts_list(request, page_index='1'):
 @login_required
 def message(request, message_id):
     email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)
+
     if not can_user_view_message(request.user, email.message) or email.message.is_email_removed():
         return HttpResponseForbidden('Вы не можете просматривать это письмо.')
+
     email.is_read = True
     email.save()
     link_back = urlresolvers.reverse('mail:inbox')
+
     if email.message.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')
+
     if email.message.is_sent():
         link_back = urlresolvers.reverse('mail:sent')
+
     return render(
         request,
         'mail/message.html', {
@@ -1057,3 +1067,22 @@ def email_archive(request):
     archive.close()
     file_name = 'user-%s-mail-archive-%s.zip' % (request.user.id, str(timezone.now()))
     return respond_as_zip_bytes(request, file_name, out)
+
+
+@require_POST
+@sistema.staff.only_staff
+def generate_emails(request):
+    if request.method == 'POST':
+        school = schools.models.School.objects.get(short_name=request.POST['school'])
+        session = schools.models.Session.objects.get(school=school, short_name=request.POST['session'])
+        students = EntranceStatus.objects.filter(school=school, session=session)
+        for student in students:
+            models.PersonalEmail.generate_email(student.user)
+        messages.success(request, 'Адреса успешно сгенерированы')
+        return redirect(urlresolvers.reverse('school:mail', kwargs={
+            'school_name': school.short_name,
+            'session_name': session.short_name,
+        }))
+    else:
+        HttpResponseBadRequest('Unsupported method')
+

@@ -10,9 +10,11 @@ $(document).ready(function () {
         }
     );
 
-    var val = not_read.val().toLowerCase();
-    val = val != 'false';
 
+    if (not_read.val() != undefined) {
+        var val = not_read.val().toLowerCase();
+        val = val != 'false';
+    }
     $('#not_read').prop('checked', val);
 
     button.click(function () {
@@ -36,11 +38,19 @@ $(document).ready(function () {
         $(this).removeClass('read');
     });
 
+    var clicked = false;
+
     not_read.click(
         function () {
-            val = !val;
-            not_read.val(val);
-            $('#not_read').prop('checked', val);
+            if (!clicked) {
+                val = !val;
+                clicked = true;
+                not_read.val(val);
+                $('#not_read').prop('checked', val);
+                $('#not_read').val(val);
+                return true;
+            }
+            return false;
         }
     );
 });

@@ -24,10 +24,10 @@
     </div>
 {% endblock %}
 {% block is_read %}
-      <form class="ib">
-          <button type="submit" id="not_read_button" name="not_read" value="{{ not_read }}">
+      <form class="ib" method="get">
+          <button type="submit" id="not_read_button" value="{{ not_read }}">
               <div class="checkbox-custom email-checkbox mb1 mr10 ib">
-                  <input id="not_read" type="checkbox">
+                  <input id="not_read" type="checkbox" name="not_read" value="{{ not_read }}">
                   <label for="not_read">Только непрочитанные</label>
               </div>
           </button>

@@ -4,9 +4,16 @@ import urllib.parse
 import collections
 import random
 import string
+from io import BytesIO
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseNotFound
+
+
+def respond_as_zip(request, filename, out: BytesIO):
+    response = HttpResponse(out.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; ' + filename_header(request, filename)
+    return response
 
 
 def respond_as_attachment(request, file_path, original_filename):

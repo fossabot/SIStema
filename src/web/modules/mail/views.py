@@ -26,7 +26,7 @@ from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
 from modules.mail.models import get_user_by_hash
-from sistema.helpers import respond_as_attachment, filename_header
+from sistema.helpers import respond_as_attachment, filename_header, respond_as_zip
 from sistema.uploads import save_file
 from . import models, forms
 
@@ -917,6 +917,4 @@ def download_all(request, message_id):
     archive.close()
 
     filename = 'msg' + str(message_id) + '-attachments.zip'
-    response = HttpResponse(out.getvalue(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; ' + filename_header(request, filename)
-    return response
+    return respond_as_zip(request, filename, out)

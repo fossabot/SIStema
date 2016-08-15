@@ -1,0 +1,23 @@
+{% extends 'staff_layout.html' %}
+
+{% load staticfiles %}
+
+{% block title %}Управление почтовым сервисом{% endblock %}
+
+{% block topbar %}{% endblock %}
+
+{% block content %}
+    <!-- Кнопка генерирования PersonalEmail для школьников текущей смены -->
+    <h4>Создать индивидуальные адреса электронной почты для школьников </h4>
+    {% for session in sessions %}
+    <form id="{{ session.short_name }}" method="post" action="{% url 'mail:generate_emails' %}">
+        {% csrf_token %}
+        <h5>{{ school.name }} - {{ session.name }}</h5>
+        <input type="hidden" name="school" value="{{ school.short_name }}">
+        <input type="hidden" name="session" value="{{ session.short_name }}">
+        <button type="submit" class="btn">
+            Создать
+        </button>
+    </form>
+    {% endfor %}
+{% endblock %}

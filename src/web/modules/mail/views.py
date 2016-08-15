@@ -28,6 +28,9 @@ from modules.mail.models import get_user_by_hash
 from sistema.helpers import respond_as_attachment, respond_as_zip, respond_as_zip_bytes
 from sistema.uploads import save_file
 from . import models, forms
+import sistema.staff
+import schools.models
+from modules.entrance.models import EntranceStatus
 
 RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 
@@ -1057,3 +1060,22 @@ def email_archive(request):
     archive.close()
     file_name = 'user-%s-mail-archive-%s.zip' % (request.user.id, str(timezone.now()))
     return respond_as_zip_bytes(request, file_name, out)
+
+
+@require_POST
+@sistema.staff.only_staff
+def generate_emails(request):
+    if request.method == 'POST':
+        school = schools.models.School.objects.get(short_name=request.POST['school'])
+        session = schools.models.Session.objects.get(school=school, short_name=request.POST['session'])
+        students = EntranceStatus.objects.filter(school=school, session=session)
+        for student in students:
+            models.PersonalEmail.generate_email(student.user)
+        messages.success(request, 'Адреса успешно сгенерированы')
+        return redirect(urlresolvers.reverse('school:mail', kwargs={
+            'school_name': school.short_name,
+            'session_name': session.short_name,
+        }))
+    else:
+        HttpResponseBadRequest('Unsupported method')
+

@@ -30,6 +30,9 @@ from . import models, forms
 from sistema.helpers import respond_as_attachment
 from django.conf import settings
 from sistema.uploads import save_file
+import sistema.staff
+import schools.models
+from modules.entrance.models import EntranceStatus
 
 RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 
@@ -922,3 +925,21 @@ def download_all(request, message_id):
 
     semaphore.release()
     return respond_as_attachment(request, archive_path, 'msg' + str(message_id) + '-attachments.zip')
+
+
+@require_POST
+@sistema.staff.only_staff
+def generate_emails(request):
+    if request.method == 'POST':
+        school = schools.models.School.objects.get(short_name=request.POST['school'])
+        session = schools.models.Session.objects.get(school=school, short_name=request.POST['session'])
+        students = EntranceStatus.objects.filter(school=school, session=session)
+        for student in students:
+            models.PersonalEmail.generate_email(student.user)
+        messages.success(request, 'Адреса успешно сгенерированы')
+        return redirect(urlresolvers.reverse('school:mail', kwargs={
+            'school_name': school.short_name,
+            'session_name': session.short_name,
+        }))
+    else:
+        HttpResponseBadRequest('Unsupported method')

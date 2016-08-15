@@ -124,7 +124,7 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     return email
 
 
-def _download_mailbox_attachment(attachment_data):
+def _download_mailgun_attachment(attachment_data):
     attachment = models.Attachment.download_from_url(attachment_data['url'])
     attachment.file_size = attachment_data['size']
     attachment.original_file_name = attachment['name']

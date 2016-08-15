@@ -3,14 +3,16 @@ import random
 
 import requests
 from django.core.files import File
-from django.db.models import QuerySet
 from trans import trans
 import os
+import bleach
 
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
 from django.core.mail import EmailMessage as DjangoEmailMessage
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -18,7 +20,7 @@ from relativefilepathfield.fields import RelativeFilePathField
 from settings.api import get_current_settings
 from users.models import User
 from schools.models import Session
-from sistema.uploads import _ensure_directory_exists
+from sistema import helpers
 
 from . import previews
 
@@ -40,9 +42,11 @@ class SisEmailUser(EmailUser):
         return self.user.email
 
     def have_drafts(self):
-        return PersonalEmailMessage.objects.filter(user=self.user,
-                                                   message__status=EmailMessage.STATUS_DRAFT,
-                                                   is_removed=False).exists()
+        return PersonalEmailMessage.objects.filter(
+            user=self.user,
+           message__status=EmailMessage.STATUS_DRAFT,
+           is_removed=False
+        ).exists()
 
     def add_person_to_contacts(self, person):
         try:
@@ -81,15 +85,21 @@ class Attachment(models.Model):
 
     file_size = models.PositiveIntegerField()
 
-    file = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
-        settings.SISTEMA_MAIL_ATTACHMENTS_DIR,
-        'SISTEMA_MAIL_ATTACHMENTS_DIR'
-    ), recursive=True)
+    file = RelativeFilePathField(
+        path=django.db.migrations.writer.SettingsReference(
+            settings.SISTEMA_MAIL_ATTACHMENTS_DIR,
+            'SISTEMA_MAIL_ATTACHMENTS_DIR'
+        ),
+        recursive=True
+    )
 
-    preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
-        settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
-        'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
-    ), recursive=True)
+    preview = RelativeFilePathField(
+        path=django.db.migrations.writer.SettingsReference(
+            settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
+            'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
+        ),
+        recursive=True
+    )
 
     @staticmethod
     def from_file(renamed_path, name, content_type):
@@ -105,10 +115,8 @@ class Attachment(models.Model):
 
     def _generate_preview(self):
         directory = Attachment._meta.get_field('preview').path
-        _ensure_directory_exists(directory)
-        output_file = '%s_preview' % os.path.splitext(
-            os.path.join(directory, self.file)
-        )[0]
+        helpers.ensure_directory_exists(directory)
+        output_file = '%s_preview' % os.path.splitext(os.path.join(directory, self.file))[0]
         preview_generator = self.preview_generator
         if preview_generator is not None:
             try:
@@ -169,12 +177,15 @@ class EmailMessage(models.Model):
     STATUS_DRAFT = 3
     STATUS_RAW_DRAFT = 4
 
-    status = models.IntegerField(choices=(
-        (STATUS_RECEIVED, 'Принято'),
-        (STATUS_SENT, 'Отправлено'),
-        (STATUS_DRAFT, 'Черновик'),
-        (STATUS_RAW_DRAFT, 'Новый черновик')
-    ), default=STATUS_UNKNOWN)
+    status = models.IntegerField(
+        choices=(
+            (STATUS_RECEIVED, 'Принято'),
+            (STATUS_SENT, 'Отправлено'),
+            (STATUS_DRAFT, 'Черновик'),
+            (STATUS_RAW_DRAFT, 'Новый черновик')
+        ),
+        default=STATUS_UNKNOWN
+    )
 
     def is_incoming(self):
         return self.status == self.STATUS_RECEIVED
@@ -357,3 +368,19 @@ class PersonalEmail(models.Model):
         email.save()
         return email
 
+
+@receiver(pre_save, sender=EmailMessage)
+def clean_html_text(instance, **kwargs):
+    """Delete dangerous tags from email message text"""
+    # Bleach is a whitelist-based HTML sanitizing library that escapes or strips markup and attributes.
+    # Bleach is intended for sanitizing text from untrusted sources.
+    # Whitelist could be found there:
+    # https://github.com/mozilla/bleach/blob/master/bleach/__init__.py
+    # There is a large discussion about sanitizing html in Python projects:
+    # http://stackoverflow.com/questions/699468/python-html-sanitizer-scrubber-filter/812785
+    # So in that discussion Bleach is most upvoted solution that passes tests.
+    # Also, it's made by Mozilla and it's ready to production.
+    # bleach.clean method deletes all dangerous tags and attributes,
+    # but saves not dangerous like strong or i.
+    if instance.html_text:
+        instance.html_text = bleach.clean(instance.html_text)

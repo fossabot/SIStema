@@ -63,5 +63,14 @@ def group_by(collection, extract_key_function, extract_value_function=None):
 
     return result
 
+
 def generate_random_name(length=10, alphabet=string.hexdigits):
     return ''.join(random.choice(alphabet) for _ in range(length))
+
+
+def ensure_directory_exists(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    else:
+        if not os.path.isdir(path):
+            raise FileNotFoundError('sistema: %s is not a directory' % path)

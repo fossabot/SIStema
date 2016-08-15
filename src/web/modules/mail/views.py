@@ -442,7 +442,7 @@ def inbox(request, page_index='1'):
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
-    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_ACCEPTED, search)
+    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_RECEIVED, search)
     mail_list = []
     for mail in personal_mail_list:
         mail_list.append(mail.message)
@@ -831,7 +831,7 @@ def _write(request, new_form):
                 for attachment in attachments:
                     attachment.save()
                     email.attachments.add(attachment)
-                email.status = models.EmailMessage.STATUS_ACCEPTED
+                email.status = models.EmailMessage.STATUS_RECEIVED
                 email.save()
 
                 for user in recipients:

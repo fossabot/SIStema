@@ -9,6 +9,9 @@ from datetime import datetime
 from io import BytesIO
 from io import StringIO
 from string import whitespace
+from zipfile import ZIP_DEFLATED
+
+import zipstream
 
 from django import forms
 from django.conf import settings
@@ -909,12 +912,10 @@ def download_all(request, message_id):
         if not can_user_download_attachment(request.user, attachment):
             return HttpResponseForbidden()
 
-    out = BytesIO()
-    archive = zipfile.ZipFile(out, 'w')
+    archive = zipstream.ZipFile(mode='w', compression=ZIP_DEFLATED)
     for attachment in attachments:
         path = attachment.get_file_abspath()
         archive.write(path, attachment.original_file_name)
-    archive.close()
 
     filename = 'msg' + str(message_id) + '-attachments.zip'
-    return respond_as_zip(request, filename, out)
+    return respond_as_zip(request, filename, archive)

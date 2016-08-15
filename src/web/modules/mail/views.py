@@ -8,6 +8,7 @@ from string import whitespace
 import zipfile
 import zipstream
 from io import BytesIO
+import itertools
 
 from django import forms
 from django.conf import settings
@@ -518,6 +519,28 @@ def sent(request, page_index='1'):
     params['next_link'] = _get_next_link('mail:sent_page', page_index, len(mail_list))
     params['search'] = search
     return render(request, 'mail/sent.html', params)
+
+
+@login_required
+def show_archive_mail(request, page_index=1):
+    search = ''
+    if 'search_request' in request.GET:
+        search = request.GET['search_request']
+
+    sent_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_SENT, search)
+    received_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_RECEIVED, search)
+    mail_list = itertools.chain(sent_mail_list, received_mail_list)
+
+    do_redirect, page_index = _read_page_index(page_index, len(mail_list))
+    if do_redirect:
+        return redirect(urlresolvers.reverse('mail:archive_page', kwargs={'page_index': page_index}))
+
+    params = _get_standard_mail_list_params(mail_list, page_index, request)
+    params['tab_links'] = _get_links_of_pages_to_show('mail:archive_page', page_index, len(mail_list))
+    params['prev_link'] = _get_prev_link('mail:archive_page', page_index)
+    params['next_link'] = _get_next_link('mail:archive_page', page_index, len(mail_list))
+    params['search'] = search
+    return render(request, 'mail/archive.html', params)
 
 
 @login_required

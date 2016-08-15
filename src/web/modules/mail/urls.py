@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^page/(?P<page_index>[^/]+)/$', views.inbox, name='inbox_page'),
     url(r'^webhook/', views.incoming_webhook),
     url(r'^sent/$', views.sent, name='sent'),
+    url(r'^archive/$', views.show_archive_mail, name='archive'),
     url(r'^sent/page/(?P<page_index>[^/]+)/$', views.sent, name='sent_page'),
     url(r'^drafts/$', views.drafts_list, name='drafts'),
     url(r'^drafts/page/(?P<page_index>[^/]+)/', views.drafts_list, name='drafts_page'),

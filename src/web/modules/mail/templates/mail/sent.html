@@ -16,6 +16,9 @@
             {% if email_user.have_drafts %}
             <span class="mr10"><a href="{% url 'mail:drafts' %}">Черновики</a></span>
             {% endif %}
+            {% if email_user.have_archive %}
+            <span class="mr10"><a href="{% url 'mail:archive' %}">Архив писем</span>
+            {% endif %}
             <span class="pull-right">
                 <a href="{% url 'mail:contact_list' %}">
                 Контакты

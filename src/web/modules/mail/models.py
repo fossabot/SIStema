@@ -1,6 +1,5 @@
 import datetime
 import random
-
 import requests
 from django.core.files import File
 from trans import trans
@@ -13,6 +12,7 @@ import django.db.migrations.writer
 from django.core.mail import EmailMessage as DjangoEmailMessage
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -44,8 +44,16 @@ class SisEmailUser(EmailUser):
     def have_drafts(self):
         return PersonalEmailMessage.objects.filter(
             user=self.user,
-           message__status=EmailMessage.STATUS_DRAFT,
-           is_removed=False
+            message__status=EmailMessage.STATUS_DRAFT,
+            is_removed=False
+        ).exists()
+
+    def have_archive(self):
+        session = models.Session.objects.filter(start_date__lte=timezone.now(), finish_date__gte=timezone.now())
+        return PersonalEmailMessage.objects.filter(
+            user=self.user,
+            is_removed=False,
+            created_at__lt=session.start_date
         ).exists()
 
     def add_person_to_contacts(self, person):

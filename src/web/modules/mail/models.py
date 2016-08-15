@@ -350,6 +350,11 @@ class PersonalEmail(models.Model):
         else:
             raise TypeError('Method generate_email() must take instance of User or SisEmailUser')
 
+        for personal_email in cls.objects.filter(owner=owner):
+            personal_email.is_active = False
+            with transaction.atomic():
+                personal_email.save()
+
         try:
             email_name = trans(owner.display_name)
         except Exception:

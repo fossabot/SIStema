@@ -20,7 +20,24 @@
     <h1>
         {% if area == 'global' %} Глобальные настройки
         {% elif area == 'school' %} Настройки для школы {{ name }}
-        {% elif area == 'session' %} Настройки для смены {{ name }}{% endif %}
+            <small>
+
+                <a href="{% url "settings:index" %}"><span class="glyphicon glyphicon-arrow-up"
+                                                           aria-hidden="true"></span></a>
+                {% for session in sessions %}
+                    /
+                    <a href="{% url 'school:session_settings_list' short_name session|get_item:'short_name' %}">{{ session|get_item:'name' }}</a>
+                {% endfor %}
+
+            </small>
+        {% elif area == 'session' %} Настройки для смены {{ name }}
+
+            <small>
+                <a href="{% url "school:school_settings_list" school_short_name %}"><span
+                        class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span></a>
+            </small>
+
+        {% endif %}
     </h1>
     <button class="btn btn-default clear" type="button" onclick="clearSearch()">Очистить поиск</button>
     <div class="input-group search">

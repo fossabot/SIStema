@@ -1,37 +1,36 @@
-from string import whitespace
-import json
-from datetime import datetime
-import os
 import hashlib
 import hmac
+import json
+import os
 import re
-import zipfile
 import threading
+import zipfile
+from datetime import datetime
+from io import BytesIO
+from io import StringIO
+from string import whitespace
 
+from django import forms
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers, validators, exceptions
+from django.db import transaction
 from django.db.models import Q, TextField
-from django.db.models.expressions import Value, Case
+from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
-from django.http.response import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db import transaction
-from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
-from django import forms
-from django.contrib import messages
-from relativefilepathfield.fields import RelativeFilePathField
+from django.views.decorators.http import require_POST
 
-from settings import api
 from modules.mail.models import get_user_by_hash
-from . import models, forms
-from sistema.helpers import respond_as_attachment
-from django.conf import settings
+from sistema.helpers import respond_as_attachment, filename_header, respond_as_zip
 from sistema.uploads import save_file
+from . import models, forms
 
-RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,; ] *')
+RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 
 
 def _parse_recipients(string_with_recipients):
@@ -136,6 +135,7 @@ def _verify_mailgun_request(api_key, token, timestamp, signature):
         msg='{}{}'.format(timestamp, token),
         digestmod=hashlib.sha256
     ).hexdigest()
+
 
 @login_required
 def compose(request):
@@ -789,7 +789,7 @@ def _write(request, new_form):
         if form.is_valid():
             data = form.cleaned_data
 
-            uploaded_files = data['attachments']
+            uploaded_files = request.FILES.getlist('attachments')
             attachments = []
             if uploaded_files is not None:
                 for file in uploaded_files:
@@ -830,6 +830,9 @@ def _write(request, new_form):
                     email.attachments.add(attachment)
                 email.status = models.EmailMessage.STATUS_ACCEPTED
                 email.save()
+
+                for user in recipients:
+                    models.PersonalEmailMessage.make_for(email, user.user)
 
             form = new_form()
         return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
@@ -906,15 +909,12 @@ def download_all(request, message_id):
         if not can_user_download_attachment(request.user, attachment):
             return HttpResponseForbidden()
 
-    semaphore = threading.BoundedSemaphore()
-    semaphore.acquire()
-
-    archive_path = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, 'attachments.zip')
-    archive = zipfile.ZipFile(archive_path, mode='w')
+    out = BytesIO()
+    archive = zipfile.ZipFile(out, 'w')
     for attachment in attachments:
         path = attachment.get_file_abspath()
         archive.write(path, attachment.original_file_name)
     archive.close()
 
-    semaphore.release()
-    return respond_as_attachment(request, archive_path, 'msg' + str(message_id) + '-attachments.zip')
+    filename = 'msg' + str(message_id) + '-attachments.zip'
+    return respond_as_zip(request, filename, out)

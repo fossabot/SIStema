@@ -1,0 +1,1 @@
+$('.notify').fadeOut(3000);

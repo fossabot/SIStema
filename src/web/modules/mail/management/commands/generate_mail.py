@@ -155,7 +155,7 @@ def find_text(options):
 
 def find_status(options):
     STRING_TO_STATUS = {
-        'incoming': EmailMessage.STATUS_ACCEPTED,
+        'incoming': EmailMessage.STATUS_RECEIVED,
         'sent': EmailMessage.STATUS_SENT,
         'draft': EmailMessage.STATUS_DRAFT,
     }

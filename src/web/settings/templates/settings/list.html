@@ -7,6 +7,10 @@
 
 {% block topbar %}{% endblock %}
 
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{% static "settings/style.css" %}">
+{% endblock %}
+
 {% block scripts %}
     <script src="{% static 'settings/settings.js' %}"></script>
 {% endblock %}
@@ -18,7 +22,13 @@
         {% elif area == 'school' %} Настройки для школы {{ name }}
         {% elif area == 'session' %} Настройки для смены {{ name }}{% endif %}
     </h1>
-
+    <button class="btn btn-default clear" type="button" onclick="clearSearch()">Очистить поиск</button>
+    <div class="input-group search">
+        <input type="text" class="form-control" id="search-query" placeholder="Например, letter">
+        <span class="input-group-btn">
+            <button class="btn btn-default" type="button" onclick="search()">Искать</button>
+        </span>
+    </div>
     {% for app in apps %}
         <h2>Приложение {{ app|title }}</h2>
         {% if apps|get_item:app|get_item:'groups' %}

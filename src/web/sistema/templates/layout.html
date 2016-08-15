@@ -54,6 +54,7 @@
     <script src="{% static 'js/jquery.form.js' %}"></script>
     <script src="{% static 'js/ajax-csrf.js' %}"></script>
     <script src="{% static 'vendor/plugins/pnotify/pnotify.js' %}"></script>
+
     {% for message in messages %}
             <script>
                 new PNotify({
@@ -62,11 +63,13 @@
                     type: '{{ message.tags }}',
                     hide: false,
                     delay: 500,
-                    animate_speed: 'def'
+                    animate_speed: 'def',
+                    icon: false,
+                    addclass: 'notify'
                 })
             </script>
     {% endfor %}
-
+    <script src="{% static 'js/notify.js' %}"></script>
     {% block scripts %}
 
     {% endblock %}

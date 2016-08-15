@@ -1,20 +1,16 @@
 import datetime
 import random
-from mimetypes import guess_type
 
 import requests
 from django.core.files import File
 from django.db.models import QuerySet
 from trans import trans
 import os
-import bleach
 
 from django.db import models, transaction
 from django.conf import settings
 import django.db.migrations.writer
 from django.core.mail import EmailMessage as DjangoEmailMessage
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 
 from polymorphic.models import PolymorphicModel
 from relativefilepathfield.fields import RelativeFilePathField
@@ -77,6 +73,7 @@ class ExternalEmailUser(EmailUser):
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
 
+
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
 
@@ -89,23 +86,22 @@ class Attachment(models.Model):
         'SISTEMA_MAIL_ATTACHMENTS_DIR'
     ), recursive=True)
 
+    preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
+        settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
+        'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
+    ), recursive=True)
+
     @staticmethod
-    def from_file(renamed_path, name):
-        content_type = guess_type(renamed_path)
+    def from_file(renamed_path, name, content_type):
         original_file_name = name
         file_size = os.path.getsize(renamed_path)
-        file = renamed_path
+        file = os.path.relpath(renamed_path, Attachment._meta.get_field('file').path)
         return Attachment(
             content_type=content_type,
             original_file_name=original_file_name,
             file_size=file_size,
             file=file
         )
-
-    preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
-        settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
-        'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
-    ), recursive=True)
 
     def _generate_preview(self):
         directory = Attachment._meta.get_field('preview').path
@@ -168,20 +164,20 @@ class EmailMessage(models.Model):
     delivered = models.BooleanField(default=False)
 
     STATUS_UNKNOWN = 0
-    STATUS_ACCEPTED = 1
+    STATUS_RECEIVED = 1
     STATUS_SENT = 2
     STATUS_DRAFT = 3
     STATUS_RAW_DRAFT = 4
 
     status = models.IntegerField(choices=(
-        (STATUS_ACCEPTED, 'Принято'),
+        (STATUS_RECEIVED, 'Принято'),
         (STATUS_SENT, 'Отправлено'),
         (STATUS_DRAFT, 'Черновик'),
         (STATUS_RAW_DRAFT, 'Новый черновик')
     ), default=STATUS_UNKNOWN)
 
     def is_incoming(self):
-        return self.status == self.STATUS_ACCEPTED
+        return self.status == self.STATUS_RECEIVED
 
     def is_sent(self):
         return self.status == self.STATUS_SENT
@@ -244,6 +240,10 @@ class PersonalEmailMessage(models.Model):
     @classmethod
     def delete_emails_by_ids(cls, ids, user):
         for email in cls.objects.filter(message__id__in=ids, user=user):
+            for attachment in email.message.attachments.all():
+                path = attachment.get_file_abspath()
+                os.remove(path)
+                attachment.delete()
             email.remove()
 
     @classmethod
@@ -357,19 +357,3 @@ class PersonalEmail(models.Model):
         email.save()
         return email
 
-
-@receiver(pre_save, sender=EmailMessage)
-def clean_html_text(instance, **kwargs):
-    """Delete dangerous tags from email message text"""
-    # Bleach is a whitelist-based HTML sanitizing library that escapes or strips markup and attributes.
-    # Bleach is intended for sanitizing text from untrusted sources.
-    # Whitelist could be found there:
-    # https://github.com/mozilla/bleach/blob/master/bleach/__init__.py
-    # There is a large discussion about sanitizing html in Python projects:
-    # http://stackoverflow.com/questions/699468/python-html-sanitizer-scrubber-filter/812785
-    # So in that discussion Bleach is most upvoted solution that passes tests.
-    # Also, it's made by Mozilla and it's ready to production.
-    # bleach.clean method deletes all dangerous tags and attributes,
-    # but saves not dangerous like strong or i.
-    if instance.html_text:
-        instance.html_text = bleach.clean(instance.html_text)

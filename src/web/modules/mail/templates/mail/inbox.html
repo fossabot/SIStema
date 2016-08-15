@@ -23,6 +23,16 @@
         </h3>
     </div>
 {% endblock %}
+{% block is_read %}
+      <form class="ib">
+          <button type="submit" id="not_read_button" name="not_read" value="{{ not_read }}">
+              <div class="checkbox-custom email-checkbox mb1 mr10 ib">
+                  <input id="not_read" type="checkbox">
+                  <label for="not_read">Только непрочитанные</label>
+              </div>
+          </button>
+      </form>
+{% endblock %}
 {% block if_empty %}
     <div class="section mb5 fs16">
         {% if not search %}

@@ -6,6 +6,13 @@
     {% if item.description %}
         <p class='description'>{{ item.description }}</p>
     {% endif %}
+    {% if item.parent %}
+        {% if item.parent.school %}
+            <p class='specifies'>Уточняет <a href="{% url 'school:school_settings_list' item.parent.school.short_name %}">школьную</a> настройку</p>
+        {% else %}
+            <p class='specifies'>Уточняет <a href="{% url 'settings:index' %}">глобальную</a> настройку</p>
+        {% endif %}
+    {% endif %}
     <p class="lead" id="setting-{{ item.id }}">{{ item.value }}</p>
     <div class="collapse" id="edit-block-{{ item.id }}">
         <form onsubmit="saveEdit({{ item.id }}); return false;" id="form-{{ item.id }}" method="post">

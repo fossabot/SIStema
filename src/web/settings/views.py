@@ -103,24 +103,38 @@ def edit_settings_item(request, id):
 
 
 @sistema.staff.only_staff
-def clone_settings_item(request, id, school_name, session_name):
+def specify_settings_area(request, id, school_name, session_name):
     item = get_object_or_404(models.SettingsItem, id=id)
+    print(0, get_object_or_404(models.SettingsItem, id=id).school)
     item.session = None
     item.school = None
+    print(1, get_object_or_404(models.SettingsItem, id=id).school)
     if school_name is not None and session_name is None:
         item.school = get_object_or_404(models.School, short_name=school_name)
     elif session_name is not None:
         item.session = get_object_or_404(models.Session, short_name=session_name, school__short_name=school_name)
+    print(2, get_object_or_404(models.SettingsItem, id=id).school)
     item.id = None
+    print(3, get_object_or_404(models.SettingsItem, id=id).school)
     form = get_form(item, request.POST)
     if form.is_valid():
         item.value = form.cleaned_data['value_field']
         try:
             item.save()
+            print(4, get_object_or_404(models.SettingsItem, id=id).school)
         except IntegrityError:
             return JsonResponse({'status': 'failed', 'error': 'the scope hasn\'t changed'})
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'failed', 'error': ', '.join(form.errors)})
+
+
+@sistema.staff.only_staff
+def clone_settings_item(request, id, school_name, session_name):
+    item = get_object_or_404(models.SettingsItem, id=id)
+    model = type(item)
+    model(  short_name=item.short_name, display_name=item.display_name, description=item.description,
+            value=item.value, app=item.app, group=item.group, school=item.school, session=item.session).save()
+    specify_settings_area(request, id, school_name, session_name)
 
 
 def get_form(settings_item, data=None):

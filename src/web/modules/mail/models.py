@@ -252,7 +252,7 @@ class PersonalEmailMessage(models.Model):
     def make_for(cls, message: EmailMessage, user):
         if not PersonalEmailMessage.objects.all().filter(user=user, message=message):
             is_read = True
-            if message.status == EmailMessage.STATUS_ACCEPTED:
+            if message.status == EmailMessage.STATUS_RECEIVED:
                 is_read = False
             personal = PersonalEmailMessage(user=user, message=message, is_read=is_read)
             personal.save()
@@ -349,6 +349,11 @@ class PersonalEmail(models.Model):
             owner = user
         else:
             raise TypeError('Method generate_email() must take instance of User or SisEmailUser')
+
+        for personal_email in cls.objects.filter(owner=owner):
+            personal_email.is_active = False
+            with transaction.atomic():
+                personal_email.save()
 
         try:
             email_name = trans(owner.display_name)

@@ -1031,11 +1031,11 @@ def _get_raw_text_preview(email):
     email_recipients = 'To: %s' % ', '.join(map(_get_display_string, list(email.recipients.all())))
     email_cc_recipients = 'Cc: %s' % ', '.join(map(_get_display_string, list(email.cc_recipients.all())))
     if email.cc_recipients.all():
-        email_recipients_and_cc = '%s\n%s' % (email_recipients, email_cc_recipients)
+        email_recipients_and_cc = '%s\r\n%s' % (email_recipients, email_cc_recipients)
     else:
         email_recipients_and_cc = email_recipients
     email_date = 'Date: %s' % email.created_at
-    email_text = '\n%s' % strip_tags(email.html_text)
+    email_text = '\r\n%s' % strip_tags(email.html_text)
     return '\n'.join([email_sender, email_recipients_and_cc, email_subject, email_date, email_text])
 
 

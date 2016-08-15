@@ -31,11 +31,7 @@
 
 .checkbox-custom.sm-checkbox {
     transform: scale(0.5);
-    transform-origin: 150% 150%;
-}
-
-.bg-checkbox {
-    margin-left: 2px;
+    transform-origin: 100% 125%;
 }
 
 .contact_name, .contact_email {

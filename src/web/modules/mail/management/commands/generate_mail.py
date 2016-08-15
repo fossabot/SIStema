@@ -202,7 +202,7 @@ def create_attachment_to_sis_dir(attachment_path):
             os.remove(new_attachment_path)
         raise
     url = urllib.request.pathname2url(attachment_path)
-    content_type = guess_type(url)
+    content_type, encoding = guess_type(url)
     return models.Attachment.from_file(
         os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name),
         os.path.basename(attachment_path),

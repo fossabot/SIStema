@@ -1,10 +1,8 @@
 import hashlib
 import hmac
 import json
-from datetime import datetime
 import os
 import re
-import zipfile
 import threading
 import zipfile
 from datetime import datetime
@@ -12,7 +10,6 @@ from io import BytesIO
 from io import StringIO
 from string import whitespace
 from zipfile import ZIP_DEFLATED
-
 import zipstream
 
 from django import forms
@@ -46,6 +43,7 @@ def _parse_recipients(string_with_recipients):
     """Parse recipients from string like: 'a@mail.ru, b@mail.ru, ...'.
     If there is external user which hasn't record in DB, than
     create new ExternalEmailUser for him."""
+
     recipients = []
     for recipient in re.split(RECIPIENTS_LIST_SEPARATOR, string_with_recipients):
         if recipient == '':
@@ -69,8 +67,15 @@ def _parse_recipients(string_with_recipients):
             recipients.append(query)
         else:
             query = models.PersonalEmail.objects.annotate(
-                full_email=Concat('email_name', Value('-'), 'hash', Value(settings.MAIL_DOMAIN),
-                                  output_field=TextField())).filter(full_email__iexact=recipient).first()
+                full_email=Concat(
+                    'email_name',
+                    Value('-'),
+                    'hash',
+                    Value(settings.MAIL_DOMAIN),
+                    output_field=TextField()
+                )
+            ).filter(full_email__iexact=recipient).first()
+
             if query is not None:
                 recipients.append(query.owner)
             else:
@@ -90,18 +95,21 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
                 save_file(file, 'mail-attachments'),
                 models.Attachment._meta.get_field('file').path
             )
-            attachments.append(models.Attachment(
-                original_file_name=file.name,
-                file_size=file.size,
-                content_type=file.content_type,
-                file=saved_attachment_filename,
-            ))
+            attachments.append(
+                models.Attachment(
+                    original_file_name=file.name,
+                    file_size=file.size,
+                    content_type=file.content_type,
+                    file=saved_attachment_filename,
+                )
+            )
 
     email = models.EmailMessage()
     try:
         email.sender = models.SisEmailUser.objects.get(user=request.user)
     except models.EmailUser.DoesNotExist:
         return None
+
     email.status = email_status
     email.html_text = email_form['email_message']
     email.subject = email_form['email_subject']
@@ -113,13 +121,15 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
         email.save()
 
     email.recipients.clear()
-    email.cc_recipients.clear()
     for recipient in _parse_recipients(email_form['recipients']):
         email.recipients.add(recipient)
         if email_status == models.EmailMessage.STATUS_SENT:
             email.sender.add_person_to_contacts(recipient)
+
+    email.cc_recipients.clear()
     for cc_recipient in _parse_recipients(email_form['cc_recipients']):
         email.cc_recipients.add(cc_recipient)
+
     with transaction.atomic():
         for attachment in attachments:
             attachment.save()
@@ -148,12 +158,13 @@ def _verify_mailgun_request(api_key, token, timestamp, signature):
 
 @login_required
 def compose(request):
-    """
-        Initialization draft in database and redirecting to editor-page
-    """
+    """Initialization draft in database and redirecting to editor-page"""
+
     try:
-        email = models.EmailMessage.objects.get(sender=request.user.email_user.first(),
-                                                status=models.EmailMessage.STATUS_RAW_DRAFT)
+        email = models.EmailMessage.objects.get(
+            sender=request.user.email_user.first(),
+            status=models.EmailMessage.STATUS_RAW_DRAFT
+        )
     except models.EmailMessage.DoesNotExist:
         # Empty message for current user not found. Let's create it.
         email = models.EmailMessage()
@@ -187,8 +198,7 @@ def contacts_search(request):
             Q(person__externalemailuser__email__icontains=search_request)
         )
     )[:NUMBER_OF_RETURNING_RECORDS]
-    filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name}
-                        for rec in records]
+    filtered_records = [{'email': rec.person.email, 'display_name': rec.person.display_name} for rec in records]
     return JsonResponse({'records': filtered_records})
 
 
@@ -197,6 +207,7 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
         Q(person__sisemailuser__user__email=contact_form['email']) |
         Q(person__externalemailuser__email=contact_form['email'])
     ).first()
+
     if contact is None:
         person = models.ExternalEmailUser(email=contact_form['email'], display_name=contact_form['display_name'])
         with transaction.atomic():
@@ -206,6 +217,7 @@ def _save_contact(owner: models.SisEmailUser, contact_form):
         with transaction.atomic():
             contact.person.display_name = contact_form['display_name']
             contact.person.save()
+
     return contact
 
 
@@ -220,16 +232,13 @@ def _delete_contact(owner: models.SisEmailUser, contact_form):
             else:
                 return False
     return True
-    # return models.ContactRecord.objects.filter(owner=owner).filter(
-    #     Q(person__sisemailuser__user__email=contact_form['email']) |
-    #     Q(person__externalemailuser__email=contact_form['email'])
-    # ).delete()
 
 
 @login_required
 def contact_list(request):
     email_user = request.user.email_user.first()
     contacts = models.ContactRecord.get_users_contacts(email_user)
+
     if request.method == 'GET':
         form = forms.ContactEditorForm()
     elif request.method == 'POST':
@@ -242,13 +251,12 @@ def contact_list(request):
                 return HttpResponseForbidden('Вы не можете удалить этот контакт.')
         else:
             form = forms.ContactEditorForm(request.POST)
-
             if form.is_valid():
                 # Saving new contact or editing existing.
                 _save_contact(request.user.email_user.first(), form.cleaned_data)
                 messages.success(request, 'Контакт успешно добавлен.')
             else:
-                pass
+                return render(request, 'mail/contact_list.html', {'contacts': contacts, 'form': form})
     else:
         return HttpResponseBadRequest('Unsupported method')
 
@@ -267,6 +275,7 @@ def sis_users(request):
 
 def create_mail(message_data):
     """Create mail from message_data"""
+
     sender_email = message_data['sender']
     sender_name = message_data['from'][:message_data['from'].find(' <')]
     sender = find_user(sender_email, sender_name)
@@ -280,9 +289,13 @@ def create_mail(message_data):
     text = message_data['body-plain']
     date = datetime.strptime(message_data['Date'], '%a, %d %b %Y %H:%M:%S %z')
 
+    headers = []
+    for header in json.loads(message_data['message-headers']):
+        headers.append(header)
+
     attachments = []
     for attachment_dict in json.loads(message_data['attachments']):
-        attachments.append(download_attachment(attachment_dict))
+        attachments.append(_download_mailgun_attachment(attachment_dict))
 
     email = models.EmailMessage(
         sender=sender,
@@ -299,6 +312,9 @@ def create_mail(message_data):
 
     for attachment in attachments:
         email.attachments.add(attachment)
+
+    for header in headers:
+        email.headers.add(header)
 
     return email
 
@@ -324,9 +340,11 @@ def find_user(sender_email, sender_name=''):
 
 def incoming_webhook(request):
     message_data = request.POST
-    if not _verify_mailgun_request(settings.ANYMAIL['MAILGUN_API_KEY'],
-                                   message_data['token'], message_data['timestamp'],
-                                   message_data['signature']):
+    if not _verify_mailgun_request(
+            settings.ANYMAIL['MAILGUN_API_KEY'],
+            message_data['token'], message_data['timestamp'],
+            message_data['signature']
+    ):
         return HttpResponseBadRequest()
     email = create_mail(message_data)
     email.save()
@@ -350,12 +368,12 @@ def _is_message_dict_empty(email):
     Returns True if email is empty
     :param email: dict-like object with email fields
     """
+
     FIELDS = ('recipients', 'email_subject', 'email_message')
     is_message_empty = True
     for field in FIELDS:
         if email[field]:
-            is_message_empty = False
-            break
+            return False #is_message_empty = False
     return is_message_empty
 
 
@@ -368,8 +386,7 @@ def _get_max_page_num(mail_count):
         return 1
     if mail_count % EMAILS_PER_PAGE == 0:
         return mail_count // EMAILS_PER_PAGE
-    else:
-        return mail_count // EMAILS_PER_PAGE + 1
+    return mail_count // EMAILS_PER_PAGE + 1
 
 
 def _get_start_and_end_page(page_index, max_page):
@@ -377,8 +394,7 @@ def _get_start_and_end_page(page_index, max_page):
         return 1, min(max_page, PAGES_ON_PAGINATOR)
     elif page_index > max_page - PAGES_ON_PAGINATOR // 2:
         return max(max_page - PAGES_ON_PAGINATOR + 1, 1), max_page
-    else:
-        return page_index - PAGES_ON_PAGINATOR // 2, page_index + PAGES_ON_PAGINATOR // 2
+    return page_index - PAGES_ON_PAGINATOR // 2, page_index + PAGES_ON_PAGINATOR // 2
 
 
 def _get_links_of_pages_to_show(view, page_index, mail_count):
@@ -419,8 +435,7 @@ def _read_page_index(page_index, mail_count):
             return True, _get_max_page_num(mail_count)
         if page_index < 1:
             return True, 1
-        else:
-            return False, page_index
+        return False, page_index
     except ValueError:
         return True, 1
 
@@ -430,16 +445,15 @@ def _get_email_list(current_user, status, search_request=''):
         message__status=status).order_by('-message__created_at')
     if search_request:
         email_list = email_list.annotate(
-            full_text=Concat('message__subject', Value(' '),
-                             'message__sender__externalemailuser__display_name', Value(' '),
-                             'message__sender__externalemailuser__email', Value(' '),
-                             'message__sender__sisemailuser__user__email', Value(' '),
-                             'message__sender__sisemailuser__user__last_name', Value(' '),
-                             'message__sender__sisemailuser__user__first_name', Value(' '),
-                             'message__html_text', output_field=TextField()),
-        ).filter(
-            full_text__icontains=search_request
-        )
+            full_text=Concat(
+                'message__subject', Value(' '),
+                'message__sender__externalemailuser__display_name', Value(' '),
+                'message__sender__externalemailuser__email', Value(' '),
+                'message__sender__sisemailuser__user__email', Value(' '),
+                'message__sender__sisemailuser__user__last_name', Value(' '),
+                'message__sender__sisemailuser__user__first_name', Value(' '),
+                'message__html_text', output_field=TextField()),
+        ).filter(full_text__icontains=search_request)
     return email_list
 
 
@@ -470,6 +484,7 @@ def sent(request, page_index='1'):
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
+
     personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_SENT, search)
     mail_list = []
     for mail in personal_mail_list:
@@ -491,10 +506,13 @@ def sent(request, page_index='1'):
 def drafts_list(request, page_index='1'):
     if not request.user.email_user.first().have_drafts():
         return redirect(urlresolvers.reverse('mail:inbox'))
+
     page_index = int(page_index)
+
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
+
     personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_DRAFT, search)
     mail_list = []
     for mail in personal_mail_list:
@@ -518,17 +536,21 @@ def message(request, message_id):
 
     if not can_user_view_message(request.user, email) or email.is_email_removed():
         return HttpResponseForbidden('Вы не можете просматривать это письмо.')
+
     link_back = urlresolvers.reverse('mail:inbox')
     if email.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')
     if email.is_sent():
         link_back = urlresolvers.reverse('mail:sent')
 
-    return render(request, 'mail/message.html', {
-        'email': email,
-        'allow_replying': is_recipient_of_email(request.user, email),
-        'link_back': link_back,
-    })
+    return render(
+        request,
+        'mail/message.html', {
+            'email': email,
+            'allow_replying': is_recipient_of_email(request.user, email),
+            'link_back': link_back,
+        }
+    )
 
 
 MAX_STRING_LENGTH = 70
@@ -536,6 +558,7 @@ MAX_STRING_LENGTH = 70
 
 def get_citation_depth(string):
     """ Returns the citation depth of a sentence, i.e. 3 for ">>> Hello" and 2 for ">> Hello"  """
+
     current = 0
     while current < len(string) and string[current] == '>':
         current += 1
@@ -544,6 +567,7 @@ def get_citation_depth(string):
 
 def ensure_beginning_whitespace(string):
     """ Adds a beginning whitespace if necessary """
+
     if string and string[0] != ' ':
         return ' %s' % string
     return string
@@ -557,6 +581,7 @@ def rstrip_if_not_space(line):
 
 def cite_text(text):
     """ Returns cited(quoted) text. Follows RFC 3676. """
+
     lines = text.split('\n')
     cited_lines = []
     for line in lines:
@@ -608,19 +633,20 @@ def reply(request, message_id):
         recipients.append(email.sender.email)
     else:
         recipients.append(email.reply_to.email)
-    cc_recipients = list()
-
     for recipient in email.recipients.all():
         if isinstance(recipient, models.ExternalEmailUser) or recipient.user != request.user:
             recipients.append(recipient.email)
 
+    cc_recipients = list()
     for cc_recipient in email.cc_recipients.all():
         if isinstance(cc_recipient, models.ExternalEmailUser) or cc_recipient.user != request.user:
             cc_recipients.append(cc_recipient.email)
+
     if email.sender.display_name.isspace():
         display_name = email.sender.email
     else:
         display_name = email.sender.display_name
+
     text = '\n \n%s:\n%s' % (display_name, cite_text(strip_tags(email.html_text)))
 
     form_data = {
@@ -631,9 +657,13 @@ def reply(request, message_id):
     }
 
     uploaded_files = request.FILES.getlist('attachments')
-    sending_email = _save_email(request, form_data,
-                                email_status=models.EmailMessage.STATUS_DRAFT,
-                                uploaded_files=uploaded_files)
+    sending_email = _save_email(
+        request,
+        form_data,
+        email_status=models.EmailMessage.STATUS_DRAFT,
+        uploaded_files=uploaded_files
+    )
+
     if sending_email is None:
         return HttpResponseNotFound('Can\'t find your email box.')
     else:
@@ -645,12 +675,15 @@ def edit(request, message_id):
     def _sending_error(show_message=True):
         if show_message:
             messages.info(request, 'Не удалось отправить письмо.')
-        return render(request, 'mail/compose.html', {
-            'form': form,
-            'message_id': message_id,
-            'link_back': link_back,
-            'draft': draft,
-        })
+        return render(
+            request,
+            'mail/compose.html', {
+                'form': form,
+                'message_id': message_id,
+                'link_back': link_back,
+                'draft': draft,
+            }
+        )
 
     email = get_object_or_404(models.EmailMessage, id=message_id)
 
@@ -671,23 +704,27 @@ def edit(request, message_id):
         recipients = EMAILS_SEPARATOR.join([recipient.email for recipient in email.recipients.all()])
         cc_recipients = EMAILS_SEPARATOR.join([cc_recipient.email for cc_recipient in email.cc_recipients.all()])
 
-        form = forms.ComposeForm(initial={
-            'recipients': recipients,
-            'cc_recipients': cc_recipients,
-            'email_subject': email.subject,
-            'email_message': email.html_text,
-        })
+        form = forms.ComposeForm(
+            initial={
+                'recipients': recipients,
+                'cc_recipients': cc_recipients,
+                'email_subject': email.subject,
+                'email_message': email.html_text,
+            }
+        )
 
         if not email.is_draft():
             link_back = urlresolvers.reverse('mail:inbox')
 
-        return render(request, 'mail/compose.html', {
-            'form': form,
-            'message_id': message_id,
-            'link_back': link_back,
-            'draft': draft,
-        })
-
+        return render(
+            request,
+            'mail/compose.html', {
+                'form': form,
+                'message_id': message_id,
+                'link_back': link_back,
+                'draft': draft,
+            }
+        )
     elif request.method == 'POST':
         form = forms.ComposeForm(request.POST)
         if form.is_valid():
@@ -719,7 +756,6 @@ def edit(request, message_id):
                 return _sending_error()
         else:
             return _sending_error(False)
-
     else:
         return HttpResponseBadRequest('Method is not supported')
 
@@ -759,14 +795,17 @@ def save_changes(request, message_id):
     If email is not filled draft, do nothing.
     If email is filled draft, save it to database.
     """
+
     message_data = request.POST
     is_raw_draft = _is_message_dict_empty(message_data)
 
     SUCCESS_LABEL = 'is_successful'
     if is_raw_draft:
         try:
-            email = models.PersonalEmailMessage.objects.get(user=request.user,
-                                                            message__id=message_id)
+            email = models.PersonalEmailMessage.objects.get(
+                user=request.user,
+                message__id=message_id
+            )
         except models.PersonalEmailMessage.DoesNotExist:
             pass
         else:
@@ -788,10 +827,11 @@ def save_changes(request, message_id):
 
 def can_user_download_attachment(user, attachment):
     emails = attachment.emailmessage_set.filter(
-        Q(attachments=attachment) &
-        (Q(sender__sisemailuser__user=user) |
-         Q(recipients__sisemailuser__user=user) |
-         Q(cc_recipients__sisemailuser__user=user))
+        Q(attachments=attachment) & (
+            Q(sender__sisemailuser__user=user) |
+            Q(recipients__sisemailuser__user=user) |
+            Q(cc_recipients__sisemailuser__user=user)
+        )
     )
     for email in emails:
         if email.personalemailmessage_set.filter(is_removed=False):
@@ -815,12 +855,10 @@ def _write(request, new_form):
     if request.method == 'GET':
         form = new_form()
         return render(request, 'mail/compose.html', {'form': form, 'no_draft': True})
-
     elif request.method == 'POST':
         form = forms.WriteForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-
             uploaded_files = request.FILES.getlist('attachments')
             attachments = []
             if uploaded_files is not None:
@@ -830,17 +868,20 @@ def _write(request, new_form):
                         models.Attachment._meta.get_field('file').path
                     )
                     attachments.append(models.Attachment(
-                        original_file_name=file.name,
-                        file_size=file.size,
-                        content_type=file.content_type,
-                        file=saved_attachment_filename,
-                    ))
+                            original_file_name=file.name,
+                            file_size=file.size,
+                            content_type=file.content_type,
+                            file=saved_attachment_filename,
+                        )
+                    )
 
             email_subject = data['email_subject']
             email_message = data['email_message']
             recipients = _parse_recipients(data['recipients'])
-            author = models.ExternalEmailUser.objects.filter(display_name=data['author_name'],
-                                                             email=data['author_email']).first()
+            author = models.ExternalEmailUser.objects.filter(
+                display_name=data['author_name'],
+                email=data['author_email']
+            ).first()
             if author is None:
                 author = models.ExternalEmailUser(display_name=data['author_name'], email=data['author_email'])
                 author.save()
@@ -876,11 +917,12 @@ def _write(request, new_form):
 def write(request):
     def new_form():
         return forms.WriteForm(initial={
-            'email_subject': '',
-            'recipients': '',
-            'email_message': '',
-            'text': ''
-        })
+                'email_subject': '',
+                'recipients': '',
+                'email_message': '',
+                'text': ''
+            }
+        )
 
     return _write(request, new_form)
 
@@ -892,11 +934,12 @@ def write_to(request, recipient_hash):
 
     def new_form():
         return forms.WriteForm(initial={
-            'email_subject': '',
-            'recipients': recipient.display_name,
-            'email_message': '',
-            'text': ''
-        })
+                'email_subject': '',
+                'recipients': recipient.display_name,
+                'email_message': '',
+                'text': ''
+            }
+        )
 
     return _write(request, new_form)
 

@@ -143,7 +143,7 @@ class Attachment(models.Model):
 
 
 class EmailMessage(models.Model):
-    sender = models.ForeignKey(EmailUser, related_name='sent_emails')
+    sender = models.ForeignKey(EmailUser, related_name='sent_emails', db_index=True)
 
     recipients = models.ManyToManyField(EmailUser, related_name='received_emails', blank=True)
 
@@ -214,11 +214,13 @@ class EmailMessage(models.Model):
 
 
 class PersonalEmailMessage(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, db_index=True)
 
-    message = models.ForeignKey(EmailMessage)
+    message = models.ForeignKey(EmailMessage, db_index=True)
 
-    is_removed = models.BooleanField(default=False)
+    is_removed = models.BooleanField(default=False, db_index=True)
+
+    is_read = models.BooleanField(default=False, db_index=True)
 
     time_removed = models.DateTimeField(null=True, blank=True, default=None)
 
@@ -247,9 +249,12 @@ class PersonalEmailMessage(models.Model):
             email.remove()
 
     @classmethod
-    def make_for(cls, message, user):
+    def make_for(cls, message: EmailMessage, user):
         if not PersonalEmailMessage.objects.all().filter(user=user, message=message):
-            personal = PersonalEmailMessage(user=user, message=message)
+            is_read = True
+            if message.status == EmailMessage.STATUS_ACCEPTED:
+                is_read = False
+            personal = PersonalEmailMessage(user=user, message=message, is_read=is_read)
             personal.save()
 
 

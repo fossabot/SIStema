@@ -19,6 +19,20 @@
 
     <h1>
         {% if area == 'global' %} Глобальные настройки
+            <div class="dropdown ib ml15">
+                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true">
+                    Выбрать школу
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    {% for school in schools %}
+                        <li>
+                            <a href="{% url 'school:school_settings_list' school|get_item:'short_name' %}">{{ school|get_item:'name' }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% elif area == 'school' %} Настройки для школы {{ name }}
             <small>
 
@@ -31,12 +45,10 @@
 
             </small>
         {% elif area == 'session' %} Настройки для смены {{ name }}
-
             <small>
                 <a href="{% url "school:school_settings_list" school_short_name %}"><span
                         class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span></a>
             </small>
-
         {% endif %}
     </h1>
     <button class="btn btn-default clear" type="button" onclick="clearSearch()">Очистить поиск</button>

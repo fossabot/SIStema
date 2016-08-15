@@ -48,7 +48,7 @@
                         </div>
                         <div class="section mt15 mbn">
                             {% if email.attachments.all %}
-                                <a class="btn mb15" href="download_all/">Скачать все</a>
+                                <a class="btn mb15" href="{% url 'mail:download_all' email.id %}">Скачать все</a>
                             {% endif %}
 
                             {% for attachment in email.attachments.all %}

@@ -373,11 +373,18 @@ def _get_start_and_end_page(page_index, max_page):
         return page_index - PAGES_ON_PAGINATOR // 2, page_index + PAGES_ON_PAGINATOR // 2
 
 
-def _get_links_of_pages_to_show(view, page_index, mail_count):
+def _get_links_of_pages_to_show(view, page_index, mail_count, not_read=None):
     links = []
+
     start_page, end_page = _get_start_and_end_page(page_index, _get_max_page_num(mail_count))
     for i in range(start_page, end_page + 1):
         links.append(urlresolvers.reverse(view, kwargs={'page_index': i}))
+    if not_read is not None:
+        not_read = '?not_read=' + str(not_read)
+    else:
+        not_read = ''
+    links = [(link + not_read) for link in links]
+    print(links, file=open('b.txt', 'w'))
     return links
 
 
@@ -417,11 +424,18 @@ def _read_page_index(page_index, mail_count):
         return True, 1
 
 
-def _get_email_list(current_user, status, search_request=''):
-    email_list = models.PersonalEmailMessage.get_not_removed(user=current_user).filter(
+def _get_email_list(current_user, status, search_request='', not_read=None):
+    """
+    :param current_user:
+    :param status: int (Accepted, Sent, Draft)
+    :param search_request: string
+    :return: list: PersonalEmailMessage Все неудаленные письма текущего пользователя со статусом status,
+    содержащие подстроку search.
+    """
+    personal_email_list = models.PersonalEmailMessage.get_not_removed(user=current_user).filter(
         message__status=status).order_by('-message__created_at')
     if search_request:
-        email_list = email_list.annotate(
+        personal_email_list = personal_email_list.annotate(
             full_text=Concat('message__subject', Value(' '),
                              'message__sender__externalemailuser__display_name', Value(' '),
                              'message__sender__externalemailuser__email', Value(' '),
@@ -432,28 +446,36 @@ def _get_email_list(current_user, status, search_request=''):
         ).filter(
             full_text__icontains=search_request
         )
-    return email_list
+    if not_read is not None:
+        return personal_email_list.filter(is_read=not not_read)
+    else:
+        return personal_email_list
 
 
 @login_required
 def inbox(request, page_index='1'):
     search = ''
+    not_read = None
+    if 'not_read' in request.GET:
+        if request.GET['not_read'].lower() == 'true':
+            not_read = True
     if 'search_request' in request.GET:
         search = request.GET['search_request']
-    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_ACCEPTED, search)
-    mail_list = []
-    for mail in personal_mail_list:
-        mail_list.append(mail.message)
+    mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_ACCEPTED, search, not_read)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
         return redirect(urlresolvers.reverse('mail:inbox_page', kwargs={'page_index': page_index}))
 
     params = _get_standard_mail_list_params(mail_list, page_index, request)
-    params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list))
+    params['tab_links'] = _get_links_of_pages_to_show('mail:inbox_page', page_index, len(mail_list), not_read)
     params['prev_link'] = _get_prev_link('mail:inbox_page', page_index)
     params['next_link'] = _get_next_link('mail:inbox_page', page_index, len(mail_list))
     params['search'] = search
+    if 'not_read' in request.GET:
+        params['not_read'] = request.GET['not_read']
+    else:
+        params['not_read'] = False
     return render(request, 'mail/inbox.html', params)
 
 
@@ -462,10 +484,7 @@ def sent(request, page_index='1'):
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
-    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_SENT, search)
-    mail_list = []
-    for mail in personal_mail_list:
-        mail_list.append(mail.message)
+    mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_SENT, search)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -487,10 +506,7 @@ def drafts_list(request, page_index='1'):
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
-    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_DRAFT, search)
-    mail_list = []
-    for mail in personal_mail_list:
-        mail_list.append(mail.message)
+    mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_DRAFT, search)
 
     do_redirect, page_index = _read_page_index(page_index, len(mail_list))
     if do_redirect:
@@ -506,19 +522,20 @@ def drafts_list(request, page_index='1'):
 
 @login_required
 def message(request, message_id):
-    email = get_object_or_404(models.EmailMessage, id=message_id)
-
-    if not can_user_view_message(request.user, email) or email.is_email_removed():
+    email = get_object_or_404(models.PersonalEmailMessage, message__id=message_id)
+    if not can_user_view_message(request.user, email.message) or email.message.is_email_removed():
         return HttpResponseForbidden('Вы не можете просматривать это письмо.')
+    email.is_read = True
+    email.save()
     link_back = urlresolvers.reverse('mail:inbox')
-    if email.is_draft():
+    if email.message.is_draft():
         link_back = urlresolvers.reverse('mail:drafts')
-    if email.is_sent():
+    if email.message.is_sent():
         link_back = urlresolvers.reverse('mail:sent')
 
     return render(request, 'mail/message.html', {
-        'email': email,
-        'allow_replying': is_recipient_of_email(request.user, email),
+        'email': email.message,
+        'allow_replying': is_recipient_of_email(request.user, email.message),
         'link_back': link_back,
     })
 

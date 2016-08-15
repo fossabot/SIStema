@@ -24,33 +24,36 @@
                             {% endblock %}
                         </div>
                         {% if search or mail_list %}
-                        <form id="searcher" role="form" class="mb10">
-                            <input type="text" class="form-control" name="search_request"
-                                   placeholder="Текст для поиска" value="{{ search }}">
-                        </form>
+                            <form id="searcher" role="form" class="mb10">
+                                <input type="text" class="form-control" name="search_request"
+                                       placeholder="Текст для поиска" value="{{ search }}">
+                            </form>
                         {% endif %}
-                        <form id="email_list" method="post" action="{% url 'mail:delete_all' %}">
-                            {% csrf_token %}
                             {% if mail_list %}
-                                <div class="checkbox-custom email-checkbox mb1 mr10">
+                                <div class="checkbox-custom email-checkbox mb1 mr10 ib">
                                     <input id="check_all" type="checkbox" checkbox_for="email">
                                     <label for="check_all">Отметить все</label>
                                 </div>
+                                {% block is_read %}
+                                {% endblock %}
+                        <form id="email_list" method="post" action="{% url 'mail:delete_all' %}">
+                            {% csrf_token %}
                                 {% for email in mail_list %}
-                                    <a class="email-link" href="{% if email.is_draft %}{% url 'mail:edit' email.id %}
-                                {% else %}{% url 'mail:message' email.id %}{% endif %}">
-                                        <div class="section pb20 mbn email">
+                                    <a class="email-link"
+                                       href="{% if email.message.is_draft %}{% url 'mail:edit' email.message.id %}
+                                {% else %}{% url 'mail:message' email.message.id %}{% endif %}">
+                                        <div class="section pb20 mbn email{% if not email.is_read %} read {% endif %}">
                                             <div class="checkbox-custom email-checkbox sm-checkbox mb20 pull-left mr10">
-                                                <input id="{{ email.id }}" type="checkbox"
-                                                       name="email_id {{ email.id }}" checkbox_group="email">
-                                                <label for="{{ email.id }}"></label>
+                                                <input id="{{ email.message.id }}" type="checkbox"
+                                                       name="email_id {{ email.message.id }}" checkbox_group="email">
+                                                <label for="{{ email.message.id }}"></label>
                                             </div>
                                             <div class="ml30">
-                                                <div title="{{ email.sender.email }}"
-                                                     class="ib mr15 mt15">{{ email.sender.display_name }}
+                                                <div title="{{ email.message.sender.email }}"
+                                                     class="ib mr15 mt15">{{ email.message.sender.display_name }}
                                                 </div>
-                                                <b>{{ email.subject }}</b>
-                                                — {{ email.html_text|truncatechars:50|striptags }}
+                                                {{ email.message.subject }}
+                                                — <i>{{ email.message.html_text|truncatechars:50|striptags }}</i>
                                             </div>
                                         </div>
                                     </a>

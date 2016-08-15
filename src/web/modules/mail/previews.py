@@ -1,7 +1,7 @@
 import os
+from PIL import Image, ImageDraw, ImageFont
 
 from django.conf import settings
-from PIL import Image, ImageDraw, ImageFont
 
 
 class AbstractPreviewGenerator:
@@ -36,6 +36,7 @@ class TextPreviewGenerator(AbstractPreviewGenerator):
         draw = ImageDraw.Draw(image)
         text = text_file.read(500)
         split_text = text.split('\n')
+
         for counter in range(min(12, len(split_text))):
             line = split_text[counter] + '\n'
             draw.text((7, 9 + counter * 7), line, fill=(100, 100, 100), font=font)

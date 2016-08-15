@@ -23,7 +23,12 @@ def respond_as_attachment(request, file_path, original_filename):
     response['Content-Length'] = str(os.stat(file_path).st_size)
     if encoding is not None:
         response['Content-Encoding'] = encoding
+    response['Content-Disposition'] = 'attachment; ' + filename_header(request, original_filename)
+    return response
 
+
+def filename_header(request, original_filename):
+    filename_header = ''
     # To inspect details for the below code, see http://greenbytes.de/tech/tc2231/
     if u'WebKit' in request.META['HTTP_USER_AGENT']:
         # Safari 3.0 and Chrome 2.0 accepts UTF-8 encoded string directly.
@@ -35,8 +40,7 @@ def respond_as_attachment(request, file_path, original_filename):
     else:
         # For others like Firefox, we follow RFC2231 (encoding extension in HTTP headers).
         filename_header = 'filename*=UTF-8\'\'%s' % urllib.parse.quote(original_filename)
-    response['Content-Disposition'] = 'attachment; ' + filename_header
-    return response
+    return filename_header
 
 
 # TODO: if extract_key_function is str, make extract_key_function from operator.attrgetter

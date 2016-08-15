@@ -1,5 +1,7 @@
 from random import choice, randint, sample
 import string
+from mimetypes import guess_type
+import urllib.request
 
 
 from django.core.management.base import BaseCommand, CommandError
@@ -191,7 +193,7 @@ def create_attachment_to_sis_dir(attachment_path):
     """Функция копирует файл с компьютера по пути attachment_path
        и сохраняет его в системную папку sis_dir=settings.SISTEMA_MAIL_ATTACHMENT_DIR.
        Функция переименовывает файл, сохраняя original_file_name в модели Attachment."""
-    attachment_name = helpers.generate_random_name() + os.path.splitext(attachment_path)[1]
+    attachment_name = helpers.generate_random_name()
     new_attachment_path = os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name)
     try:
         shutil.copy(attachment_path, new_attachment_path)
@@ -199,9 +201,12 @@ def create_attachment_to_sis_dir(attachment_path):
         if os.path.exists(new_attachment_path):
             os.remove(new_attachment_path)
         raise
+    url = urllib.request.pathname2url(attachment_path)
+    content_type = guess_type(url)
     return models.Attachment.from_file(
         os.path.join(settings.SISTEMA_MAIL_ATTACHMENTS_DIR, attachment_name),
-        os.path.basename(attachment_path)
+        os.path.basename(attachment_path),
+        content_type
     )
 
 

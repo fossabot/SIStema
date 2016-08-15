@@ -1,6 +1,5 @@
 import datetime
 import random
-from mimetypes import guess_type
 
 import requests
 from django.core.files import File
@@ -77,6 +76,7 @@ class ExternalEmailUser(EmailUser):
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
 
+
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
 
@@ -89,23 +89,22 @@ class Attachment(models.Model):
         'SISTEMA_MAIL_ATTACHMENTS_DIR'
     ), recursive=True)
 
-    @staticmethod
-    def from_file(renamed_path, name):
-        content_type = guess_type(renamed_path)
-        original_file_name = name
-        file_size = os.path.getsize(renamed_path)
-        file = renamed_path
-        return Attachment(
-            content_type=content_type,
-            original_file_name=original_file_name,
-            file_size=file_size,
-            file=file
-        )
-
     preview = RelativeFilePathField(path=django.db.migrations.writer.SettingsReference(
         settings.SISTEMA_ATTACHMENT_PREVIEWS_DIR,
         'SISTEMA_ATTACHMENT_PREVIEWS_DIR'
     ), recursive=True)
+
+    @staticmethod
+    def from_file(renamed_path, name, content_type):
+        original_file_name = name
+        file_size = os.path.getsize(renamed_path)
+        file = os.path.relpath(renamed_path, Attachment._meta.get_field('file').path)
+        return Attachment(
+            content_type=content_type[0],
+            original_file_name=original_file_name,
+            file_size=file_size,
+            file=file
+        )
 
     def _generate_preview(self):
         directory = Attachment._meta.get_field('preview').path
@@ -113,6 +112,8 @@ class Attachment(models.Model):
         output_file = '%s_preview' % os.path.splitext(
             os.path.join(directory, self.file)
         )[0]
+        #print('i am here')
+        print(self.content_type)
         preview_generator = self.preview_generator
         if preview_generator is not None:
             try:

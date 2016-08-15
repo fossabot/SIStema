@@ -3,36 +3,29 @@ import hmac
 import json
 import os
 import re
-import threading
-import zipfile
 from datetime import datetime
-from io import BytesIO
-from io import StringIO
 from string import whitespace
-from zipfile import ZIP_DEFLATED
+import zipfile
 import zipstream
+from io import BytesIO
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers, validators, exceptions
-from django.db import transaction
 from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
-from django.http.response import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
-from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
-from settings import api
 from modules.mail.models import get_user_by_hash
-from sistema.helpers import respond_as_attachment, filename_header, respond_as_zip
+from sistema.helpers import respond_as_attachment, respond_as_zip, respond_as_zip_bytes
 from sistema.uploads import save_file
 from . import models, forms
 
@@ -413,6 +406,7 @@ def _get_standard_mail_list_params(mail_list, page_index, request):
     params['show_next'] = (page_index != _get_max_page_num(len(mail_list)))
     params['start_page'] = _get_start_and_end_page(page_index, _get_max_page_num(len(mail_list)))[0]
     params['email_user'] = request.user.email_user.first()
+    params['show_archive'] = _show_archive(request.user)
     return params
 
 
@@ -455,6 +449,12 @@ def _get_email_list(current_user, status, search_request=''):
                 'message__html_text', output_field=TextField()),
         ).filter(full_text__icontains=search_request)
     return email_list
+
+
+def _show_archive(user):
+    accepted = _get_email_list(user, models.EmailMessage.STATUS_RECEIVED)
+    sent = _get_email_list(user, models.EmailMessage.STATUS_SENT)
+    return sent or accepted
 
 
 @login_required
@@ -984,10 +984,58 @@ def download_all(request, message_id):
         if not can_user_download_attachment(request.user, attachment):
             return HttpResponseForbidden()
 
-    archive = zipstream.ZipFile(mode='w', compression=ZIP_DEFLATED)
+    archive = zipstream.ZipFile(mode='w', compression=zipfile.ZIP_DEFLATED)
     for attachment in attachments:
         path = attachment.get_file_abspath()
         archive.write(path, attachment.original_file_name)
 
     filename = 'msg' + str(message_id) + '-attachments.zip'
     return respond_as_zip(request, filename, archive)
+
+
+def _get_display_string(person):
+    return '%s %s' % (person.display_name, person.email)
+
+
+def _get_raw_text_preview(email):
+    email_subject = 'Subject: %s' % email.subject
+    email_sender = 'From: %s' % _get_display_string(email.sender)
+    email_recipients = 'To: %s' % ', '.join(map(_get_display_string, list(email.recipients.all())))
+    email_cc_recipients = 'Cc: %s' % ', '.join(map(_get_display_string, list(email.cc_recipients.all())))
+    if email.cc_recipients.all():
+        email_recipients_and_cc = '%s\n%s' % (email_recipients, email_cc_recipients)
+    else:
+        email_recipients_and_cc = email_recipients
+    email_date = 'Date: %s' % email.created_at
+    email_text = '\n%s' % strip_tags(email.html_text)
+    return '\n'.join([email_sender, email_recipients_and_cc, email_subject, email_date, email_text])
+
+
+@login_required
+def email_archive(request):
+    personal_received_mail = _get_email_list(request.user, models.EmailMessage.STATUS_RECEIVED)
+    personal_sent_mail = _get_email_list(request.user, models.EmailMessage.STATUS_SENT)
+    if not personal_received_mail and not personal_sent_mail:
+        messages.info(request, 'У вас ещё нет писем.')
+        return redirect(urlresolvers.reverse('mail:inbox'))
+    out = BytesIO()
+    archive = zipfile.ZipFile(out, 'w')
+    for mail in personal_received_mail:
+        email_file_name = 'inbox/mail-%s.txt' % mail.message.id
+        archive.writestr(email_file_name, _get_raw_text_preview(mail.message))
+        for attachment in mail.message.attachments.all():
+            path = attachment.get_file_abspath()
+            file_name = 'inbox/mail-%s.attachments/%s' % (mail.message.id, attachment.original_file_name)
+            archive.write(path, file_name)
+
+    for mail in personal_sent_mail:
+        email_file_name = 'sent/mail-%s.txt' % mail.message.id
+        archive.writestr(email_file_name, _get_raw_text_preview(mail.message))
+        for attachment in mail.message.attachments.all():
+            path = attachment.get_file_abspath()
+            file_name = 'sent/mail-%s.attachments/%s' % (mail.message.id, attachment.original_file_name)
+            archive.write(path, file_name)
+
+    archive.close()
+    file_name = 'user-%s-mail-archive-%s.zip' % (request.user.id, str(timezone.now()))
+    return respond_as_zip_bytes(request, file_name, out)

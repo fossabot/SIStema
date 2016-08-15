@@ -15,6 +15,12 @@ def respond_as_zip(request, filename, zip_stream):
     return response
 
 
+def respond_as_zip_bytes(request, filename, out):
+    response = HttpResponse(out.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; ' + filename_header(request, filename)
+    return response
+
+
 def respond_as_attachment(request, file_path, original_filename):
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return HttpResponseNotFound()

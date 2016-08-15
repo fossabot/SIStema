@@ -3,15 +3,11 @@ import hmac
 import json
 import os
 import re
-import threading
-import zipfile
 from datetime import datetime
-from io import BytesIO
-from io import StringIO
 from string import whitespace
 from zipfile import ZIP_DEFLATED
-import zipstream
 
+import zipstream
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -22,20 +18,15 @@ from django.db.models import Q, TextField
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
-from django.http.response import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db import transaction
-from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
-from settings import api
 from modules.mail.models import get_user_by_hash
-from sistema.helpers import respond_as_attachment, filename_header, respond_as_zip
+from sistema.helpers import respond_as_attachment, respond_as_zip
 from sistema.uploads import save_file
 from . import models, forms
-
 
 RECIPIENTS_LIST_SEPARATOR = re.compile(r'[,;] *')
 

@@ -100,7 +100,7 @@ class Attachment(models.Model):
         file_size = os.path.getsize(renamed_path)
         file = os.path.relpath(renamed_path, Attachment._meta.get_field('file').path)
         return Attachment(
-            content_type=content_type[0],
+            content_type=content_type,
             original_file_name=original_file_name,
             file_size=file_size,
             file=file
@@ -112,8 +112,6 @@ class Attachment(models.Model):
         output_file = '%s_preview' % os.path.splitext(
             os.path.join(directory, self.file)
         )[0]
-        #print('i am here')
-        print(self.content_type)
         preview_generator = self.preview_generator
         if preview_generator is not None:
             try:

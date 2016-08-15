@@ -55,7 +55,12 @@ def get_session_settings(school_name, session_name):
 def global_settings_list(request):
     settings_list = get_global_settings()
     groups = groups_list_from_settings_list(settings_list)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'global'})
+    schools = []
+    for school in School.objects.all().order_by('short_name'):
+        schools.append({'name': school.name, 'short_name': school.short_name})
+    return render(request, 'settings/list.html', {'apps': groups,
+                                                  'area': 'global',
+                                                  'schools': schools})
 
 
 @sistema.staff.only_staff

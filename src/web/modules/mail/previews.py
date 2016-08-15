@@ -31,7 +31,7 @@ class TextPreviewGenerator(AbstractPreviewGenerator):
         text_file = open(self.attachment.get_file_abspath(), "r")
         size = (64, 96)
         image = Image.new('RGBA', size, (255, 255, 255))
-        font_path = os.path.join(settings.BASE_DIR, 'modules/mail/static/mail/fonts/DroidSans.ttf')
+        font_path = os.path.join(settings.BASE_DIR, 'web/modules/mail/static/mail/fonts/DroidSans.ttf')
         font = ImageFont.truetype(font_path, size=7)
         draw = ImageDraw.Draw(image)
         text = text_file.read(500)

@@ -14,6 +14,9 @@
             <span class="mr10"><a href="{% url 'mail:inbox' %}">Входящие</a></span>
             <span class="mr10"><a href="{% url 'mail:sent' %}">Отправленные</a></span>
             <span class="mr10">Черновики</span>
+            {% if email_user.have_archive %}
+            <span class="mr10"><a href="{% url 'mail:archive' %}">Архив писем</span>
+            {% endif %}
             <span class="pull-right">
                 <a href="{% url 'mail:contact_list' %}">
                 Контакты

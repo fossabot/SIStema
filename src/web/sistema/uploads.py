@@ -4,20 +4,12 @@ from . import settings
 from sistema import helpers
 
 
-def _ensure_directory_exists(path):
-    if not os.path.exists(path):
-        os.mkdir(path)
-    else:
-        if not os.path.isdir(path):
-            raise FileNotFoundError('sistema: %s is not a directory' % path)
-
-
 # TODO: by default save extension from uploaded_file
 def save_file(uploaded_file, category, extension=None, save_as=None):
     DEFAULT_EXTENSION = ''
 
     directory = os.path.join(settings.SISTEMA_UPLOAD_FILES_DIR, category)
-    _ensure_directory_exists(directory)
+    helpers.ensure_directory_exists(directory)
 
     if save_as is None:
         file_name = os.path.join(directory, helpers.generate_random_name())

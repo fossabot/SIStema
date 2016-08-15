@@ -77,6 +77,7 @@ class ExternalEmailUser(EmailUser):
     def __str__(self):
         return '"%s" <%s>' % (self.display_name, self.email)
 
+
 class Attachment(models.Model):
     content_type = models.CharField(max_length=100)
 

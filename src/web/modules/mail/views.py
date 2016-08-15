@@ -11,6 +11,9 @@ from datetime import datetime
 from io import BytesIO
 from io import StringIO
 from string import whitespace
+from zipfile import ZIP_DEFLATED
+
+import zipstream
 
 from django import forms
 from django.conf import settings
@@ -127,7 +130,7 @@ def _save_email(request, email_form, email_id=None, email_status=models.EmailMes
     return email
 
 
-def _download_mailbox_attachment(attachment_data):
+def _download_mailgun_attachment(attachment_data):
     attachment = models.Attachment.download_from_url(attachment_data['url'])
     attachment.file_size = attachment_data['size']
     attachment.original_file_name = attachment['name']
@@ -445,7 +448,7 @@ def inbox(request, page_index='1'):
     search = ''
     if 'search_request' in request.GET:
         search = request.GET['search_request']
-    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_ACCEPTED, search)
+    personal_mail_list = _get_email_list(request.user, models.EmailMessage.STATUS_RECEIVED, search)
     mail_list = []
     for mail in personal_mail_list:
         mail_list.append(mail.message)
@@ -857,7 +860,7 @@ def _write(request, new_form):
                 for attachment in attachments:
                     attachment.save()
                     email.attachments.add(attachment)
-                email.status = models.EmailMessage.STATUS_ACCEPTED
+                email.status = models.EmailMessage.STATUS_RECEIVED
                 email.save()
 
                 for user in recipients:
@@ -938,12 +941,10 @@ def download_all(request, message_id):
         if not can_user_download_attachment(request.user, attachment):
             return HttpResponseForbidden()
 
-    out = BytesIO()
-    archive = zipfile.ZipFile(out, 'w')
+    archive = zipstream.ZipFile(mode='w', compression=ZIP_DEFLATED)
     for attachment in attachments:
         path = attachment.get_file_abspath()
         archive.write(path, attachment.original_file_name)
-    archive.close()
 
     filename = 'msg' + str(message_id) + '-attachments.zip'
-    return respond_as_zip(request, filename, out)
+    return respond_as_zip(request, filename, archive)

@@ -169,20 +169,20 @@ class EmailMessage(models.Model):
     delivered = models.BooleanField(default=False)
 
     STATUS_UNKNOWN = 0
-    STATUS_ACCEPTED = 1
+    STATUS_RECEIVED = 1
     STATUS_SENT = 2
     STATUS_DRAFT = 3
     STATUS_RAW_DRAFT = 4
 
     status = models.IntegerField(choices=(
-        (STATUS_ACCEPTED, 'Принято'),
+        (STATUS_RECEIVED, 'Принято'),
         (STATUS_SENT, 'Отправлено'),
         (STATUS_DRAFT, 'Черновик'),
         (STATUS_RAW_DRAFT, 'Новый черновик')
     ), default=STATUS_UNKNOWN)
 
     def is_incoming(self):
-        return self.status == self.STATUS_ACCEPTED
+        return self.status == self.STATUS_RECEIVED
 
     def is_sent(self):
         return self.status == self.STATUS_SENT

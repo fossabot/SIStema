@@ -1,17 +1,16 @@
+import collections
 import mimetypes
 import os
-import urllib.parse
-import collections
 import random
 import string
-from io import BytesIO
+import urllib.parse
 
 from django.http import HttpResponse
-from django.http.response import HttpResponseNotFound
+from django.http.response import HttpResponseNotFound, StreamingHttpResponse
 
 
-def respond_as_zip(request, filename, out: BytesIO):
-    response = HttpResponse(out.getvalue(), content_type='application/zip')
+def respond_as_zip(request, filename, zip_stream):
+    response = StreamingHttpResponse(zip_stream, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; ' + filename_header(request, filename)
     return response
 

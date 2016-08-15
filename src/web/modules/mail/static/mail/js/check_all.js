@@ -1,7 +1,7 @@
 function number_of_checked(checkbox_group) {
     var cnt = 0;
-    $('input:checkbox[checkbox_group="' + checkbox_group + '"]').each(function (i, e) {
-        if ($(e).prop('checked'))
+    $('input:checkbox[checkbox_group="' + checkbox_group + '"]').each(function (idx, item) {
+        if ($(item).prop('checked'))
             ++cnt;
     });
     return cnt;

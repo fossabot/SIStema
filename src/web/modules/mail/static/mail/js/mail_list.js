@@ -46,8 +46,7 @@ $(document).ready(function () {
                 val = !val;
                 clicked = true;
                 not_read.val(val);
-                $('#not_read').prop('checked', val);
-                $('#not_read').val(val);
+                $('#not_read').prop('checked', val).val(val);
                 return true;
             }
             return false;

@@ -10,9 +10,10 @@ $(document).ready(function () {
         }
     );
 
-    var val = not_read.val().toLowerCase();
-    val = val != 'false';
-
+    if (val) {
+        var val = not_read.val().toLowerCase();
+        val = val != 'false';
+    }
     $('#not_read').prop('checked', val);
 
     button.click(function () {

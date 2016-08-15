@@ -63,7 +63,14 @@ def school_settings_list(request, school_name):
     settings_list = get_school_settings(school_name)
     groups = groups_list_from_settings_list(settings_list)
     school = get_object_or_404(School, short_name=school_name)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'school', 'name': school.name})
+    sessions = []
+    for session in Session.objects.filter(school=school):
+        sessions.append({'name': session.name, 'short_name': session.short_name})
+    return render(request, 'settings/list.html', {'apps': groups,
+                                                  'area': 'school',
+                                                  'name': school.name,
+                                                  'short_name': school.short_name,
+                                                  'sessions': sessions})
 
 
 @sistema.staff.only_staff
@@ -72,7 +79,10 @@ def session_settings_list(request, school_name, session_name):
     groups = groups_list_from_settings_list(settings_list)
     school = get_object_or_404(School, short_name=school_name)
     session = get_object_or_404(Session, school=school, short_name=session_name)
-    return render(request, 'settings/list.html', {'apps': groups, 'area': 'session', 'name': str(session)})
+    return render(request, 'settings/list.html', {'apps': groups,
+                                                  'area': 'session',
+                                                  'name': str(session),
+                                                  'school_short_name': school.short_name})
 
 
 @sistema.staff.only_staff

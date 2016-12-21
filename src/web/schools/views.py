@@ -7,30 +7,6 @@ from .decorators import school_view
 import importlib
 
 
-class UserStep:
-    pass
-
-
-def build_user_steps(steps, user):
-    user_steps = []
-
-    for class_name, params in steps:
-        module_name, class_name = class_name.rsplit(".", 1)
-        klass = getattr(importlib.import_module(module_name), class_name)
-        step = klass(**params)
-
-        rendered_step = step.render(user)
-        # TODO: create custom model
-        user_step = UserStep()
-        user_step.is_available = step.is_available(user)
-        user_step.is_passed = step.is_passed(user)
-        user_step.rendered = rendered_step
-
-        user_steps.append(user_step)
-
-    return user_steps
-
-
 def user(request):
     blocks = request.school.home_page_blocks.order_by('order')
     for block in blocks:
@@ -40,14 +16,6 @@ def user(request):
     return render(request, 'home/user.html', {
         'school': request.school,
         'blocks': blocks,
-    })
-
-    return render(request, 'home/user.html', {
-        'school': request.school,
-        'steps': user_steps,
-        'entrance_status': entrance_status,
-        'enrolled_steps': user_enrolled_steps,
-        'absence_reason': absence_reason,
     })
 
 

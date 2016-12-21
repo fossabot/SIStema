@@ -1,11 +1,12 @@
-from django.shortcuts import get_object_or_404
+from django import shortcuts
 
 from .models import *
 
 
 def school_view(view):
     def func_wrapper(request, school_name, *args, **kwargs):
-        request.school = get_object_or_404(School, short_name=school_name)
+        request.school = shortcuts.get_object_or_404(School,
+                                                     short_name=school_name)
         return view(request, *args, **kwargs)
 
     func_wrapper.__doc__ = view.__doc__

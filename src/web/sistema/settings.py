@@ -58,19 +58,19 @@ INSTALLED_APPS = (
 
     'sistema',
 
-    'schools',
-    'users',
-    'questionnaire',
-    'home',
     'frontend',
     'generator',
+    'home',
+    'questionnaire',
+    'schools',
+    'users',
 
     'modules.ejudge',
-    'modules.entrance',
-    'modules.topics',
-    'modules.exam_scorer_2016',
     'modules.enrolled_scans',
+    'modules.entrance',
+    'modules.exam_scorer_2016',
     'modules.finance',
+    'modules.topics',
 )
 
 MIDDLEWARE_CLASSES = (

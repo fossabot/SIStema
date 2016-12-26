@@ -20,9 +20,10 @@ class School(models.Model):
                   'обычным названием. Например, «Летняя компьютерная школа '
                   '2048»')
 
-    short_name = models.CharField(max_length=20,
-                                  help_text='Используется в урлах. Например, 2048',
-                                  unique=True)
+    short_name = models.CharField(
+        max_length=20,
+        help_text='Используется в урлах. Например, 2048',
+        unique=True)
 
     def __str__(self):
         return self.name

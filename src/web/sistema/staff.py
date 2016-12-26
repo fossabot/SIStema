@@ -65,6 +65,8 @@ def staff_context_processor(request):
     return {}
 
 
+# TODO(Artem Tabolin): is there any reason for not moving that function to
+#     users.decorators or to .decorators?
 def only_staff(func):
     def wrapped(request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_staff:

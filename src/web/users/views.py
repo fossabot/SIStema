@@ -14,6 +14,7 @@ def get_email_confirmation_link(request, user):
 
 
 def send_confirmation_email(request, user):
+    # TODO(Artem Tabolin): is it possible to use templates for that?
     return 0 < mail.send_mail('Регистрация в ЛКШ',
                               'Здравствуйте, ' + user.first_name + ' ' + user.last_name + '!\n\n'
                               'Кто-то (возможно, и вы) указали этот адрес при регистрации в Летней компьютерной школе (http://sistema.lksh.ru). '

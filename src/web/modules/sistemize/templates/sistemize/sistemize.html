@@ -1,0 +1,26 @@
+{% extends 'staff_layout.html' %}
+
+{% load staticfiles %}
+
+{% block title %}SIStemize!{% endblock %}
+
+{% block topbar %}{% endblock %}
+
+{% block content %}
+<form action="/sistemize/" enctype="multipart/form-data" method="post">
+  {% csrf_token %}
+  {{ form }}
+  <input type="submit" value="SIStemize!" />
+</form>
+
+<div>
+  <table>
+    <tbody>
+      {% for line in result %}
+      <tr><td>{{ line }}</td></tr>
+      {% endfor %}
+    </tbody>
+    <table>
+</div>
+{% endblock %}
+

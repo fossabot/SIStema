@@ -7,8 +7,6 @@ Most relevant issues are [here](https://github.com/andgein/SIStema/milestone/2)
 
 ## Install
 
-> Minimal required Python version is 3.5
-
     $ git clone git@github.com:andgein/SIStema.git
     $ cd SIStema/
     $ virtualenv -p python3 venv

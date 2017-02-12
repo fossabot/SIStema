@@ -13,8 +13,9 @@ Start from reading [wiki](https://github.com/andgein/SIStema/wiki)
     $ cd SIStema/
     $ virtualenv -p python3 venv
     $ source ./venv/bin/activate
-    $ sudo apt install libmysqlclient-dev
     $ pip install -Ur src/requirements.txt
+    
+Or (`pip install -Ur src/requirements.mysql.txt` if you want to use MySQL backend)
 
 Ask someone to make you a database dump of the main SIStema instance:
 

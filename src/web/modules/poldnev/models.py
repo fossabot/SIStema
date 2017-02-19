@@ -8,13 +8,13 @@ class Session(models.Model):
     """SIS session from poldnev.ru"""
 
     poldnev_id = models.CharField(
-        max_length=30,
+        max_length=50,
         unique=True,
         help_text='Id смены на poldnev.ru. Заполняется автоматически командой '
                   'manage.py update_poldnev по информации с сайта.')
 
     name = models.CharField(
-        max_length=30,
+        max_length=50,
         help_text='Имя смены на poldnev.ru. Заполняется автоматически командой '
                   'manage.py update_poldnev по информации с сайта.')
 
@@ -49,17 +49,17 @@ class Person(models.Model):
                   'командой manage.py update_poldnev по информации с сайта.')
 
     first_name = models.CharField(
-        max_length=50,
+        max_length=100,
         help_text='Имя человека на poldnev.ru. Заполняется автоматически '
                   'командой manage.py update_poldnev по информации с сайта.')
 
     middle_name = models.CharField(
-        max_length=50,
+        max_length=100,
         help_text='Отчество человека на poldnev.ru. Заполняется автоматически '
                   'командой manage.py update_poldnev по информации с сайта.')
 
     last_name = models.CharField(
-        max_length=100,
+        max_length=200,
         help_text='Фамилия человека на poldnev.ru. Заполняется автоматически '
                   'командой manage.py update_poldnev по информации с сайта.')
 

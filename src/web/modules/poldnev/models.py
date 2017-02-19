@@ -100,7 +100,7 @@ class Role(models.Model):
                   'poldnev.ru')
 
     poldnev_role = models.CharField(
-        max_length=50,
+        max_length=150,
         help_text='Строка, обозначающая роль на poldnev.ru. Заполняется '
                   'автоматически командой manage.py update_poldnev по '
                   'информации с сайта.')

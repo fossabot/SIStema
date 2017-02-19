@@ -1,0 +1,7 @@
+{% extends "staff_layout.html" %}
+
+{% block content %}
+<div style="width: 600px; margin: auto;">
+{% autoescape off %}{{ question.html }}{% endautoescape %}
+</div>
+{% endblock %}

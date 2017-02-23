@@ -10,7 +10,7 @@ from . import models
 
 
 def get_email_confirmation_link(request, user):
-    return request.build_absolute_uri(urlresolvers.reverse('confirm', args=[user.email_confirmation_token]))
+    return request.build_absolute_uri(urlresolvers.reverse('users:confirm', args=[user.email_confirmation_token]))
 
 
 def send_confirmation_email(request, user):

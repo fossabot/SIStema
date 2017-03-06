@@ -1,7 +1,14 @@
 {% extends "staff_layout.html" %}
 
+{# TODO: add css #}
+
 {% block content %}
 <div style="width: 600px; margin: auto;">
 {% autoescape off %}{{ question.html }}{% endautoescape %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>{{ question.js|safe }}</script>
 {% endblock %}

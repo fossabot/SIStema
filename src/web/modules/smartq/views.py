@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import random
 import types
 import uuid
 
@@ -87,22 +88,19 @@ heap_code = """
 import random
 
 class Generator:
-    # TODO(artemtab): where to put seed?
-    def __init__(self, seed):
-        self.seed = seed
+    def __init__(self):
         self.size = 10
 
     def generate(self):
-        # TODO(artemtab): how it behaves when there are several threads?
-        # TODO(artemtab): most probably we need strong consistency 
-        state = random.getstate()
-        random.seed(self.seed)
-
         elements = random.sample(range(100), self.size)
 
-        random.setstate(state)
-        return api.GeneratedQuestionData(answer_fields=[0] * len(elements),
-                                         heap_elements=elements)
+        regexp = '|'.join(map(str, elements))
+        answer_fields = [api.AnswerFieldSpec.text(validation_regexp=regexp)
+                         for _ in elements]
+
+        return api.GeneratedQuestionData(
+            answer_fields=answer_fields,
+            heap_elements=elements)
 
 
 class Checker:
@@ -114,14 +112,32 @@ class SmartQForm(forms.Form):
     default_renderer = 'django.forms.renderers.Jinja2'
 
     def __init__(self, prefix, field_specs, *args, **kwargs):
-        super().__init__(*args, auto_id=prefix + '-%s', **kwargs)
+        super().__init__(*args, auto_id='%s', **kwargs)
 
         self.field_specs = field_specs
 
-        for i in range(len(field_specs)):
+        for i, spec in enumerate(field_specs):
             # TODO: add prefix to name
             field_name = 'element_' + str(i + 1)
-            self.fields[field_name] = forms.IntegerField().get_bound_field(self, field_name)
+            prefixed_name = '-'.join([prefix, field_name])
+
+            field = None
+            if spec['type'] == api.AnswerFieldSpec.Type.TEXT:
+                # TODO: custom widgets for regexp check?
+                # TODO: min_length, max_length
+                # TODO: mutiline
+                field = forms.CharField()
+            if spec['type'] == api.AnswerFieldSpec.Type.INTEGER:
+                # TODO: custom widgets for regexp check?
+                field = forms.IntegerField(
+                    min_value=spec.get('min_value'),
+                    max_value=spec.get('max_value'))
+
+            if field is None:
+                # TODO: what is the right thing to do here?
+                raise Exception('Unknown field type')
+
+            self.fields[field_name] = field.get_bound_field(self, prefixed_name)
 
 
 class Question(models.Model):
@@ -169,7 +185,16 @@ class Question(models.Model):
         super().save(*args, **kwargs)
 
     def generate_with_seed(self, seed):
-        data = self._implementation.Generator(seed=seed).generate()
+        seed = str(seed)[:100]
+
+        # TODO(artemtab): how it behaves when there are several threads?
+        # TODO(artemtab): most probably we need strong consistency
+        state = random.getstate()
+        random.seed(seed)
+        # TODO: run in a separate thread and enforce TL
+        data = self._implementation.Generator().generate()
+        random.setstate(state)
+
         # TODO: replace with objects.create
         return GeneratedQuestion(
             base_question=self,

@@ -1,11 +1,29 @@
 import enum
 
-# Answer fields:
-# - one line text
-# - multiline text
-# - number
-#
-# - format string
+class Generator:
+    def generate(self):
+        raise NotImplementedError()
+
+
+# TODO: think of the way to return a message along with the status
+# TODO: it's also useful to return error messages to the specific cells as well
+#       as error message to the whole form
+class Checker:
+    # TODO: better names?
+    class Result(enum.IntEnum):
+        # Use explicit values and don't change the existing ones. That's
+        # important because they are stored in the database.
+        OK = 1
+        WA = 2
+        PE = 3
+
+    def __init__(self):
+        self.message = ''
+
+    def check(self, generated_question_data, answer):
+        raise NotImplementedError()
+
+
 class GeneratedQuestionData:
     def __init__(self, **kwargs):
         for name, value in kwargs.items():
@@ -65,3 +83,5 @@ class AnswerFieldSpec:
             spec['max_value'] = max_value
 
         return spec
+
+# TODO: checker statuses

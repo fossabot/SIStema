@@ -34,6 +34,14 @@ class GeneratedQuestionData:
             self.answer_fields = []
 
 
+class CheckerResult:
+    def __init__(self, status, message=None, field_messages=None):
+        # TODO: check types
+        self.status = status
+        self.message = message or ''
+        self.field_messages = field_messages or {}
+
+
 # TODO: is there a better name?
 class AnswerFieldSpec:
     class Type(enum.IntEnum):
@@ -43,10 +51,19 @@ class AnswerFieldSpec:
         INTEGER = 2
 
     @classmethod
-    def text(cls, multiline=False, validation_regexp=None):
+    def _base(cls, name=None):
+        spec = {'type': cls.Type.TEXT}
+
+        if name is not None:
+            spec['name'] = name
+
+        return spec
+
+    @classmethod
+    def text(cls, multiline=False, validation_regexp=None, **kwargs):
         # TODO: min_length, max_length?
         # TODO: what about using enum?
-        spec = {'type': cls.Type.TEXT}
+        spec = cls._base(**kwargs)
 
         if not isinstance(multiline, bool):
             raise Exception('multiline must be either True or False')

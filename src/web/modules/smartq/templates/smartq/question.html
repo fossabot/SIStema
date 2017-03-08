@@ -9,7 +9,11 @@
     {% autoescape off %}{{ question.html }}{% endautoescape %}
     <input type="submit" value="Отправить">
   </form>
-  <div>{{ status }}</div>
+  <div>
+    {% for line in status_lines %}
+    <p>{{ line }}</p>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
 

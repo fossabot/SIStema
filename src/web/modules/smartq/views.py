@@ -30,7 +30,6 @@ heap_template_html = """
     </div>
 """
 
-# TODO: shouldn't depend on field ids
 heap_template_js = """
 (function() {
     function draw_heap(canvas, overlay, n) {
@@ -48,8 +47,8 @@ heap_template_js = """
         }
 
         var nodes = {};
-        var level = 0, level_size = 0, j = 0;
-        for (var i = 1; i <= n; ++i, ++j) {
+        var level = 0, level_size = 0, i = 1, j = 0;
+        {% for field in form %}
             if (!(i & (i - 1))) {
                 level_size = 1 << level;
                 level++;
@@ -67,13 +66,15 @@ heap_template_js = """
                 ctx.lineTo(x, y);
             }
 
-            input = document.getElementById('id_{{ short_name }}-element_' + i);
+            input = document.getElementById('{{ field.auto_id }}');
             input.style['text-align'] = 'center';
             input.style.width = '4em';
             input.style.position = 'absolute';
             input.style.top = y * canvas_to_overlay - input.offsetHeight / 2 + 'px';
             input.style.left = x * canvas_to_overlay - input.offsetWidth / 2 + 'px';
-        }
+
+            ++i, ++j;
+        {% endfor %}
 
         ctx.stroke();
     }
@@ -113,26 +114,28 @@ class Checker(api.Checker):
     def check(self, generated_question_data, answer):
         elements = generated_question_data.heap_elements
         regexp = '|'.join(str(x) for x in elements)
-        for x in answer:
-            if not re.fullmatch(regexp, x):
-                self.message = 'Число {} не содержится среди данных элементов'.format(x)
-                return self.Result.PE
+        for name, value in answer.items():
+            if not re.fullmatch(regexp, value):
+                message = 'Число {} не содержится среди данных элементов'.format(value)
+                return api.CheckerResult(status=self.Result.PE,
+                                         field_messages={ name: message })
 
-        answer_heap = list(map(int, answer))
+        answer_heap = list(map(int, answer.values()))
         if sorted(elements) != sorted(answer_heap):
-            self.message = 'Набор элементов кучи не совпадает с заданным набором элементов'
-            return self.Result.PE
+            message = 'Набор элементов кучи не совпадает с заданным набором элементов'
+            return api.CheckerResult(status=self.Result.PE,
+                                     message=message)
 
         print(answer_heap)
         for i in range(1, len(answer_heap)):
             child = answer_heap[i]
             parent = answer_heap[(i + 1) // 2 - 1]
             if child < parent:
-                self.message = 'Число {x} меньше {y}, но является при этом его потомком'.format(x=child, y=parent)
-                return self.Result.WA
+                message = 'Число {x} меньше предка {y}, но является при этом его потомком'.format(x=child, y=parent)
+                return api.CheckerResult(status=self.Result.WA,
+                                         message=message)
 
-        self.message = ''
-        return self.Result.OK
+        return api.CheckerResult(status=self.Result.OK)
 """
 
 
@@ -169,7 +172,6 @@ class Question(models.Model):
         if module is None or module.modified_date < self.modified_date:
             module = types.ModuleType(name=self.short_name)
             module.api = api
-            # TODO: add safety layer
             exec(self.code, module.__dict__)  # TODO: use compiled_code
             module.modified_date = self.modified_date
 
@@ -249,13 +251,22 @@ class GeneratedQuestion(models.Model):
         # TODO: add cache layer
         return jinja2.Template(self.base_question.template_js).render(context)
 
-    def check(self, answer_values):
+    def check(self, data):
+        self.form = self.form_type(data)
+
+        if not self.form.is_valid():
+            return None
+
+        # TODO: is there a better way to get ordered cleaned_data?
+        answer_dict = collections.OrderedDict(
+            (name, self.form.cleaned_data[name])
+            for name in self.form.field_order)
         # TODO: add safety layer
         checker = self.base_question._implementation.Checker()
-        status = checker.check(self.data, answer_values)
-        # TODO: remove this dirty hack
-        checker.status = status
-        return checker
+        result = checker.check(self.data, answer_dict)
+        # TODO: update form with messages?
+
+        return result
 
 
 def make_form_type(prefix, field_specs):
@@ -264,14 +275,13 @@ def make_form_type(prefix, field_specs):
 
     for i, spec in enumerate(field_specs):
         # TODO: add prefix to name
-        field_name = 'element_' + str(i + 1)
-        prefixed_name = '-'.join([prefix, field_name])
+        field_name = spec.get('name', 'element_' + str(i))
 
         field = None
         if spec['type'] == api.AnswerFieldSpec.Type.TEXT:
             # TODO: custom widgets for regexp check?
             # TODO: min_length, max_length
-            # TODO: mutiline
+            # TODO: multiline
             field = forms.CharField()
 
         if spec['type'] == api.AnswerFieldSpec.Type.INTEGER:
@@ -305,18 +315,18 @@ def heap(request, seed='100500'):
 
     generated_question = question.generate_with_seed(seed)
 
-    status = 'NA'
+    status_lines = ['NA']
 
     if request.method == 'POST':
-        form = generated_question.form_type(request.POST)
-        if form.is_valid():
-            answer_values = [form.cleaned_data[name]
-                             for name in form.field_order]
-            result = generated_question.check(answer_values)
-            status = '{}: {}'.format(repr(result.status), result.message)
-            generated_question.form = form
+        result = generated_question.check(request.POST)
+        print(result.__dict__)
+        status_lines = [str(result.status)]
+        if result.message:
+            status_lines.append('  message: {}'.format(result.message))
+        for name, value in result.field_messages.items():
+            status_lines.append('  {}: {}'.format(name, value))
 
     return shortcuts.render(request, 'smartq/question.html', {
         'question': generated_question,
-        'status': status,
+        'status_lines': status_lines,
     })

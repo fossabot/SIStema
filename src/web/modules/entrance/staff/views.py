@@ -129,6 +129,8 @@ class EnrollingUsersTable(frontend.table.Table):
 def get_enrolling_users_ids(school):
     # TODO: get not first TopicQuestionnaire, but defined in settings
     topic_questionnaire = modules.topics.models.TopicQuestionnaire.objects.filter(school=school).first()
+    if topic_questionnaire is None:
+      return []
     return topic_questionnaire.get_filled_users_ids()
 
 

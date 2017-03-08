@@ -151,7 +151,7 @@ class StudyResultsTable(frontend.table.Table):
 def get_study_result_ids(school):
     study_result_ids = (schools.models.SchoolParticipant.objects.filter(
         school=school).select_related('study_result').all()
-        .values_list('id', flat=True))
+        .values_list('study_result__id', flat=True))
     return study_result_ids
 
 

@@ -45,7 +45,10 @@ class TopicQuestionnaire(models.Model):
 class Level(models.Model):
     questionnaire = models.ForeignKey(TopicQuestionnaire)
 
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = ('questionnaire', 'name')
 
     def __str__(self):
         return '%s. %s' % (self.questionnaire, self.name)

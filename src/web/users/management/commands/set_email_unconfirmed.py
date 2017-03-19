@@ -6,7 +6,7 @@ from users import models
 
 
 class Command(management_base.BaseCommand):
-    help = 'Set user.is_email_confirmed=False for all user in range [from_user_id, user_id]'
+    help = 'Set user.is_email_confirmed=False for all user in range [from_user_id, to_user_id]'
 
     def add_arguments(self, parser):
         parser.add_argument('--from_user_id', type=int, help='left bound of range')

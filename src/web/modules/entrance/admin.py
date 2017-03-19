@@ -43,8 +43,6 @@ class EntranceLevelAdmin(admin.ModelAdmin):
 
 admin.site.register(models.EntranceLevel, EntranceLevelAdmin)
 
-admin.site.register(models.EntranceStep)
-
 
 class EntranceExamTaskSolutionAdmin(admin.ModelAdmin):
     list_display = ('id', 'task', 'user', 'ip')
@@ -168,7 +166,7 @@ class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
             kwargs['queryset'] = (
                 users.models.User.objects.filter(
                     entrance_statuses__status=models.EntranceStatus.Status.ENROLLED
-                ).order_by('last_name', 'first_name'))
+                ).distinct().order_by('last_name', 'first_name'))
         if db_field.name == 'created_by':
             kwargs['queryset'] = (
                 users.models.User.objects.filter(
@@ -176,11 +174,30 @@ class AbstractAbsenceReasonAdmin(admin.ModelAdmin):
                 ).order_by('last_name', 'first_name'))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-admin.site.register(models.RejectionAbsenceReason, AbstractAbsenceReasonAdmin)
-admin.site.register(models.NotConfirmedAbsenceReason, AbstractAbsenceReasonAdmin)
+admin.site.register(models.RejectionAbsenceReason,
+                    AbstractAbsenceReasonAdmin)
+admin.site.register(models.NotConfirmedAbsenceReason,
+                    AbstractAbsenceReasonAdmin)
 
 
-admin.site.register(models.EntranceStepsHomePageBlock, AbstractHomePageBlockAdmin)
-admin.site.register(models.EnrolledStepsHomePageBlock, AbstractHomePageBlockAdmin)
-admin.site.register(models.AbsenceReasonHomePageBlock, AbstractHomePageBlockAdmin)
-admin.site.register(models.EntranceStatusHomePageBlock, AbstractHomePageBlockAdmin)
+admin.site.register(models.EntranceStepsHomePageBlock,
+                    AbstractHomePageBlockAdmin)
+
+
+class AbstractEntranceStepAdmin(admin.ModelAdmin):
+    list_display = ('id', 'school', 'order',
+                    'available_from_time', 'available_to_time',
+                    'available_after_step')
+    list_filter = (('school', admin.RelatedOnlyFieldListFilter), )
+    ordering = ('school', 'order')
+
+admin.site.register(models.ConfirmProfileEntranceStep,
+                    AbstractEntranceStepAdmin)
+admin.site.register(models.FillQuestionnaireEntranceStep,
+                    AbstractEntranceStepAdmin)
+admin.site.register(models.SolveExamEntranceStep,
+                    AbstractEntranceStepAdmin)
+admin.site.register(models.ResultsEntranceStep,
+                    AbstractEntranceStepAdmin)
+admin.site.register(models.MakeUserParticipatingEntranceStep,
+                    AbstractEntranceStepAdmin)

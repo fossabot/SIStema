@@ -1,109 +1,37 @@
-from modules.entrance import steps
-import questionnaire.models
-from .. import models
+from modules.entrance.models import steps
+from modules.finance import models
 
 
-class PaymentInfoEntranceStep(steps.EntranceStep):
-    def __init__(self, school, payment_questionnaire, previous_questionnaire=None):
-        super().__init__(school, previous_questionnaire=previous_questionnaire)
-        self.payment_questionnaire = payment_questionnaire
-        if self.payment_questionnaire.school_id != self.school.id:
-            raise ValueError(
-                'finance.entrance.steps.PaymentInfoEntranceStep: PaymentQuestionnaire must be for this school')
+class FillPaymentInfoEntranceStep(steps.FillQuestionnaireEntranceStep):
+    template_file = 'finance/fill_payment_info.html'
 
-    def is_passed(self, user):
-        return self.payment_questionnaire.is_filled_by(user) and super().is_passed(user)
+    def build(self, user):
+        block = super().build(user)
+        if block is not None:
+            block.payment_amount = models.PaymentAmount.get_amount_for_user(
+                self.school, user
+            )
+            block.user_discounts = models.Discount.objects.filter(
+                school=self.school, user=user
+            )
+            block.actual_discounts = block.user_discounts.filter(amount__gt=0)
+            block.considered_discounts = block.user_discounts.filter(amount=0)
 
-    def render(self, user):
-        if not self.is_available(user):
-            template = self._template_factory('''
-            <p>
-                {{ questionnaire.title }} будет доступна после заполнения раздела «{{ previous.title }}».
-            </p>
-            ''')
-            body = template.render({
-                'questionnaire': self.payment_questionnaire,
-                'previous': self.previous_questionnaire,
-            })
-            return self.panel(self.payment_questionnaire.title, body, 'default')
+        return block
 
-        payment_amount = models.PaymentAmount.get_amount_for_user(self.school, user)
+    def __str__(self):
+        return 'Шаг заполнения информации об оплате для ' + self.school.name
 
-        user_discounts = models.Discount.objects.filter(school=self.school, user=user)
-        actual_discounts = user_discounts.filter(amount__gt=0)
-        considered_discounts = user_discounts.filter(amount=0)
-
-        already_filled = self.payment_questionnaire.is_filled_by(user)
-
-        template = self._template_factory('''
-            {% load stringcase %}
-
-            {% if payment_amount != None %}
-                <p>
-                    Размер оргвзноса для вас с учётом скидок составляет <b>{{ payment_amount }} рублей</b>.
-                </p>
-                <p>
-                    {% if actual_discounts %}
-                        <b>Предоставленн{{ actual_discounts.count|pluralize:'ая,ые' }} скидк{{ actual_discounts.count|pluralize:'а,и' }}: </b>
-                        {% for discount in actual_discounts %}
-                            {% if discount.public_comment %}
-                                {{ discount.public_comment|lowerfirst }}
-                            {% else %}
-                                {{ discount.type_name|lowerfirst }}
-                            {% endif %}
-                            в размере {{ discount.amount }} рублей{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                        {% if actual_discounts.count > 1 %}
-                            <p>
-                                Обратите внимание, что скидки не суммируются: применяется большая из них.
-                            </p>
-                        {% endif %}
-                    {% endif %}
-
-                    {% if considered_discounts %}
-                        Вы <b>рассматриваетесь</b> на получение скид{{ considered_discounts.count|pluralize:'ки,ок' }}:
-                        {% for discount in considered_discounts %}
-                            {% if discount.public_comment %}
-                                {{ discount.public_comment|lowerfirst }}
-                            {% else %}
-                                {{ discount.type_name|lowerfirst }}
-                            {% endif %}
-                            {% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    {% endif %}
-                </p>
-            {% endif %}
-            <p>
-                {% if already_filled %}
-                    Если вы собираетесь поменять способ оплаты или реквизиты, сделайте это до <b>20 июня</b>.
-                {% else %}
-                    Заполните информацию об оплате до <b>20 июня</b>.
-                {% endif %}
-            </p>
-            <div>
-                <a class="btn btn-{{ already_filled|yesno:'success,alert' }}" href="{{ questionnaire.get_absolute_url }}">Заполнить</a>
-            </div>
-            ''')
-        body = template.render({
-            'user': user,
-            'school': self.school,
-            'questionnaire': self.payment_questionnaire,
-            'payment_amount': payment_amount,
-            'actual_discounts': actual_discounts,
-            'considered_discounts': considered_discounts,
-            'already_filled': already_filled,
-        })
-
-        return self.panel(self.payment_questionnaire.title, body, 'success' if already_filled else 'alert')
-
-
+# TODO (andgein): Replace with the new entrance step
+"""
 class DocumentsEntranceStep(steps.EntranceStep):
     def __init__(self, school, payment_questionnaire):
         super().__init__(school, previous_questionnaire=payment_questionnaire)
         self.payment_questionnaire = payment_questionnaire
         if self.payment_questionnaire.school_id != self.school.id:
             raise ValueError(
-                'finance.entrance.steps.DocumentsEntranceStep: PaymentQuestionnaire must be for this school')
+                'finance.entrance.steps.DocumentsEntranceStep: '
+                'PaymentQuestionnaire must be for this school')
 
     def _get_needed_document_types(self, user):
         document_types = models.DocumentType.objects.filter(school=self.school)
@@ -222,5 +150,10 @@ class DocumentsEntranceStep(steps.EntranceStep):
                     'not_filled_fields': not_filled_fields
                 })
 
-        return self.panel('Документы', body, 'alert' if has_ready_document else 'danger')
+        return self.panel(
+            'Документы',
+            body,
+            'alert' if has_ready_document else 'danger'
+        )
 
+"""

@@ -1,5 +1,4 @@
 import datetime
-
 import re
 
 import djchoices
@@ -101,22 +100,6 @@ class EntranceExam(models.Model):
 
     def get_absolute_url(self):
         return urlresolvers.reverse('school:entrance:exam', kwargs={ 'school_name': self.school.short_name})
-
-
-class EntranceStep(models.Model):
-    school = models.ForeignKey(schools.models.School, related_name='entrance_steps')
-
-    class_name = models.CharField(max_length=100, help_text='Путь до класса, описывающий шаг')
-
-    params = models.TextField(help_text='Параметры для шага')
-
-    order = models.IntegerField()
-
-    def __str__(self):
-        return 'Шаг %s используется для %s' % (self.class_name, self.school)
-
-    class Meta:
-        ordering = ['order']
 
 
 class EntranceLevel(models.Model):
@@ -309,15 +292,21 @@ class CheckingComment(models.Model):
 class EntranceRecommendation(models.Model):
     school = models.ForeignKey(schools.models.School, related_name='+')
 
-    user = models.ForeignKey(users.models.User, related_name='entrance_recommendations')
+    user = models.ForeignKey(
+        users.models.User,
+        related_name='entrance_recommendations'
+    )
 
     checked_by = models.ForeignKey(users.models.User, related_name='+')
 
     # Null parallel means recommendation to not enroll user
-    parallel = models.ForeignKey(schools.models.Parallel, related_name='entrance_recommendations',
-                                 blank=True,
-                                 null=True,
-                                 default=None)
+    parallel = models.ForeignKey(
+        schools.models.Parallel,
+        related_name='entrance_recommendations',
+        blank=True,
+        null=True,
+        default=None
+    )
 
     score = models.PositiveIntegerField()
 
@@ -330,27 +319,72 @@ class EntranceStatus(models.Model):
         AUTO_REJECTED = djchoices.ChoiceItem(2, 'Автоматический отказ')
         NOT_ENROLLED = djchoices.ChoiceItem(3, 'Не прошёл по конкурсу')
         ENROLLED = djchoices.ChoiceItem(4, 'Поступил')
+        PARTICIPATING = djchoices.ChoiceItem(5, 'Подал заявку')
 
-    school = models.ForeignKey(schools.models.School, related_name='entrance_statuses')
+    school = models.ForeignKey(
+        schools.models.School,
+        related_name='entrance_statuses'
+    )
 
-    user = models.ForeignKey(users.models.User, related_name='entrance_statuses')
+    user = models.ForeignKey(
+        users.models.User,
+        related_name='entrance_statuses'
+    )
 
     # created_by=None means system's auto creating
-    created_by = models.ForeignKey(users.models.User, blank=True, null=True, default=None)
+    created_by = models.ForeignKey(
+        users.models.User,
+        blank=True, null=True, default=None
+    )
 
-    public_comment = models.TextField(help_text='Публичный комментарий. Может быть виден поступающему', blank=True)
+    public_comment = models.TextField(
+        help_text='Публичный комментарий. Может быть виден поступающему',
+        blank=True
+    )
 
-    is_status_visible = models.BooleanField()
+    is_status_visible = models.BooleanField(default=False)
 
-    status = models.IntegerField(choices=Status.choices, validators=[Status.validator])
+    status = models.IntegerField(
+        choices=Status.choices,
+        validators=[Status.validator])
 
-    session = models.ForeignKey(schools.models.Session, blank=True, null=True, default=None)
+    session = models.ForeignKey(
+        schools.models.Session,
+        blank=True, null=True, default=None
+    )
 
-    parallel = models.ForeignKey(schools.models.Parallel, blank=True, null=True, default=None)
+    parallel = models.ForeignKey(
+        schools.models.Parallel,
+        blank=True, null=True, default=None
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_enrolled(self):
+        return self.status == self.Status.ENROLLED
+
+    @classmethod
+    def create_or_update(cls, school, user, status, **kwargs):
+        with transaction.atomic():
+            current = cls.objects.filter(school=school, user=user).first()
+            if current is None:
+                current = cls(school=school, user=user, status=status, **kwargs)
+            else:
+                current.status = status
+                for key, value in current:
+                    setattr(current, key, value)
+            current.save()
+
+    @classmethod
+    def get_visible_status(cls, school, user):
+        return cls.objects.filter(
+            school=school,
+            user=user,
+            is_status_visible=True
+        ).first()
 
     def __str__(self):
         return '%s %s' % (self.user, self.Status.values[self.status])
@@ -361,22 +395,37 @@ class EntranceStatus(models.Model):
 
 
 class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
-    school = models.ForeignKey(schools.models.School, related_name='absences_reasons')
+    school = models.ForeignKey(
+        schools.models.School,
+        related_name='absences_reasons'
+    )
 
     user = models.ForeignKey(users.models.User, related_name='absences_reasons')
 
-    private_comment = models.TextField(blank=True, help_text='Не показывается школьнику')
+    private_comment = models.TextField(
+        blank=True,
+        help_text='Не показывается школьнику'
+    )
 
-    public_comment = models.TextField(blank=True, help_text='Показывается школьнику')
+    public_comment = models.TextField(
+        blank=True,
+        help_text='Показывается школьнику'
+    )
 
-    created_by = models.ForeignKey(users.models.User, related_name='+', null=True, default=None,
-                                   blank=True)
+    created_by = models.ForeignKey(
+        users.models.User,
+        related_name='+',
+        null=True, default=None, blank=True
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     @classmethod
     def for_user_in_school(cls, user, school):
-        """Returns absence reason for specified user or None if user has not declined."""
+        """
+        Returns absence reason for specified user
+        or None if user has not declined.
+        """
         return cls.objects.filter(user=user, school=school).first()
 
     def default_public_comment(self):

@@ -114,18 +114,6 @@ class Migration(migrations.Migration):
             },
             bases=('entrance.abstractentrancestep',),
         ),
-        migrations.RemoveField(
-            model_name='absencereasonhomepageblock',
-            name='abstracthomepageblock_ptr',
-        ),
-        migrations.RemoveField(
-            model_name='enrolledstepshomepageblock',
-            name='abstracthomepageblock_ptr',
-        ),
-        migrations.RemoveField(
-            model_name='entrancestatushomepageblock',
-            name='abstracthomepageblock_ptr',
-        ),
         migrations.DeleteModel(
             name='AbsenceReasonHomePageBlock',
         ),

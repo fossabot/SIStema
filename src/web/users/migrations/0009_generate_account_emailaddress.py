@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
     ]
 
     dependencies = [
-        ('users', '0008_generate_account_emailaddress'),
+        ('users', '0008_userprofile_poldnev'),
     ]
 
     if global_apps.is_installed('allauth.account'):

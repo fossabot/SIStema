@@ -180,7 +180,7 @@ class Migration(migrations.Migration):
     ]
 
     dependencies = [
-        ('users', '0010_create_user_profiles_for_enrolled'),
+        ('users', '0010_convert_social_accounts'),
     ]
 
     if global_apps.is_installed('questionnaire'):

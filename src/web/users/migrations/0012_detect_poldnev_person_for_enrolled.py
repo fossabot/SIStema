@@ -116,7 +116,7 @@ class EnrolledPoldnevPersonDetector(object):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0011_userprofile_poldnev'),
+        ('users', '0011_create_user_profiles_for_enrolled'),
         ('poldnev', '0007_auto_20170318_1027'),
     ]
 

@@ -147,7 +147,7 @@ class Migration(migrations.Migration):
     ]
 
     dependencies = [
-        ('users', '0009_convert_social_accounts'),
+        ('users', '0009_generate_account_emailaddress'),
     ]
 
     if global_apps.is_installed('django.contrib.sites'):

@@ -18,6 +18,7 @@ class SocialAccountsConverter:
     SocialTokenModel = None
     social_apps = None
 
+    _converted_accounts = 0
     _already_converted_accounts = 0
 
     def _account_was_converted(self, old_account, social_app):
@@ -44,6 +45,7 @@ class SocialAccountsConverter:
             expires_at = 0
             sys.stderr.write("can not get expires_at for (acc.id %d uid %s provider %s)\n"
                              % (old_account.id, old_account.uid, old_account.provider))
+        self._converted_accounts += 1
         self.SocialTokenModel.objects.create(
             app=social_app,
             account=social_account,
@@ -66,6 +68,7 @@ class SocialAccountsConverter:
             expires_at = 0
             sys.stderr.write("can not get expires_at for (acc.id %d uid %s provider %s)\n"
                              % (old_account.id, old_account.uid, old_account.provider))
+        self._converted_accounts += 1
         self.SocialTokenModel.objects.create(
             app=social_app,
             account=social_account,
@@ -131,7 +134,8 @@ class SocialAccountsConverter:
 
         for old_account in self.OldSocialModel.objects.all():
             self._convert_account(old_account)
-        sys.stderr.write('%d accounts have already been converted\n' % self._already_converted_accounts)
+        sys.stderr.write('converted %d accounts, and %d accounts have already been converted\n'
+                         % (self._converted_accounts, self._already_converted_accounts))
 
     @classmethod
     def as_callable(cls):

@@ -63,7 +63,8 @@ def copy_object(from_school, to_school, obj):
     plain_fields = [f for f in own_fields
                     if is_plain_field(f) and
                     f.name != cls._meta.pk.attname and
-                    not is_unique_field(f)]
+                    not is_unique_field(f) and
+                    not is_auto_now_add_field(f)]
 
     relation_fields = [f for f in own_fields
                        if not is_plain_field(f) and
@@ -169,3 +170,7 @@ def is_related_field(field):
 
 def is_unique_field(field):
     return hasattr(field, 'unique') and field.unique
+
+
+def is_auto_now_add_field(field):
+    return hasattr(field, 'auto_now_add') and field.auto_now_add

@@ -174,9 +174,9 @@ class UserProfile(models.Model):
         null=True,
         blank=True,
     )
-    document_number = models.CharField('Номер документа', max_length=20, blank=True)
+    document_number = models.CharField('Номер документа', max_length=100, blank=True)
 
-    insurance_number = models.CharField('Номер медицинского полиса', max_length=20, blank=True)
+    insurance_number = models.CharField('Номер медицинского полиса', max_length=100, blank=True)
 
     def get_zero_class_year(self):
         return self._zero_class_year

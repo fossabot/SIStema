@@ -5,6 +5,60 @@ from modules.entrance import models as entrance_models
 
 import operator
 
+
+__en2ru_char_map = {
+    'a': 'а',
+    'b': 'б',
+    'с': 'к',
+    'd': 'д',
+    'e': 'е',
+    'f': 'ф',
+    'g': 'г',
+    'h': 'х',
+    'i': 'и',
+    'j': 'й',
+    'k': 'к',
+    'l': 'л',
+    'm': 'м',
+    'n': 'н',
+    'o': 'о',
+    'p': 'п',
+    'r': 'р',
+    's': 'с',
+    't': 'т',
+    'u': 'у',
+    'v': 'в',
+    'x': 'кс',
+    'y': 'ы',
+    'z': 'з',
+}
+
+
+def _up_word(word):
+    return word[0].upper() + word[1:]
+
+
+def _translit_en2ru(s):
+    if s.endswith('iy'):
+        s = s[:-2] + 'ий'
+    if s.endswith('y'):
+        s = s[:-1] + 'ий'
+    for a, b in [('sch', 'щ'), ('sh', 'ш'), ('zh', 'ж'), ('сh', 'ч'),
+                 ('kh', 'х'), ('ya', 'я'), ('yo', 'ё'), ('yu', 'ю')]:
+        s = s.replace(a, b)
+        s = s.replace(_up_word(a), _up_word(b))
+    t = ''
+    for ch in list(s):
+        ch2 = ch.lower()
+        if ch in __en2ru_char_map:
+            t += __en2ru_char_map[ch]
+        elif ch2 in __en2ru_char_map:
+            t += _up_word(__en2ru_char_map[ch2])
+        else:
+            t += ch
+    return t
+
+
 __first_name_normalization_dict = {
     'саша': 'александр',
     'александра': 'александр',
@@ -61,6 +115,7 @@ __first_name_normalization_dict = {
     'настя': 'анастасия',
     'оля': 'ольга',
     'наташа': 'наталья',
+    'наталия': 'наталья',
     'света': 'светлана',
     'витя': 'виктор',
     'гриша': 'григорий',
@@ -77,33 +132,43 @@ __first_name_normalization_dict = {
 }
 
 
+_no_break_space = b'\xc2\xa0'.decode('utf8')
+
+
+def _normalize(s):
+    if not s:
+        return s
+    s = _translit_en2ru(s)
+    s = s.lower()
+    s = s.replace('ё', 'е')
+    s = s.replace(_no_break_space, ' ')
+    return s
+
+
 def _normalize_first_name(first_name):
     if not first_name:
         return first_name
-    first_name = first_name.lower().replace('ё', 'е')
+    first_name = _normalize(first_name)
     return __first_name_normalization_dict.get(first_name, first_name)
 
 
 def _match_names(name1, name2, can_be_null):
     if not name1 or not name2:
         return can_be_null
-    # TODO make transliteration if need
-    name1 = name1.lower().replace('ё', 'е')
-    name2 = name2.lower().replace('ё', 'е')
-    return name1 == name2
+    return _normalize(name1) == _normalize(name2)
 
 
-def _match_first_names(name1, name2):
+def match_first_names(name1, name2):
     name1 = _normalize_first_name(name1)
     name2 = _normalize_first_name(name2)
     return _match_names(name1, name2, True)
 
 
-def _match_middle_names(name1, name2):
+def match_middle_names(name1, name2):
     return _match_names(name1, name2, True)
 
 
-def _match_last_names(name1, name2):
+def match_last_names(name1, name2):
     return _match_names(name1, name2, False)
 
 
@@ -167,10 +232,10 @@ class SimilarAccountSearcher(object):
         last_name = self._new_user_profile.last_name
         ok = False
         if hasattr(user, 'poldnev_person'):
-            ok |= _match_last_names(last_name, user.poldnev_person.last_name)
+            ok |= match_last_names(last_name, user.poldnev_person.last_name)
         if hasattr(user, 'user_profile'):
-            ok |= _match_last_names(last_name, user.user_profile.last_name)
-        ok |= _match_last_names(last_name, user.last_name)
+            ok |= match_last_names(last_name, user.user_profile.last_name)
+        ok |= match_last_names(last_name, user.last_name)
         return ok
 
     def _good_match(self, user):
@@ -186,15 +251,15 @@ class SimilarAccountSearcher(object):
         last_name = self._new_user_profile.last_name
         ok = False
         if hasattr(user, 'poldnev_person'):
-            ok |= (_match_last_names(last_name, user.poldnev_person.last_name)
-                   and _match_first_names(first_name, user.poldnev_person.first_name)
-                   and _match_middle_names(middle_name, user.poldnev_person.middle_name))
+            ok |= (match_last_names(last_name, user.poldnev_person.last_name)
+                   and match_first_names(first_name, user.poldnev_person.first_name)
+                   and match_middle_names(middle_name, user.poldnev_person.middle_name))
         if hasattr(user, 'user_profile'):
-            ok |= (_match_last_names(last_name, user.user_profile.last_name)
-                   and _match_first_names(first_name, user.user_profile.first_name)
-                   and _match_middle_names(middle_name, user.user_profile.middle_name))
-        ok |= (_match_last_names(last_name, user.last_name)
-               and _match_first_names(first_name, user.first_name))
+            ok |= (match_last_names(last_name, user.user_profile.last_name)
+                   and match_first_names(first_name, user.user_profile.first_name)
+                   and match_middle_names(middle_name, user.user_profile.middle_name))
+        ok |= (match_last_names(last_name, user.last_name)
+               and match_first_names(first_name, user.first_name))
         return ok
 
     @classmethod

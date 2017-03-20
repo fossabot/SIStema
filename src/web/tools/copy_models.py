@@ -122,6 +122,7 @@ def get_school(obj, cache={}):
 
             associated_schools = set(get_school(next_obj)
                                      for next_obj in objects_to_check)
+            associated_schools.discard(None)
 
             if len(associated_schools) == 1:
                 cache[key] = associated_schools.pop()

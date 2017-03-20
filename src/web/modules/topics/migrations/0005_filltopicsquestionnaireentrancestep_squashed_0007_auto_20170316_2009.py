@@ -8,8 +8,6 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    replaces = [('topics', '0005_filltopicsquestionnaireentrancestep'), ('topics', '0006_auto_20170316_1910'), ('topics', '0007_auto_20170316_2009')]
-
     dependencies = [
         ('entrance', '0026_auto_20170312_0128'),
         ('topics', '0004_auto_20160725_1510'),

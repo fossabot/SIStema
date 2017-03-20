@@ -11,8 +11,11 @@ Example usage:
 
 import collections
 
+import django.db.transaction
+
 import schools.models
 
+@django.db.transaction.atomic
 def copy_models(from_school, to_school, models):
     """
     Copy instances of classes listed in models from from_school to to_school.
@@ -41,6 +44,8 @@ def copy_object(from_school, to_school, obj):
 
     Return the copied object or original one if copy is not needed
     """
+    if obj is None:
+        return None
 
     if get_school(obj) != from_school:
         return obj
@@ -51,12 +56,23 @@ def copy_object(from_school, to_school, obj):
     cls = obj.__class__
 
     all_fields = cls._meta.get_fields()
-    own_fields = [f for f in all_fields if not is_related_field(f)]
+
+    own_fields = [f for f in all_fields
+                  if not is_related_field(f)]
+
     plain_fields = [f for f in own_fields
-                    if is_plain_field(f) and f.name != cls._meta.pk.attname]
-    relation_fields = [f for f in own_fields if not is_plain_field(f)]
+                    if is_plain_field(f) and
+                    f.name != cls._meta.pk.attname and
+                    not is_unique_field(f)]
+
+    relation_fields = [f for f in own_fields
+                       if not is_plain_field(f) and
+                       f.name != 'polymorphic_ctype' and
+                       not f.name.endswith('_ptr')]
+
     to_one_fields = [f for f in relation_fields
                      if f.one_to_one or f.many_to_one]
+
     many_to_many_fields = [f for f in relation_fields if f.many_to_many]
 
     # Arguments for object creation
@@ -68,8 +84,11 @@ def copy_object(from_school, to_school, obj):
 
     # Deep copy foreign keys and one to one fields
     for f in to_one_fields:
+        value = getattr(obj, f.name)
+        if is_unique_field(value) and get_school(value) is None:
+            continue
         kwargs[f.name] = copy_object(
-            from_school, to_school, getattr(obj, f.name))
+            from_school, to_school, value)
 
     # If the object for new school already exists, just return it
     if cls.objects.filter(**kwargs).exists():
@@ -101,6 +120,9 @@ def get_school(obj, cache={}):
     Return schools.models.School object if obj is associated with a signle
     school.
     """
+    if obj is None:
+        return None
+
     key = '{}:{}'.format(obj.__class__.__name__, obj.id)
 
     if key not in cache:
@@ -143,3 +165,7 @@ def is_related_field(field):
     Returns true if the field created as a related field from another model.
     """
     return hasattr(field, 'related_name')
+
+
+def is_unique_field(field):
+    return hasattr(field, 'unique') and field.unique

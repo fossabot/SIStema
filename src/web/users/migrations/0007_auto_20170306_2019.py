@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('region', models.CharField(blank=True, help_text='или страна, если не Россия', max_length=100, verbose_name='Субъект РФ')),
                 ('city', models.CharField(blank=True, help_text='в котором находится школа', max_length=100, verbose_name='Населённый пункт')),
                 ('school_name', models.CharField(blank=True, max_length=100, verbose_name='Школа')),
-                ('phone', models.CharField(blank=True, max_length=20, verbose_name='Телефон')),
+                ('phone', models.CharField(blank=True, max_length=100, verbose_name='Телефон')),
                 ('citizenship', models.IntegerField(choices=[(1, 'Россия'), (2, 'Казахстан'), (3, 'Беларусь'), (4, 'Таджикистан'), (-1, 'Другое')], blank=True, null=True, validators=[djchoices.choices.ChoicesValidator({-1: 'Другое', 1: 'Россия', 2: 'Казахстан', 3: 'Беларусь', 4: 'Таджикистан'})], verbose_name='Гражданство')),
                 ('citizenship_other', models.CharField(blank=True, max_length=100, verbose_name='Другое гражданство')),
                 ('document_type', models.IntegerField(choices=[(1, 'Российский паспорт'), (2, 'Свидетельство о рождении'), (3, 'Заграничный паспорт'), (4, 'Паспорт другого государства'), (-1, 'Другой')], blank=True, null=True, validators=[djchoices.choices.ChoicesValidator({-1: 'Другой', 1: 'Российский паспорт', 2: 'Свидетельство о рождении', 3: 'Заграничный паспорт', 4: 'Паспорт другого государства'})], verbose_name='Тип документа')),

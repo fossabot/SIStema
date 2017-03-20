@@ -147,7 +147,7 @@ class UserProfile(models.Model):
 
     school_name = models.CharField('Школа', max_length=100, blank=True)
 
-    phone = models.CharField('Телефон', max_length=20, blank=True)
+    phone = models.CharField('Телефон', max_length=100, blank=True)
 
     poldnev_person = models.ForeignKey(
         'poldnev.Person',

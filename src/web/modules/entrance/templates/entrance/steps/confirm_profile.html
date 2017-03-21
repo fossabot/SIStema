@@ -3,5 +3,9 @@
 {% block title %}Проверить профиль{% endblock %}
 
 {% block not_passed_after_text %}
-    <button class="btn btn-sm btn-default">Проверить профиль</button>
+    <a href="{% url 'user:profile' %}?confirm=1" class="btn btn-sm btn-default">
+        {% block not_passed_button_text %}
+            Проверить профиль
+        {% endblock %}
+    </a>
 {% endblock %}

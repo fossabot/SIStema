@@ -14,6 +14,18 @@
                         Профиль
                     </div>
                 </div>
+                {% if is_creating %}
+                    <div class="alert alert-info alert-micro alert-border-left">
+                        Пожалуйста, заполните данные о себе. Вопросы без звёздочки можете не
+                        заполнять — они понадобятся только в случае зачисления вас в школу.
+                    </div>
+                {% elif is_confirming %}
+                    <div class="alert alert-warning alert-micro alert-border-left">
+                        Проверьте указанные данные на корректность и актуальность. Вопросы
+                        без звёздочки можете не заполнять — они понадобятся только в случае
+                        зачисления вас в школу.
+                    </div>
+                {% endif %}
                 <form method="POST" action="">
                     {% csrf_token %}
                     <div class="panel-body bg-light p30">
@@ -45,7 +57,13 @@
                         {% endfor %}
                     </div>
                     <div class="panel-footer p25 text-right">
-                        <button type="submit" class="button btn-success">Сохранить</button>
+                        <button type="submit" class="button btn-success">
+                            {% if is_confirming %}
+                                Подтвердить данные
+                            {% else %}
+                                Сохранить
+                            {% endif %}
+                        </button>
                     </div>
                 </form>
             </div>

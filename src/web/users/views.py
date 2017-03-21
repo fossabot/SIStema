@@ -35,8 +35,23 @@ def _init_profile_form(request):
 
 
 @auth_decorators.login_required()
-@sistema_decorators.form_handler('users/profile.html',
-                                 forms.UserProfileForm,
-                                 _init_profile_form)
-def profile(request, form):
-    form.fill_user_profile(request).save()
+def profile(request):
+    if request.method == 'POST':
+        form = forms.UserProfileForm(data=request.POST)
+        if form.is_valid():
+            form.fill_user_profile(request).save()
+            return shortcuts.redirect('home')
+        return shortcuts.render(request, 'users/profile.html', {'form': form})
+    else:
+        if request.user_profile:
+            initial_data = {}
+            for field_name in models.UserProfile.get_field_names():
+                initial_data[field_name] = getattr(request.user_profile, field_name)
+        else:
+            initial_data = {'first_name': request.user.first_name,
+                            'last_name': request.user.last_name}
+        form = forms.UserProfileForm(initial=initial_data)
+        return shortcuts.render(request, 'users/profile.html',
+                                {'form': form,
+                                 'is_creating': not request.user_profile,
+                                 'is_confirming': request.GET.get('confirm', False)})

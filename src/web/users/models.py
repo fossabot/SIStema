@@ -122,6 +122,7 @@ class UserProfile(models.Model):
         OTHER = choices.ChoiceItem(-1, 'Другое')
 
     user = models.OneToOneField(User, related_name='user_profile')
+    updated_at = models.DateTimeField(auto_now=True)
 
     first_name = models.CharField('Имя', max_length=100, blank=True)
     middle_name = models.CharField('Отчество', max_length=100, blank=True)

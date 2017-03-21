@@ -175,6 +175,16 @@ class UserProfileForm(forms.Form):
         })
     )
 
+    telegram = forms.CharField(
+        required=False,
+        label='Ник в Телеграмме',
+        widget=TextInputWithFaIcon(attrs={
+            'placeholder': '@nick',
+            'class': 'gui-input',
+            'fa': 'paper-plane',
+        })
+    )
+
     citizenship = EmptyIntChoiceField(
         models.UserProfile.Citizenship.choices,
         label='Гражданство',

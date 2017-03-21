@@ -149,6 +149,7 @@ class UserProfile(models.Model):
     school_name = models.CharField('Школа', max_length=100, blank=True)
 
     phone = models.CharField('Телефон', max_length=100, blank=True)
+    telegram = models.CharField('Телеграмм', max_length=100, blank=True)
 
     poldnev_person = models.ForeignKey(
         'poldnev.Person',
@@ -228,6 +229,7 @@ class UserProfile(models.Model):
             'city',
             'school_name',
             'phone',
+            'telegram',
             'citizenship',
             'citizenship_other',
             'document_type',

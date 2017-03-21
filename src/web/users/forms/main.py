@@ -64,7 +64,8 @@ class EmptyIntChoiceField(forms.ChoiceField):
 class UserProfileForm(forms.Form):
     poldnev_person = poldnev_forms.PersonField(
         label='Бывали ли вы в ЛКШ?',
-        help_text='Оставьте поле пустым, если ещё не были в ЛКШ'
+        help_text='Оставьте поле пустым, если ещё не были в ЛКШ',
+        required=False,
     )
 
     last_name = forms.CharField(
@@ -124,6 +125,7 @@ class UserProfileForm(forms.Form):
     current_class = forms.IntegerField(
         required=True,
         label='Класс',
+        help_text=models.UserProfile.get_class_help_text(),
         min_value=1,
         widget=forms.NumberInput(attrs={
             'class': 'gui-input'

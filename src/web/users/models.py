@@ -181,6 +181,16 @@ class UserProfile(models.Model):
     def get_zero_class_year(self):
         return self._zero_class_year
 
+    @classmethod
+    def get_class_help_text(cls, date=None):
+        if not date:
+            date = datetime.date.today()
+        year = date.year
+        if date.month < 9:
+            year -= 1
+        return ('Класс в %d–%d учебном году. Если вы обучаетесь не в РФ, введите '
+                'максимально подходящий класс по Российской системе' % (year, year + 1))
+
     def get_class(self, date=None):
         if self._zero_class_year is None:
             return None

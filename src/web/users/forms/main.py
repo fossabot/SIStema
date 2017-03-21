@@ -227,13 +227,13 @@ class UserProfileForm(forms.Form):
         })
     )
 
-    def fill_user_profile(self, request):
-        if request.user_profile:
-            user_profile = request.user_profile
-        elif request.user.is_authenticated:
-            user_profile = models.UserProfile(user=request.user)
-        else:
+    def fill_user_profile(self, user):
+        if not user.is_authenticated:
             user_profile = models.UserProfile()
+        elif hasattr(user, 'user_profile'):
+            user_profile = user.user_profile
+        else:
+            user_profile = models.UserProfile(user=user)
         for field_name in user_profile.get_field_names():
             setattr(user_profile, field_name, self.cleaned_data.get(field_name))
         return user_profile

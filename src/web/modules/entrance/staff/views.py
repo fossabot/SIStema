@@ -18,6 +18,7 @@ import schools.models
 import sistema.staff
 import modules.topics.models
 import users.models
+import users.views
 from . import forms
 from .. import models
 from .. import upgrades
@@ -138,6 +139,13 @@ def get_enrolling_users_ids(school):
 def enrolling(request):
     users_table = EnrollingUsersTable.create(request.school)
     return render(request, 'entrance/staff/enrolling.html', {'users_table': users_table})
+
+
+@sistema.staff.only_staff
+def user_profile(request, user_id):
+    user = get_object_or_404(users.models.User, id=user_id)
+    # TODO: use staff interface for showing questionnaire (here and in user_topics)
+    return users.views.profile_for_user(request, user)
 
 
 @sistema.staff.only_staff

@@ -172,9 +172,9 @@
                     <span class="panel-title">Общая информация</span>
                     <div class="mr10 pull-right fs12">
                         Анкеты:
-                        <a href="{% url 'school:entrance:user_questionnaire' request.school.short_name user_for_checking.id 'about' %}"
+                        <a href="{% url 'school:entrance:user_profile' request.school.short_name user_for_checking.id %}"
                            target="_blank" class="ml10" title="Откроется в новом окне">
-                            О себе</a>
+                            Профиль</a>
                         <a href="{% url 'school:entrance:user_questionnaire' request.school.short_name user_for_checking.id 'enrollee' %}"
                            target="_blank" class="ml10" title="Откроется в новом окне">
                             Поступающего</a>

@@ -16,6 +16,7 @@ urlpatterns = [
     # Staff urls
     url(r'^enrolling/$', staff_views.enrolling, name='enrolling'),
     url(r'^enrolling/(?P<user_id>\d+)/$', staff_views.enrolling_user, name='enrolling_user'),
+    url(r'^enrolling/(?P<user_id>\d+)/profile/$', staff_views.user_profile, name='user_profile'),
     url(r'^enrolling/(?P<user_id>\d+)/questionnaire/(?P<questionnaire_name>[^/]+)/$', staff_views.user_questionnaire, name='user_questionnaire'),
     url(r'^enrolling/(?P<user_id>\d+)/topics/$', staff_views.user_topics, name='user_topics'),
     url(r'^enrolling/(?P<user_id>\d+)/change_group/$', staff_views.change_group, name='change_group'),

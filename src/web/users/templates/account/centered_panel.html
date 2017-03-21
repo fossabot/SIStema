@@ -77,7 +77,8 @@
                                         {% endif %}
                                         {% for field_name in form.fields %}
                                             {% with field=form|get_item:field_name %}
-                                                {% if field.field.required %}
+                                                {# TODO(eugene): fix this hack #}
+                                                {% if field.field.required or field_name == 'poldnev_person' %}
                                                     <div class="section mb20">
                                                         <div class="{{ field.errors|yesno:'state-error,' }}">
                                                             <label for="{{ field.id_for_label }}" class="field-label fs16">{{ field.label }}</label>

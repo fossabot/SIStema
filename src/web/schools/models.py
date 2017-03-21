@@ -73,6 +73,11 @@ class Session(models.Model):
             return self.school.name
         return '%s.%s' % (self.school.name, self.name)
 
+    def get_full_name(self):
+        if not self.name:
+            return self.school.name
+        return '%s.%s' % (self.school.name, self.name)
+
     @property
     def dates_range(self):
         """Return natural language representation of the session dates range."""

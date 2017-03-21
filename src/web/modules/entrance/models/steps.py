@@ -323,7 +323,7 @@ class ResultsEntranceStep(AbstractEntranceStep):
     def _get_entrance_message(self, entrance_status):
         if entrance_status.is_enrolled:
             if entrance_status.session is not None:
-                session_name = str(entrance_status.session)
+                session_name = entrance_status.session.get_full_name()
             else:
                 session_name = self.school.name
 

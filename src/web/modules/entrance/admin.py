@@ -12,22 +12,9 @@ class EntranceExamTaskAdmin(admin.ModelAdmin):
     ordering = ('exam', 'order')
 
 
-class TestEntranceExamTaskAdmin(EntranceExamTaskAdmin):
-    pass
-
-admin.site.register(models.TestEntranceExamTask, TestEntranceExamTaskAdmin)
-
-
-class FileEntranceExamTaskAdmin(EntranceExamTaskAdmin):
-    pass
-
-admin.site.register(models.FileEntranceExamTask, FileEntranceExamTaskAdmin)
-
-
-class ProgramEntranceExamTaskAdmin(EntranceExamTaskAdmin):
-    pass
-
-admin.site.register(models.ProgramEntranceExamTask, ProgramEntranceExamTaskAdmin)
+admin.site.register(models.TestEntranceExamTask, EntranceExamTaskAdmin)
+admin.site.register(models.FileEntranceExamTask, EntranceExamTaskAdmin)
+admin.site.register(models.ProgramEntranceExamTask, EntranceExamTaskAdmin)
 
 admin.site.register(models.EntranceExam)
 

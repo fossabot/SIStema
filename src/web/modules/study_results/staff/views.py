@@ -23,7 +23,8 @@ class StudyResultsTable(frontend.table.Table):
         super().__init__(
             study_results_models.StudyResult,
             study_results_models.StudyResult.objects.filter(
-                id__in=study_result_ids).prefetch_related('comments')
+                id__in=study_result_ids).prefetch_related('comments').order_by(
+                    'school_participant__parallel__name', 'school_participant__user__last_name')
         )
         self.school = school
         self.identifiers = {'school_name': school.short_name}

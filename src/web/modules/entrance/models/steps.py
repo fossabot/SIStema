@@ -171,8 +171,6 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
 
     @property
     def is_opened(self):
-        if self.is_closed:
-            return False
         if self.available_from_time is None:
             return True
         now = timezone.now()

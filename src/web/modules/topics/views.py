@@ -326,6 +326,8 @@ def start_checking(request):
     new_q = _create_topic_checking_questionnaire(request)
 
     if new_q.questions.all().count() == 0:
+        new_q.status = models.TopicCheckingQuestionnaire.Status.PASSED
+        new_q.save()
         return redirect('school:topics:finish', school_name=request.school.short_name)
 
     return redirect('school:topics:check_topics', school_name=request.school.short_name)

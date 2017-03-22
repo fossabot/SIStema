@@ -29,3 +29,9 @@
         {% endif %}
     </a>
 {% endblock %}
+
+{% block passed_after_text %}
+    <a href="{{ entrance_block.step.questionnaire.get_absolute_url }}" class="btn btn-primary">
+        Посмотреть оценки
+    </a>
+{% endblock %}

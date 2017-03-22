@@ -78,7 +78,7 @@
 
     {% if entrance_block.state == EntranceStepState.PASSED %}
         {% block passed_text %}
-            {% if entrance_block.step.is_closed %}
+            {% if entrance_block.step.is_closed and entrance_block.step.text_after_finish_date_if_passed%}
                 {{ entrance_block.step.text_after_finish_date_if_passed|markdown }}
             {% else %}
                 {{ entrance_block.step.text_step_is_passed|markdown }}

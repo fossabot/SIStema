@@ -315,7 +315,9 @@ class ScaleInTopic(models.Model):
         return self.topic.questionnaire
 
     def __str__(self):
-        return '%s.%s' % (self.topic.short_name, self.scale.short_name)
+        return '.'.join([self.topic.questionnaire.school.short_name,
+                         self.topic.short_name,
+                         self.scale.short_name])
 
     class Meta:
         unique_together = ('topic', 'scale_label_group')
@@ -459,16 +461,22 @@ class QuestionForTopic(models.Model):
             help_text='Question is for this topic')
 
     mark = models.PositiveIntegerField(
-            help_text='Question will be asked is this mark is equal to user mark for topic')
+        help_text='Question will be asked is this mark is equal to user mark '
+                  'for topic')
 
     smartq_question = models.ForeignKey(
-            smartq_models.Question,
-            related_name='topic_mapping',
-            help_text='Base checking question without specified numbers')
+        smartq_models.Question,
+        related_name='topic_mapping',
+        help_text='Base checking question without specified numbers')
 
     group = models.IntegerField(
-            blank=True, null=True, default=None,
-            help_text='Same group indicates similar questions, e.g. bfs/dfs, and only one of them is asked')
+        blank=True, null=True, default=None,
+        help_text='Same group indicates similar questions, e.g. bfs/dfs, and '
+                  'only one of them is asked')
+
+    def __str__(self):
+        return '{} -> {}'.format((self.scale_in_topic, self.mark),
+                                 self.smartq_question)
 
 
 class TopicCheckingSettings(models.Model):
@@ -491,15 +499,21 @@ class TopicCheckingQuestionnaireQuestion(models.Model):
         PRESENTATION_ERROR = choices.ChoiceItem(3)
         CHECK_FAILED = choices.ChoiceItem(4)
 
-    questionnaire = models.ForeignKey(TopicCheckingQuestionnaire, related_name='questions')
+    questionnaire = models.ForeignKey(TopicCheckingQuestionnaire,
+                                      related_name='questions')
 
-    generated_question = models.ForeignKey(smartq_models.GeneratedQuestion, related_name='+')
+    generated_question = models.ForeignKey(smartq_models.GeneratedQuestion,
+                                           related_name='+')
 
     topic_mapping = models.ForeignKey(QuestionForTopic, related_name='+')
 
-    checker_result = models.PositiveIntegerField(choices=CheckerResult.choices,
-            validators=[CheckerResult.validator],
-            null=True, default=None)
+    checker_result = models.PositiveIntegerField(
+        choices=CheckerResult.choices,
+        validators=[CheckerResult.validator],
+        blank=True,
+        null=True,
+        default=None)
 
-    checker_message = models.CharField(max_length=2000, blank=True, null=True, default=None)
+    checker_message = models.CharField(
+        max_length=2000, blank=True, null=True, default=None)
 

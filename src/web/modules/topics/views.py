@@ -314,8 +314,10 @@ def return_to_correcting(request):
 @login_required
 @topic_questionnaire_view
 def start_checking(request):
+    print('start_checking')
     if request.questionnaire.is_closed():
         return redirect('school:topics:index', school_name=request.school.short_name)
+    print('start_checking')
 
     user_status = _get_questionnaire_status(request.user, request.questionnaire)
     if user_status.status != models.UserQuestionnaireStatus.Status.CORRECTING:
@@ -386,7 +388,8 @@ def _create_topic_checking_questionnaire(request):
 
     topics_with_marks = _get_user_marks_by_topics(
             request.user, request.questionnaire, not_show_auto_marks=False)
-    topics_with_marks = sorted(topics_with_marks, key=lambda t: t.topic.order, reverse=True)
+    topics_with_marks = sorted(
+        topics_with_marks, key=lambda t: t.topic.order, reverse=True)
     # Ask not more than max_questions
     max_questions = models.TopicCheckingSettings.objects.get(
             questionnaire=topics_q).max_questions
@@ -394,11 +397,12 @@ def _create_topic_checking_questionnaire(request):
     questions_counter = 0
     groups = set()
     relevant_mappings = (mapping
-                     for topic_with_mark in topics_with_marks
-                     for mark in topic_with_mark.marks
-                     for mapping in mark.scale_in_topic.smartq_mapping.all()
-                     if  mark.mark == mapping.mark)
+                         for topic_with_mark in topics_with_marks
+                         for mark in topic_with_mark.marks
+                         for mapping in mark.scale_in_topic.smartq_mapping.all()
+                         if  mark.mark == mapping.mark)
     for mapping in relevant_mappings:
+        print('mapping', mapping)
         # Skip questions of the same group
         if mapping.group is not None and mapping.group in groups:
                  continue

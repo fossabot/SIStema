@@ -12,13 +12,13 @@
   <form method="post" class="admin-form">
     {% csrf_token %}
     {% autoescape off %}{{ question.html }}{% endautoescape %}
-    <button type="submit" class="btn btn-success">Отправить</button>
+    <button type="submit" class="btn btn-success mt10">Отправить</button>
   </form>
 
   {# TODO(Artem Tabolin): regenerate (with seed), ...  #}
   <form action="{% url 'smartq:regenerate_admin_question_instance' question_short_name=question.base_question.short_name %}" method="post">
     {% csrf_token %}
-    <button type="submit" class="btn">Перегенерировать вопрос</button>
+    <button type="submit" class="btn mt10">Перегенерировать вопрос</button>
   </form>
 
   <div>

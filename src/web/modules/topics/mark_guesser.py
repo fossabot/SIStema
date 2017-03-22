@@ -103,7 +103,7 @@ class MarkGuesser:
         :param mark: put mark=None for setting maximum possible mark
         """
         for scale_in_topic in models.ScaleInTopic.objects.filter(topic__level_id=destination_level_id) \
-                .select_related('scale_label_group__scale__count_values'):
+                .select_related('scale_label_group__scale'):
             if mark is None:
                 real_mark = scale_in_topic.scale_label_group.scale.max_mark
             else:

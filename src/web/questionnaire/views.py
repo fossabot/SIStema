@@ -46,6 +46,9 @@ def _get_user_questionnaire_answers(user, questionnaire):
     # TODO: refactor this
     result = {}
     for answer in answers:
+        # Question could be deleted from the time when user answered it
+        if answer.question_short_name not in questions:
+            continue
         if isinstance(questions[answer.question_short_name], models.ChoiceQuestionnaireQuestion) and \
                 questions[answer.question_short_name].is_multiple:
             if answer.question_short_name not in result:

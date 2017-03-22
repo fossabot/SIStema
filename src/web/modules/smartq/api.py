@@ -74,7 +74,7 @@ class CheckerResult:
 
     @property
     def is_ok(self):
-        return self.status == Checker.Result.OK
+        return self.status == Checker.Status.OK
 
 
 class AnswerFieldSpec:

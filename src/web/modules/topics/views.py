@@ -167,7 +167,7 @@ def _show_or_process_topic_form(request, topic_issue):
         form.full_clean()
 
         if is_closed:
-            form.add_error(None, 'Вступительная работа завершена. Изменения в тематическую анкету больше не принимаются')
+            form.add_error(None, 'Вступительная работа завершена. Изменения в тематическую анкету больше не принимаются')
 
         # Check that topic_id from form is equal to last issued topic, else update page for show the new question
         if 'topic_id' in form.cleaned_data and form.cleaned_data['topic_id'] != topic_issue.topic_id:

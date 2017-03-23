@@ -23,11 +23,13 @@
                     <div class="panel-body">
                         {% if smartq_q.get_status_display == "FAILED" %}
                             <div class="alert alert-border-left alert-warning light text-dark">
-                                <i class="fa fa-info pr10"></i>
-                                <strong>Проверочные вопросы не&nbsp;пройдены!</strong>
+                                <p>
+                                    <i class="fa fa-info pr5"></i>
+                                    <strong>Проверочные вопросы не&nbsp;пройдены!</strong>
+                                </p>
                                 <p class="fs13">
-                                    Вы дали {{ smartq_q.errors_count }} неправильн{{ smartq_q.errors_count|russian_pluralize:'ый,ых,ых' }}
-                                    ответ{{ smartq_q.errors_count|russian_pluralize:',а,ов' }}. Это слишком много.
+                                    Вы дали <strong>{{ smartq_q.errors_count }} неправильн{{ smartq_q.errors_count|russian_pluralize:'ый,ых,ых' }}
+                                    ответ{{ smartq_q.errors_count|russian_pluralize:',а,ов' }}</strong>. Это слишком много.
                                 </p>
                                 <p class="fs13">
                                     Вернитесь к тематической анкете, исправьте оценки и пройдите проверочные вопросы ещё раз.
@@ -94,7 +96,7 @@
                         {% endfor %}
 
                         <div class="alert alert-micro alert-border-left alert-danger light mt10 mbn">
-                            <i class="fa fa-info pr10"></i>
+                            <i class="fa fa-info pr5"></i>
                             <strong>Внимание!</strong>
                             После нажатия на&nbsp;кнопку «Подтвердить» исправить или
                             заново заполнить тематическую анкету будет нельзя.

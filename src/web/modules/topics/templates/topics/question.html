@@ -64,8 +64,10 @@
 
                         <div class="panel-footer p25">
                             {% if is_correcting %}
-                                <button type="submit" class="button btn-alert">Сохранить</button>
-                                <a class="btn btn-link" href="{% url 'school:topics:index' request.school.short_name%}">Отменить</a>
+                                <button type="submit" class="button btn-alert va-m">Сохранить</button>
+                                <a class="va-m pl20" href="{% url 'school:topics:index' request.school.short_name%}">
+                                    Отменить <span class="hidden-xs">и вернуться к&nbsp;списку</span>
+                                </a>
                             {% else %}
                                 <button type="submit" class="button btn-alert">Ответить</button>
                             {% endif %}

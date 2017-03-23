@@ -1,5 +1,7 @@
 {% extends 'user_layout.html' %}
 
+{% load number_to_text %}
+
 {% block title %}{{ questionnaire.title }}{% endblock %}
 
 {% block content %}
@@ -21,38 +23,42 @@
                         {% if smartq_q.get_status_display == "FAILED" %}
                             <div class="alert alert-border-left alert-warning light text-dark">
                                 <i class="fa fa-info pr10"></i>
-                                <strong>Проверочные вопросы не пройдены!</strong>
+                                <strong>Проверочные вопросы не&nbsp;пройдены!</strong>
                                 <p class="fs13">
-                                    Вы допустили слишком много ошибок при ответе на проверочные вопросы. Пожалуйста, перепроверьте вашу тематическую анкету и попробуйте проверить себя ещё раз.
+                                    Вы дали слишком много неправильных ответов.
+                                    Вернитесь к тематической анкете, исправьте оценки и пройдите проверочные вопросы ещё раз.
                                 </p>
                                 <p class="fs13">
-                                    Количество допущенных ошибок: {{ smartq_q.errors_count }}
+                                    Вы допустили {{ smartq_q.errors_count }} ошиб{{ smartq_q.errors_count|russian_pluralize:'ку,ки,ок' }}
                                 </p>
                             </div>
                         {% endif %}
 
                         <div class="alert alert-micro alert-default alert-border-left">
                             <h4 class="text-success">
-                                Поздравляем! Вы справились с заполнением тематической анкеты!
+                                Поздравляем! Вы успешно заполнили тематическую анкету!
                             </h4>
 
                             <p class="fs13">
-                                Ниже приведены все ваши оценки. Бледным выделены те, которые поставлены вами, их обычно проверять не надо.
+                                Ниже приведены все ваши оценки. Бледным выделены те, которые поставлены вами, их обычно проверять не&nbsp;надо.
                                 Цветом выделены ответы, автоматически проставленные системой.
                                 Пожалуйста, проверьте их правильность.
                             </p>
 
                             <p class="fs13">
-                                Для исправления оценок нажмите иконку рядом с вопросом. Вот такую <span class="fa fa-edit"></span>.
+                                Для исправления оценок нажмите иконку рядом с вопросом. Вот такую: <span class="fa fa-edit"></span>.
                             </p>
 
                             <p class="fs13">
-                                <span class="fa fa-warning"></span> Нечестное заполнение анкеты приведёт к тому,
-                                что вы получите задания, не соответствующие вашему уровню, и не сможете быть зачислены в ЛКШ.
+                                После проверки оценок мы выдадим вам проверочные вопросы.
+                                Возможно, их не&nbsp;будет. Ничего страшного &mdash; так тоже бывает.
+                                После ответа на&nbsp;проверочные вопросы вернуться к&nbsp;редактированию анкеты будет нельзя.
                             </p>
 
                             <p class="fs13">
-                                После проверки анкеты вам будут предложены проверочные вопросы для подтверждения ваших знаний. Если вопросов не будет, ничего страшного, так тоже бывает. После ответа на них вернуться к редактированию анкеты будет нельзя.
+                                <span class="fa fa-warning"></span> Нечестное заполнение анкеты приведёт к&nbsp;тому,
+                                что вы получите вступительную работу, не&nbsp;соответствующие вашему уровню,
+                                и не&nbsp;сможете попасть в&nbsp;ЛКШ.
                             </p>
                         </div>
 
@@ -77,7 +83,9 @@
                                     {% for mark in topic_with_marks.marks %}
                                         <p class="{{ mark.is_automatically|yesno:",text-muted-lighter," }}">
                                             <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
-                                            <span class="label label-{{ mark.is_automatically|yesno:"success,muted," }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                            {% with relative_mark=mark.mark|multiply:'10'|divide:mark.scale_in_topic.scale.max_mark|to_int %}
+                                                <span class="label label-{{ mark.is_automatically|yesno:"grade-,muted " }}{{ relative_mark }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                            {% endwith %}
                                         </p>
                                     {% endfor %}
                                 </div>
@@ -87,7 +95,8 @@
                         <div class="alert alert-micro alert-border-left alert-danger light mt10 mbn">
                             <i class="fa fa-info pr10"></i>
                             <strong>Внимание!</strong>
-                            После нажатия на «Подтвердить» возможно исправить или заново заполнить анкету будет нельзя.
+                            После нажатия на&nbsp;кнопку «Подтвердить» исправить или
+                            заново заполнить тематическую анкету будет нельзя.
                         </div>
 
                     </div>

@@ -64,6 +64,17 @@ def pluralize(number, one, two, five):
     return five
 
 
+@register.filter(is_safe=False)
+def russian_pluralize(value, arg='s'):
+    if ',' not in arg:
+        arg = ',' + arg
+    bits = arg.split(',')
+    if len(bits) > 3:
+        return ''
+    one, two, five = bits[:3]
+    return pluralize(value, one, two, five)
+
+
 @register.filter
 def number_to_text(number, gender='male', return_text_for_zero=True):
     """ Supports numbers less than 1 000 000 000 """

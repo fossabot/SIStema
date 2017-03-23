@@ -67,3 +67,10 @@ body {
 .lh12 { line-height: 12px; }
 .lh13 { line-height: 13px; }
 .lh14 { line-height: 14px; }
+
+/* Grades */
+.label-grade-0 { background-color: #cc7070; }
+.label-grade-3 { background-color: #cc9060; }
+.label-grade-5 { background-color: #dddd50; }
+.label-grade-6 { background-color: #c2d25a; }
+.label-grade-10 { background-color: #70cc70; }

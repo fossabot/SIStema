@@ -204,11 +204,6 @@ def get_all_inheritors(klass):
 @admin.register(models.AbstractEntranceStep)
 class EntranceStepsAdmin(PolymorphicParentModelAdmin):
     base_model = models.AbstractEntranceStep
-    # child_models = (models.ConfirmProfileEntranceStep,
-    #                 models.FillQuestionnaireEntranceStep,
-    #                 models.SolveExamEntranceStep,
-    #                 models.ResultsEntranceStep,
-    #                 models.MakeUserParticipatingEntranceStep)
     list_display = ('id',
                     'get_class',
                     'school', 'order',
@@ -221,9 +216,9 @@ class EntranceStepsAdmin(PolymorphicParentModelAdmin):
     def get_child_models(self):
         return get_all_inheritors(self.base_model)
 
-    @staticmethod
-    def get_class(obj):
+    def get_class(self, obj):
         return obj.get_real_instance_class().__name__
+    get_class.short_description = 'Type'
 
 
 @admin.register(models.ConfirmProfileEntranceStep)

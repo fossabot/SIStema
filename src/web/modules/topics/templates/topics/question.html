@@ -1,9 +1,11 @@
 {% extends 'user_layout.html' %}
 
 {% load staticfiles %}
+{% load math %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'topics/css/topics.css' %}"></link>
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'topics/css/topics.css' %}"/>
 {% endblock %}
 
 {% block title %}{{ topic.title }} &mdash; {{ questionnaire.title }}{% endblock %}
@@ -97,9 +99,11 @@
                                         {% for mark in topic_with_marks.marks %}
                                             <p class="{{ mark.is_automatically|yesno:"text-muted-lighter," }}">
                                                 <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
-                                                <span class="label label-{{ mark.is_automatically|yesno:"muted,success" }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                                {% with relative_mark=mark.mark|multiply:'10'|divide:mark.scale_in_topic.scale.max_mark|to_int %}
+                                                    <span class="label label-{{ mark.is_automatically|yesno:"muted ,grade-" }}{{ relative_mark }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                                {% endwith %}
                                                 {% if mark.is_automatically %}
-                                                    <div class="text-muted small">(автоматическая оценка; школьника не&nbsp;видна до&nbsp;конца заполнения)</div>
+                                                    <div class="text-muted small">(автоматическая оценка; не&nbsp;видна школьникам до&nbsp;конца заполнения)</div>
                                                 {% endif %}
                                             </p>
                                         {% endfor %}

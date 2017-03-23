@@ -18,6 +18,18 @@
 {% endblock %}
 
 {% block _header %}
+    {% block collapse_icon %}
+        {% if not entrance_block.step.always_expanded %}
+            <div class="collapse-icon">
+                {% if entrance_block.state == EntranceStepState.NOT_PASSED or entrance_block.state == EntranceStepState.CLOSED %}
+                    <span class="fa fa-chevron-up"></span>
+                {% else %}
+                    <span class="fa fa-chevron-down"></span>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endblock %}
+
     {% block title %}{% endblock %}
 
     {% if entrance_block.state == EntranceStepState.NOT_OPENED %}
@@ -37,18 +49,6 @@
             <span class="done-icon  fa fa-check"></span>
         {% endblock %}
     {% endif %}
-
-    {% block collapse_icon %}
-        {% if not entrance_block.step.always_expanded %}
-            <div class="collapse-icon">
-                {% if entrance_block.state == EntranceStepState.NOT_PASSED or entrance_block.state == EntranceStepState.CLOSED %}
-                    <span class="fa fa-chevron-up"></span>
-                {% else %}
-                    <span class="fa fa-chevron-down"></span>
-                {% endif %}
-            </div>
-        {% endif %}
-    {% endblock %}
 {% endblock %}
 
 {% block _text %}

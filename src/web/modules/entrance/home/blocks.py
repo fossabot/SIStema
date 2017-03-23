@@ -10,7 +10,8 @@ __all__ = ['EntranceStepsHomePageBlock']
 class EntranceStepsHomePageBlock(home.models.AbstractHomePageBlock):
     ENTRANCE_STEPS_TEMPLATES_FOLDER = 'entrance/steps'
 
-    css_files = ['entrance/css/timeline.css']
+    css_files = ['entrance/css/timeline.css',
+                 'entrance/css/timeline-sm.css']
     js_files = ['entrance/js/timeline.js']
 
     def build(self, request):

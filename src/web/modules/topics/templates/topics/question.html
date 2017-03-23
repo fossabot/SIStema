@@ -1,5 +1,11 @@
 {% extends 'user_layout.html' %}
 
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'topics/css/topics.css' %}"></link>
+{% endblock %}
+
 {% block title %}{{ topic.title }} &mdash; {{ questionnaire.title }}{% endblock %}
 
 {% block content %}
@@ -19,11 +25,11 @@
 
                     <form method="POST" action="">
                         {% csrf_token %}
-                        <div class="panel-body p25">
+                        <div class="panel-body">
 
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div class="text-alert fs30">
+                                    <div class="topics-questionnaire__question__title text-alert">
                                         {{ topic.title }}
                                     </div>
                                     <div class="help-block">
@@ -35,7 +41,7 @@
                                             {{ field }}
                                         {% else %}
                                             <div class="mt20 {{ field.errors|yesno:"state-error,," }}">
-                                                <label for="{{ field.id_for_label }}" class="fs18">{{ field.label }}</label>
+                                                <label for="{{ field.id_for_label }}" class="fs18 mb5">{{ field.label }}</label>
 
                                                 {% for radio in field %}
                                                     <label for="{{ radio.id_for_label }}" class="option option-alert block mt5">
@@ -54,7 +60,7 @@
                             </div>
                         </div>
 
-                        <div class="panel-footer p25 text-left">
+                        <div class="panel-footer p25">
                             {% if is_correcting %}
                                 <button type="submit" class="button btn-alert">Сохранить</button>
                                 <a class="btn btn-link" href="{% url 'school:topics:index' request.school.short_name%}">Отменить</a>
@@ -70,19 +76,22 @@
                     <div class="panel">
                         <div class="panel-heading">
                             <div class="panel-title">
-                                История ответов <div class="fs14 lh10 mb15">ошибки в заполнении можно будет исправить в конце</div>
+                                История ответов <div class="fs14 lh14 panel-subtitle">ошибки в&nbsp;заполнении можно будет исправить в&nbsp;конце</div>
                             </div>
                         </div>
                         <div class="panel-body">
                             {% for topic_with_marks in issued_topics %}
                                 <div class="row">
-                                    <div class="col-xs-1">
+                                    <div class="col-sm-1 hidden-xs">
                                         <div class="mnw50 fs30 mr15 text-right text-{{ topic_with_marks.all_marks_are_automatically|yesno:"muted-lighter,alert" }}">
                                             {{ forloop.revcounter }}
                                         </div>
                                     </div>
-                                    <div class="col-xs-11 mb10">
+                                    <div class="col-sm-11 mb10">
                                         <p class="text-{{ topic_with_marks.all_marks_are_automatically|yesno:"muted-lighter,alert" }} fs18 fw600 mt5">
+                                            <span class="visible-xs-inline">
+                                                {{ forloop.revcounter }}.
+                                            </span>
                                             {{ topic_with_marks.topic.title }}
                                         </p>
                                         {% for mark in topic_with_marks.marks %}
@@ -90,7 +99,7 @@
                                                 <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
                                                 <span class="label label-{{ mark.is_automatically|yesno:"muted,success" }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
                                                 {% if mark.is_automatically %}
-                                                    <div class="text-muted small">(автоматическая оценка; видна только админам)</div>
+                                                    <div class="text-muted small">(автоматическая оценка; школьника не&nbsp;видна до&nbsp;конца заполнения)</div>
                                                 {% endif %}
                                             </p>
                                         {% endfor %}

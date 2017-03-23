@@ -31,6 +31,18 @@ body {
     padding: 25px 28px 17px;
 }
 
+.admin-form .panel-title .panel-subtitle {
+    margin-bottom: 15px;
+}
+
+.admin-form .option {
+    margin-left: 30px;
+}
+.admin-form .option .radio,
+.admin-form .option .checkbox {
+    margin-left: -30px;
+}
+
 /* Select2 */
 .admin-form .select2-container--default .select2-selection--single {
     background-color: white;
@@ -49,3 +61,9 @@ body {
 .form-control:not(.dont-hide-placeholder-on-focus):focus::-moz-placeholder { opacity: 0; transition: opacity 0.3s ease; }
 .form-control:not(.dont-hide-placeholder-on-focus):focus:-ms-input-placeholder { opacity: 0; transition: opacity 0.3s ease; }
 .form-control:not(.dont-hide-placeholder-on-focus):focus::-webkit-input-placeholder { opacity: 0; transition: opacity 0.3s ease; }
+
+/* Helpers */
+.lh11 { line-height: 11px; }
+.lh12 { line-height: 12px; }
+.lh13 { line-height: 13px; }
+.lh14 { line-height: 14px; }

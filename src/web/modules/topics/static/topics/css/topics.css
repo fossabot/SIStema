@@ -1,0 +1,13 @@
+.topics-questionnaire__question__title {
+    font-size: 30px;
+}
+
+@media (max-width: 768px) {
+    .topics-questionnaire__question__title {
+        font-size: 23px;
+    }
+
+    .panel-footer {
+        text-align: right;
+    }
+}

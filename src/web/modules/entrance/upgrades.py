@@ -52,7 +52,8 @@ def can_user_upgrade(school, user):
 def get_entrance_tasks(school, user, base_level):
     maximum_level = get_maximum_issued_entrance_level(school, user, base_level)
 
-    issued_levels = models.EntranceLevel.objects.filter(order__range=(base_level.order, maximum_level.order))
+    issued_levels = models.EntranceLevel.objects.filter(
+        school=school, order__range=(base_level.order, maximum_level.order))
 
     issued_tasks = set()
     for level in issued_levels:

@@ -1,11 +1,13 @@
-{% extends "staff_layout.html" %}
+{% extends 'staff_layout.html' %}
 
-{% load static %}
+{% load staticfiles %}
 
 {% block css %}
 {{ block.super }}
 <style>{{ question.css|safe }}</style>
-{% endblock css %}
+{% endblock %}
+
+{% block topbar %}{% endblock %}
 
 {% block content %}
 <div style="width: 600px; margin: auto;">

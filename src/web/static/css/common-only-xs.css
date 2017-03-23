@@ -16,7 +16,8 @@
         height: 6px;
     }
 
-    .admin-form .panel-heading {
+    .admin-form .panel-heading,
+    .admin-form .heading-border .panel-heading{
         padding: 15px;
         line-height: 200%;
     }
@@ -33,5 +34,9 @@
     .admin-form .option .radio,
     .admin-form .option .checkbox {
         vertical-align: text-top;
+    }
+
+    .admin-form .panel-footer.p25 {
+        padding: 20px 15px !important;
     }
 }

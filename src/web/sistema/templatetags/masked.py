@@ -11,8 +11,8 @@ def _mask_str(s):
 def masked_email(email):
     if not email:
         return ''
-    name, domain = email.lower().split('@', 2)
-    domain1, domain2 = domain.lower().rsplit('.', 2)
+    name, domain = email.lower().split('@', 1)
+    domain1, domain2 = domain.lower().rsplit('.', 1)
     name = _mask_str(name)
     if domain1 not in ['gmail', 'yandex', 'ya', 'rambler', 'mail', 'yahoo']:
         domain1 = _mask_str(domain1)

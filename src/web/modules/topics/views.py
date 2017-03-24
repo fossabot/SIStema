@@ -285,7 +285,10 @@ def reset(request):
 @login_required
 @topic_questionnaire_view
 def finish(request):
-    _update_questionnaire_status(request.user, request.questionnaire, models.UserQuestionnaireStatus.Status.FINISHED)
+    _update_questionnaire_status(
+        request.user,
+        request.questionnaire,
+        models.UserQuestionnaireStatus.Status.FINISHED)
 
     return redirect(request.school)
 
@@ -327,12 +330,18 @@ def start_checking(request):
 
     new_q = _create_topic_checking_questionnaire(request)
 
+    if new_q is None:
+        return redirect('school:topics:finish',
+                        school_name=request.school.short_name)
+
     if new_q.questions.all().count() == 0:
         new_q.status = models.TopicCheckingQuestionnaire.Status.PASSED
         new_q.save()
-        return redirect('school:topics:finish', school_name=request.school.short_name)
+        return redirect('school:topics:finish',
+                        school_name=request.school.short_name)
 
-    return redirect('school:topics:check_topics', school_name=request.school.short_name)
+    return redirect('school:topics:check_topics',
+                    school_name=request.school.short_name)
 
 
 @login_required
@@ -381,6 +390,11 @@ def finish_smartq(request):
 @transaction.atomic
 def _create_topic_checking_questionnaire(request):
     topics_q = request.questionnaire
+
+    if not (models.TopicCheckingSettings.objects.filter(questionnaire=topics_q)
+            .exists()):
+        return None
+
     new_q = models.TopicCheckingQuestionnaire.objects.create(
             user=request.user,
             topic_questionnaire=topics_q,

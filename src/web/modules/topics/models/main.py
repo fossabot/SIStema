@@ -251,7 +251,7 @@ class Topic(models.Model):
 
     level = models.ForeignKey(Level)
 
-    tags = models.ManyToManyField(Tag, related_name='topics')
+    tags = models.ManyToManyField(Tag, blank=True, related_name='topics')
 
     order = models.IntegerField(
         default=0,

@@ -18,9 +18,4 @@ class Migration(migrations.Migration):
             name='tags',
             field=models.ManyToManyField(blank=True, related_name='topics', to='topics.Tag'),
         ),
-        migrations.AlterField(
-            model_name='topiccheckingquestionnairequestion',
-            name='checker_result',
-            field=models.PositiveIntegerField(blank=True, choices=[(1, 'OK'), (2, 'WRONG ANSWER'), (3, 'PRESENTATION ERROR'), (4, 'CHECK FAILED')], default=None, null=True, validators=[djchoices.choices.ChoicesValidator({1: 'OK', 2: 'WRONG ANSWER', 3: 'PRESENTATION ERROR', 4: 'CHECK FAILED'})]),
-        ),
     ]

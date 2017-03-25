@@ -31,6 +31,10 @@
                     return 'Изменения в анкете не будут сохранены. Вы уверены?';
                 });
             });
+
+            $('form').submit(function(){
+                $(window).unbind('beforeunload');
+            });
         });
     </script>
 {% endblock %}

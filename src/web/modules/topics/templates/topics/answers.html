@@ -2,6 +2,8 @@
 
 {% block title %}{{ questionnaire.title }}{% endblock %}
 
+{% load math %}
+
 {% block content %}
 
     <div class="container-fluid">
@@ -42,7 +44,9 @@
                                     {% for mark in topic_with_marks.marks %}
                                         <p>
                                             <strong>{{ mark.scale_in_topic.scale.title }}</strong>: {{ mark.label }}
-                                            <span class="label label-success label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                            {% with relative_mark=mark.mark|multiply:'10'|divide:mark.scale_in_topic.scale.max_mark|to_int %}
+                                                <span class="label label-grade-{{ relative_mark }} label-sm">{{ mark.mark }} из {{ mark.scale_in_topic.scale.max_mark }}</span>
+                                            {% endwith %}
                                         </p>
                                     {% endfor %}
                                 </div>

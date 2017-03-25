@@ -31,7 +31,9 @@ def get_maximum_issued_entrance_level(school, user, base_level):
 def is_user_at_maximum_level(school, user, base_level):
     max_user_level = get_maximum_issued_entrance_level(school, user, base_level)
 
-    return not models.EntranceLevel.objects.filter(order__gt=max_user_level.order).exists()
+    return not models.EntranceLevel.objects.filter(
+        school=school,
+        order__gt=max_user_level.order).exists()
 
 
 # User can upgrade if he hasn't reached the maximum level yet and solved all

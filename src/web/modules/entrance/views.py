@@ -291,6 +291,7 @@ def upgrade(request):
             base_level
         )
         next_level = models.EntranceLevel.objects.filter(
+            school=request.school,
             order__gt=maximum_level.order
         ).order_by('order').first()
 

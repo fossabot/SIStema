@@ -35,6 +35,17 @@ code {
     display: initial !important;
 }
 
+.navbar .school-title {
+    color: #666;
+    height: 60px;
+    line-height: 58px;
+    padding: 0 0 0 18px;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    float: left;
+}
+
 /* Admin forms */
 .admin-form .heading-border .panel-heading {
     padding: 25px 28px 17px;

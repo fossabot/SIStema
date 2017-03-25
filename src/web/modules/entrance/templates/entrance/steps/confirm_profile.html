@@ -1,11 +1,11 @@
 {% extends 'entrance/steps/base.html' %}
 
-{% block title %}Проверить профиль{% endblock %}
+{% block title %}Подтвердить профиль{% endblock %}
 
 {% block not_passed_after_text %}
     <a href="{% url 'user:profile' %}?confirm=1" class="btn btn-primary">
         {% block not_passed_button_text %}
-            Проверить профиль
+            Проверить и подтвердить информацию в профиле
         {% endblock %}
     </a>
 {% endblock %}

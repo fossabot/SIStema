@@ -75,8 +75,9 @@ class User(auth_models.AbstractBaseUser, auth_models.PermissionsMixin):
         """Returns the first_name plus the last_name, with a space in between.
         """
         if hasattr(self, 'user_profile'):
-            full_name = '%s %s' % (self.user_profile.last_name,
-                                   self.user_profile.first_name)
+            full_name = '%s %s' % (self.user_profile.first_name,
+                                   self.user_profile.last_name
+                                   )
         else:
             full_name = '%s %s' % (self.first_name, self.last_name)
         return full_name.strip()

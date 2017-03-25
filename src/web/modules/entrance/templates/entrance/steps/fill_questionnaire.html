@@ -17,5 +17,11 @@
                 Редактировать анкету
             {% endblock %}
         </a>
+    {% else %}
+        <a href="{{ entrance_block.step.questionnaire.get_absolute_url }}" class="btn btn-success">
+            {% block passed_button_text__closed %}
+                Смотреть заполненную анкету
+            {% endblock %}
+        </a>
     {% endif %}
 {% endblock %}

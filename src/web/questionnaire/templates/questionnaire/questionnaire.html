@@ -25,6 +25,12 @@
                 );
 
             {% endfor %}
+
+            $(':input').on('change', function(){
+                $(window).bind('beforeunload', function(){
+                    return 'Изменения в анкете не будут сохранены. Вы уверены?';
+                });
+            });
         });
     </script>
 {% endblock %}

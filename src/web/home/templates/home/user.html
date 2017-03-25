@@ -4,6 +4,9 @@
 
 {% block title %}{{ school.name }}{% endblock %}
 
+{% block link_to_main_page %}
+{% endblock %}
+
 {% block css %}
     <link rel="stylesheet" type="text/css" href="{% static 'home/css/home.css' %}" >
     {% for block in blocks %}

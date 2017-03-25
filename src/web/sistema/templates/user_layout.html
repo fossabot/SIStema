@@ -10,9 +10,17 @@
             <header class="navbar navbar-shadow navbar-fixed-top">
                 <div class="navbar-branding">
                     {% if request.school %}
-                        <a class="navbar-brand" href="{% url 'school:index' request.school.short_name %}" title="На главную">
-                            <b>{{ request.school.name }}</b>
-                        </a>
+                        {% block link_to_main_page %}
+                            <a class="navbar-brand" href="{% url 'school:index' request.school.short_name %}" title="Вернуться на главную">
+                                <span class="fa fa-arrow-left fs14 pr5"></span> <b>На главную</b>
+                            </a>
+                        {% endblock %}
+                        <span class="school-title hidden-xs hidden-sm pl20">
+                            {{ request.school.full_name }}
+                        </span>
+                        <span class="school-title hidden-xs visible-sm">
+                            {{ request.school.name }}
+                        </span>
                     {% else %}
                         <a class="navbar-brand" href="{% url 'home' %}" title="На главную">
                             <b>ЛКШ</b>

@@ -166,9 +166,8 @@ class UserProfileForm(forms.Form):
     phone = forms.CharField(
         required=True,
         label='Телефон',
-        help_text='С кодом города',
+        help_text='С кодом города или мобильного оператора: например, +7 900 000 00 00',
         widget=TextInputWithFaIcon(attrs={
-            'placeholder': '+7 900 000-00-00',
             'class': 'gui-input',
             'fa': 'phone',
         })

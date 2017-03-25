@@ -46,6 +46,14 @@ code {
     float: left;
 }
 
+/* Hijack */
+.hijacked-warning-bootstrap {
+    position: fixed;
+    bottom: 0;
+    z-index: 3;
+    width: 100%;
+}
+
 /* Admin forms */
 .admin-form .heading-border .panel-heading {
     padding: 25px 28px 17px;

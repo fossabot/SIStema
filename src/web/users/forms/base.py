@@ -27,10 +27,7 @@ class AccountBaseForm(forms.Form):
 
 
 def _signup(form, user):
-    profile = models.UserProfile(user=user)
-    for field_name in profile.get_field_names():
-        setattr(profile, field_name, form.cleaned_data.get(field_name))
-    profile.save()
+    form.fill_user_profile(user).save()
 
 
 # NOTE you can not load allauth.account.forms before this class

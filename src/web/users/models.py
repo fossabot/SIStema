@@ -131,9 +131,9 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='user_profile')
     updated_at = models.DateTimeField(auto_now=True)
 
-    first_name = models.CharField('Имя', max_length=100, blank=True)
-    middle_name = models.CharField('Отчество', max_length=100, blank=True)
-    last_name = models.CharField('Фамилия', max_length=100, blank=True)
+    first_name = models.CharField('Имя', max_length=100, blank=True, default='')
+    middle_name = models.CharField('Отчество', max_length=100, blank=True, default='')
+    last_name = models.CharField('Фамилия', max_length=100, blank=True, default='')
 
     sex = models.PositiveIntegerField(
         'Пол',
@@ -150,13 +150,25 @@ class UserProfile(models.Model):
                                                    blank=True,
                                                    )
 
-    region = models.CharField('Субъект РФ', max_length=100, blank=True, help_text='или страна, если не Россия')
-    city = models.CharField('Населённый пункт', max_length=100, blank=True, help_text='в котором находится школа')
+    region = models.CharField(
+        'Субъект РФ',
+        max_length=100,
+        blank=True,
+        default='',
+        help_text='или страна, если не Россия'
+    )
+    city = models.CharField(
+        'Населённый пункт',
+        max_length=100,
+        blank=True,
+        default='',
+        help_text='в котором находится школа'
+    )
 
-    school_name = models.CharField('Школа', max_length=100, blank=True)
+    school_name = models.CharField('Школа', max_length=100, blank=True, default='')
 
-    phone = models.CharField('Телефон', max_length=100, blank=True)
-    telegram = models.CharField('Телеграмм', max_length=100, blank=True)
+    phone = models.CharField('Телефон', max_length=100, blank=True, default='')
+    telegram = models.CharField('Телеграмм', max_length=100, blank=True, default='')
 
     poldnev_person = models.ForeignKey(
         'poldnev.Person',
@@ -174,7 +186,7 @@ class UserProfile(models.Model):
         blank=True,
     )
 
-    citizenship_other = models.CharField('Другое гражданство', max_length=100, blank=True)
+    citizenship_other = models.CharField('Другое гражданство', max_length=100, blank=True, default='')
 
     document_type = models.IntegerField(
         'Тип документа',
@@ -183,9 +195,9 @@ class UserProfile(models.Model):
         null=True,
         blank=True,
     )
-    document_number = models.CharField('Номер документа', max_length=100, blank=True)
+    document_number = models.CharField('Номер документа', max_length=100, blank=True, default='')
 
-    insurance_number = models.CharField('Номер медицинского полиса', max_length=100, blank=True)
+    insurance_number = models.CharField('Номер медицинского полиса', max_length=100, blank=True, default='')
 
     def get_zero_class_year(self):
         return self._zero_class_year

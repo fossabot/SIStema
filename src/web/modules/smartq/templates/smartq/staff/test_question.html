@@ -10,7 +10,7 @@
 {% block topbar %}{% endblock %}
 
 {% block content %}
-<div style="width: 600px; margin: auto;">
+<div style="width: 600px; margin: auto; padding: 50px; background: #fff;">
   <form method="post" class="admin-form">
     {% csrf_token %}
     {% autoescape off %}{{ question.html }}{% endautoescape %}

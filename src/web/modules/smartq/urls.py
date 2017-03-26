@@ -10,7 +10,7 @@ urlpatterns = [
             views.regenerate_admin_question_instance,
             name='regenerate_admin_question_instance'),
     ])),
-    url(r'save-answer/(?P<generated_question_id>[^/]+)/$',
+    url(r'save-answer/(?P<generated_question_id>\d+)/$',
         views.save_answer,
         name='save_answer'),
 ]

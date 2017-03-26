@@ -385,6 +385,8 @@ def _make_form_type(generated_question_id, prefix, field_specs):
         if 'placeholder' in spec:
             attrs['placeholder'] = spec['placeholder']
 
+        required = spec.get('required', True)
+
         field = None
         if spec['type'] == api.AnswerFieldSpec.Type.TEXT:
             if spec['multiline']:
@@ -393,14 +395,14 @@ def _make_form_type(generated_question_id, prefix, field_specs):
                 widget = frontend.forms.SistemaTextInput(attrs=attrs)
 
             field = forms.CharField(
-                required=spec['required'],
+                required=required,
                 min_length=spec.get('min_length'),
                 max_length=spec.get('max_length'),
                 widget=widget)
 
         if spec['type'] == api.AnswerFieldSpec.Type.INTEGER:
             field = forms.IntegerField(
-                required=spec['required'],
+                required=required,
                 min_value=spec.get('min_value'),
                 max_value=spec.get('max_value'),
                 widget=frontend.forms.SistemaNumberInput(attrs=attrs))

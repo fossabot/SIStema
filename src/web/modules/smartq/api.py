@@ -85,11 +85,18 @@ class AnswerFieldSpec:
         INTEGER = 2
 
     @classmethod
-    def _base(cls, name=None):
+    def _base(cls, name=None, required=True, placeholder=None):
         spec = {'type': cls.Type.TEXT}
 
         if name is not None:
             spec['name'] = name
+
+        if not isinstance(required, bool):
+            return TypeError('required must be either True or False')
+        spec['required'] = required
+
+        if placeholder is not None:
+            spec['placeholder'] = str(placeholder)
 
         return spec
 

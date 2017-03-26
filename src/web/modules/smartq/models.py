@@ -1,6 +1,5 @@
 import collections
 import datetime
-import jinja2
 import json
 import multiprocessing.pool
 import random
@@ -13,6 +12,7 @@ from django.db import models
 import django.urls
 
 from constance import config
+import jinja2
 
 from modules.smartq import api
 import frontend.forms
@@ -375,12 +375,15 @@ def _make_form_type(generated_question_id, prefix, field_specs):
                 'smartq:save_answer',
                 kwargs={'generated_question_id': generated_question_id}
             ),
+
         }
         if 'validation_regexp' in spec:
             attrs['data-smartq-validation-regexp'] = spec['validation_regexp']
         if 'validation_regexp_message' in spec:
             attrs['data-smartq-validation-regexp-message'] = (
                 spec['validation_regexp_message'])
+        if 'placeholder' in spec:
+            attrs['placeholder'] = spec['placeholder']
 
         field = None
         if spec['type'] == api.AnswerFieldSpec.Type.TEXT:
@@ -390,12 +393,14 @@ def _make_form_type(generated_question_id, prefix, field_specs):
                 widget = frontend.forms.SistemaTextInput(attrs=attrs)
 
             field = forms.CharField(
+                required=spec['required'],
                 min_length=spec.get('min_length'),
                 max_length=spec.get('max_length'),
                 widget=widget)
 
         if spec['type'] == api.AnswerFieldSpec.Type.INTEGER:
             field = forms.IntegerField(
+                required=spec['required'],
                 min_value=spec.get('min_value'),
                 max_value=spec.get('max_value'),
                 widget=frontend.forms.SistemaNumberInput(attrs=attrs))

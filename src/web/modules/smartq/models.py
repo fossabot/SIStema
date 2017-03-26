@@ -11,6 +11,7 @@ from django import forms
 from django.db import models
 import django.urls
 
+from cached_property import cached_property
 from constance import config
 import jinja2
 
@@ -233,18 +234,30 @@ class GeneratedQuestion(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         data_dict = json.loads(self.data_json)
         self.data = api.GeneratedQuestionData(**data_dict)
-
-        self.form_type = _make_form_type(self.id,
-                                         self._question_div_id,
-                                         self.data.answer_fields)
-
-        self.form = self.form_type(self.answer)
+        self._form = None
 
     def __str__(self):
         return '{}({})'.format(self.base_question, self.seed)
+
+    @cached_property
+    def form_type(self):
+        if self.id is None:
+            return None
+
+        return _make_form_type(
+            self.id, self._question_div_id, self.data.answer_fields)
+
+    @property
+    def form(self):
+        if self._form is None:
+            self._form = self.form_type(self.answer)
+        return self._form
+
+    @form.setter
+    def form(self, value):
+        self._form = value
 
     @property
     def answer(self):

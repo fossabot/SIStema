@@ -15,11 +15,15 @@ class GeneratedQuestionAdmin(admin.ModelAdmin):
     list_display = (
         'base_question',
         'seed',
+        'user',
     )
 
     search_fields = (
         'base_question__short_name',
         '=seed',
+        'user__profile__first_name',
+        'user__profile__middle_name',
+        'user__profile__last_name',
     )
 
 admin.site.register(models.GeneratedQuestion, GeneratedQuestionAdmin)

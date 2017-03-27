@@ -425,18 +425,19 @@ class MakeUserParticipatingEntranceStep(AbstractEntranceStep):
         # It's here to avoid cyclic imports
         import modules.entrance.models.main as entrance_models
 
-        with transaction.atomic():
-            current = entrance_models.EntranceStatus.objects.filter(
-                school=self.school,
-                user=user,
-            ).first()
-            if (current is None or
-               current.status == entrance_models.EntranceStatus.Status.NOT_PARTICIPATED):
-                entrance_models.EntranceStatus.create_or_update(
-                    self.school,
-                    user,
-                    entrance_models.EntranceStatus.Status.PARTICIPATING
-                )
+        if self.get_state(user) == EntranceStepState.NOT_PASSED:
+            with transaction.atomic():
+                current = entrance_models.EntranceStatus.objects.filter(
+                    school=self.school,
+                    user=user,
+                ).first()
+                if (current is None or
+                   current.status == entrance_models.EntranceStatus.Status.NOT_PARTICIPATED):
+                    entrance_models.EntranceStatus.create_or_update(
+                        self.school,
+                        user,
+                        entrance_models.EntranceStatus.Status.PARTICIPATING
+                    )
 
         return super().build(user)
 

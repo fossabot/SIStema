@@ -49,7 +49,11 @@ $(document).ready(function () {
             close_container();
         } else {
             showed_accounts = Object.keys(data);
-            $accounts_data.html(Object.values(data).join());
+            var values = []
+            for (var i = 0; i < showed_accounts.length; i++) {
+                values.push(data[showed_accounts[i]]);
+            }
+            $accounts_data.html(values.join());
             if (not_declined_count == 0) {
                 $signup_button.removeAttr('disabled');
                 $decline_button.hide();

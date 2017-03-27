@@ -302,7 +302,9 @@ class ModelAutocompleteSelect2(QuerySetSelectMixin,
 def add_classes_to_label(f, classes=''):
     def func_wrapper(self, *args, **kwargs):
         if hasattr(self, 'attrs'):
-            self.attrs['class'] = self.attrs.get('class', '') + ' ' + classes
+            exists_classes = self.attrs.get('class', '')
+            if '-' + classes not in exists_classes.split():
+                self.attrs['class'] = exists_classes + ' ' + classes
         else:
             # TODO: bug? What if kwargs['attrs'] is not defined?
             if 'attrs' in kwargs:

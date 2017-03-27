@@ -31,7 +31,7 @@ class FileEntranceTaskForm(EntranceTaskForm):
         label_suffix='',
         widget=widgets.ClearableFileInput(
             attrs={
-                'class': 'file',
+                'class': 'file -form-control',
                 'data-language': 'ru',
                 'data-show-upload': 'false',
                 'data-show-remove': 'false',
@@ -61,7 +61,7 @@ class ProgramEntranceTaskForm(EntranceTaskForm):
         label_suffix='',
         widget=widgets.ClearableFileInput(
             attrs={
-                'class': 'file',
+                'class': 'file -form-control',
                 'data-language': 'ru',
                 'data-show-upload': 'false',
                 'data-show-remove': 'false',

@@ -234,8 +234,9 @@ class GeneratedQuestion(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        data_dict = json.loads(self.data_json)
-        self.data = api.GeneratedQuestionData(**data_dict)
+        if self.data_json:
+            data_dict = json.loads(self.data_json)
+            self.data = api.GeneratedQuestionData(**data_dict)
         self._form = None
 
     def __str__(self):

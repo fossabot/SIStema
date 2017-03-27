@@ -9,12 +9,18 @@
         {% if user.is_authenticated %}
             <header class="navbar navbar-shadow navbar-fixed-top">
                 <div class="navbar-branding">
-                    {% if request.school %}
-                        {% block link_to_main_page %}
+                    {% block link_to_main_page %}
+                        {% if request.school %}
                             <a class="navbar-brand" href="{% url 'school:index' request.school.short_name %}" title="Вернуться на главную">
                                 <span class="fa fa-arrow-left fs14 pr5"></span> <b>На главную</b>
                             </a>
-                        {% endblock %}
+                        {% else %}
+                            <a class="navbar-brand" href="{% url 'home' %}" title="Вернуться на главную">
+                                <span class="fa fa-arrow-left fs14 pr5"></span> <b>На главную</b>
+                            </a>
+                        {% endif %}
+                    {% endblock %}
+                    {% if request.school %}
                         <span class="school-title hidden-xs hidden-sm pl20">
                             {{ request.school.full_name }}
                         </span>
@@ -22,9 +28,9 @@
                             {{ request.school.name }}
                         </span>
                     {% else %}
-                        <a class="navbar-brand" href="{% url 'home' %}" title="На главную">
-                            <b>ЛКШ</b>
-                        </a>
+                        <span class="school-title" >
+                            ЛКШ
+                        </span>
                     {% endif %}
                 </div>
                 <ul class="nav navbar-nav navbar-right">

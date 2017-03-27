@@ -88,7 +88,7 @@ $(document).ready(function() {
         var $element = $(element);
         $element.popover('destroy').popover({
           trigger: 'manual',
-          placement: 'top',
+          placement: 'bottom',
           content: error,
           html: true,
         });

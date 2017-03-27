@@ -127,7 +127,7 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
             return EntranceStepState.NOT_OPENED
 
         if (self.available_after_step is not None and
-           not self.available_after_step.is_passed(user)):
+            self.available_after_step.get_state(user) != EntranceStepState.PASSED):
             return EntranceStepState.WAITING_FOR_OTHER_STEP
 
         if self.is_passed(user):

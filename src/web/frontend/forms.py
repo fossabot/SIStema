@@ -56,7 +56,7 @@ class SistemaTextarea(forms.Textarea):
 
     def render(self, name, value, attrs=None):
         attrs = copy.deepcopy(attrs) or {}
-        attrs['class'] = attrs.get('class', '') + ' gui-input'
+        attrs['class'] = attrs.get('class', '') + ' gui-textarea'
 
         base_rendered = super().render(name, value, attrs=attrs)
 

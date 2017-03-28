@@ -2,14 +2,14 @@
 $(document).ready(function() {
   function saveAnswer(url, generated_question_id) {
     var data = {};
-    $('input[data-smartq-id=' + generated_question_id + ']').each(function(i) {
+    $('[data-smartq-id=' + generated_question_id + ']').each(function(i) {
       var $this = $(this);
       data[$this.attr('name')] = $this.val();
     });
     $.post(url, data)
   };
 
-  var $inputs = $('input[data-smartq-id]');
+  var $inputs = $('[data-smartq-id]');
 
   $inputs.focus(function() {
     var $this = $(this);
@@ -41,7 +41,7 @@ $(document).ready(function() {
     var rules = {};
     var messages = {};
 
-    $this.find('input[data-smartq-id]').each(function() {
+    $this.find('[data-smartq-id]').each(function() {
       var $this = $(this);
       var name = $this.attr('name');
 
@@ -99,6 +99,6 @@ $(document).ready(function() {
     });
   };
 
-  $('input[data-smartq-id]').closest('form').each(validateForm);
+  $('[data-smartq-id]').closest('form').each(validateForm);
   
 });

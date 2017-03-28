@@ -165,7 +165,7 @@ class UserProfile(models.Model):
         help_text='в котором находится школа'
     )
 
-    school_name = models.CharField('Школа', max_length=100, blank=True, default='')
+    school_name = models.CharField('Школа', max_length=250, blank=True, default='')
 
     phone = models.CharField('Телефон', max_length=100, blank=True, default='')
     telegram = models.CharField('Телеграмм', max_length=100, blank=True, default='')

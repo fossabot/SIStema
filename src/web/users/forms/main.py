@@ -72,6 +72,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Фамилия',
         help_text='Как в паспорте или свидетельстве о рождении',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': 'Введите фамилию',
             'class': 'gui-input',
@@ -83,6 +84,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Имя',
         help_text='Как в паспорте или свидетельстве о рождении',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': 'Введите имя',
             'class': 'gui-input',
@@ -94,6 +96,7 @@ class UserProfileForm(forms.Form):
         required=False,
         label='Отчество',
         help_text='Как в паспорте или свидетельстве о рождении',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': 'Введите отчество',
             'class': 'gui-input',
@@ -135,6 +138,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Субъект РФ',
         help_text='или страна, если не Россия',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'class': 'gui-input',
             'fa': 'building-o',
@@ -146,6 +150,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Населённый пункт',
         help_text='в котором находится школа',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': 'Город, деревня, село..',
             'class': 'gui-input',
@@ -157,6 +162,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Школа',
         help_text='Например, «Лицей №88»',
+        max_length=250,
         widget=TextInputWithFaIcon(attrs={
             'class': 'gui-input',
             'fa': 'graduation-cap',
@@ -167,6 +173,7 @@ class UserProfileForm(forms.Form):
         required=True,
         label='Мобильный телефон',
         help_text='Позвоним в экстренной ситуации. Например, +7 900 000 00 00',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': '+7 900 000 00 00',
             'class': 'gui-input',
@@ -177,6 +184,7 @@ class UserProfileForm(forms.Form):
     telegram = forms.CharField(
         required=False,
         label='Ник в Телеграмме',
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': '@nick',
             'class': 'gui-input',
@@ -195,6 +203,7 @@ class UserProfileForm(forms.Form):
         # TODO hide this field, if citizenship != Citizenship.OTHER
         help_text='Если вы указали «Другое», укажите здесь своё гражданство (или несколько через запятую)',
         required=False,
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'class': 'gui-input',
             'fa': 'file-text-o',
@@ -210,6 +219,7 @@ class UserProfileForm(forms.Form):
         label='Номер документа',
         help_text='Укажите и серию, и номер документа',
         required=False,
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'class': 'gui-input',
             'fa': 'file-text-o',
@@ -220,6 +230,7 @@ class UserProfileForm(forms.Form):
         label='Номер медицинского полиса',
         help_text='Только для проживающих в России',
         required=False,
+        max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'class': 'gui-input',
             'fa': 'file-text-o',

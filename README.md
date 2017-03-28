@@ -19,9 +19,7 @@ Or (`pip install -Ur src/requirements.mysql.txt` if you want to use MySQL backen
 
 Ask someone to make you a database dump of the main SIStema instance:
 
-    $ python src/web/manage.py dumpdata --exclude default.usersocialauth > db.json
-
-> If you have django-reversion >= 2.0.0, remove lines containing "object_id_int" or "manager_slug" from the dump.
+    $ python src/web/manage.py dumpdata > db.json
 
 Then load it locally:
 

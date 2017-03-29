@@ -170,15 +170,13 @@ def _show_or_process_topic_form(request, topic_issue):
         form.full_clean()
 
         if is_closed:
-            form.add_error(
-                None,
-                'Вступительная работа завершена. Изменения в тематическую '
-                'анкету больше не принимаются')
+            form.add_error(None, 'Вступительная работа завершена. Изменения '
+                                 'в тематическую анкету больше не принимаются')
 
         # Check that topic_id from form is equal to last issued topic, else
         # update page for show the new question
         if ('topic_id' in form.cleaned_data and
-                form.cleaned_data['topic_id'] != topic_issue.topic_id):
+           form.cleaned_data['topic_id'] != topic_issue.topic_id):
             return redirect('.')
 
         if form.is_valid():
@@ -188,19 +186,55 @@ def _show_or_process_topic_form(request, topic_issue):
                     continue
 
                 # TODO: Deny to have '__' in Scale.short_name and ScaleLabelGroup.short_name?
-                topic_name, scale_name, label_group_name = field_name.split('__', 3)
-                scale_in_topic = models.ScaleInTopic.objects.filter(topic_id=topic_issue.topic_id,
-                                                                    scale_label_group__scale__short_name=scale_name,
-                                                                    scale_label_group__short_name=label_group_name).get()
+                _, scale_name, label_group_name = field_name.split('__', 3)
+                scale_in_topic = models.ScaleInTopic.objects.filter(
+                    topic_id=topic_issue.topic_id,
+                    scale_label_group__scale__short_name=scale_name,
+                    scale_label_group__short_name=label_group_name
+                ).get()
 
                 # Backup previous marks if user correcting their
                 if is_correcting:
                     backup_user_marks(request.user, scale_in_topic)
 
+                if models.UserMark.objects.filter(
+                    user=request.user,
+                    scale_in_topic=scale_in_topic
+                ).exists():
+                    import datetime
+                    import django.core.mail
+
+                    user_marks = list(models.UserMark.objects.filter(
+                        user=request.user,
+                        scale_in_topic=scale_in_topic
+                    ))
+                    all_user_marks = list(models.UserMark.objects.filter(
+                        user=request.user,
+                        scale_in_topic__topic__questionnaire=request.questionnaire
+                    ))
+
+                    # Try to debug strange scenario: twice issued topics
+                    message = ('{}: Twice issued topic\n'
+                               '  user_id = {}\n'
+                               '  topic_id = {}\n'
+                               '  form data = {}\n'
+                               '  user marks = {}'
+                               '  all user marks = {}'
+                               ''.format(datetime.datetime.now(),
+                                         request.user.id,
+                                         form.cleaned_data['topic_id'],
+                                         form.cleaned_data,
+                                         user_marks,
+                                         all_user_marks))
+                    print(message)
+                    django.core.mail.mail_admins('topics: Twice issued topic', message)
+                    return redirect('.')
+
                 models.UserMark.objects.get_or_create(
                     user=request.user,
                     scale_in_topic=scale_in_topic,
-                    mark=field_value)
+                    mark=field_value
+                )
 
             # Guess some marks automatically
             guesser.update_automatically_marks()
@@ -209,8 +243,10 @@ def _show_or_process_topic_form(request, topic_issue):
             topic_issuer = issuer.TopicIssuer(request.user, request.questionnaire)
             no_more_topics = not topic_issuer.find_and_issue_new_topic_for_user()
             if no_more_topics:
-                _update_questionnaire_status(request.user, request.questionnaire,
-                                             models.UserQuestionnaireStatus.Status.CORRECTING)
+                _update_questionnaire_status(
+                    request.user, request.questionnaire,
+                    models.UserQuestionnaireStatus.Status.CORRECTING
+                )
 
             # ... and redirect to view the new question
             return redirect('school:topics:index', school_name=request.school.short_name)
@@ -392,7 +428,7 @@ def finish_smartq(request):
         q.checker_result = result.status
         q.checker_message = result.message
         q.save()
- 
+
     smartq_q.checked_at = django.utils.timezone.now()
     smartq_q.save()
 

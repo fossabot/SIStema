@@ -115,8 +115,8 @@ class TopicIssuer:
         if models.TopicIssue.objects.filter(user=self.user,
                                             topic=topic).exists():
             raise AlreadyIssuedException(
-                'topics.issuer.TopicIssuer.issue_topic: this topic has been '
-                'already issued to this user')
+                'topics.issuer.TopicIssuer.issue_topic: this topic (%s: %s)'
+                'has been already issued to this user' % (topic.short_name, topic))
 
         return self._internal_issue_topic(topic, scales_in_topic)
 

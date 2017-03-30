@@ -346,9 +346,8 @@ def start_checking(request):
 
     user_status = _get_questionnaire_status(request.user, request.questionnaire)
     if user_status.status != models.UserQuestionnaireStatus.Status.CORRECTING:
-        return redirect('school:topics:index', school_name=request.school.short_name)
-
-    _update_questionnaire_status(request.user, request.questionnaire, models.UserQuestionnaireStatus.Status.CHECK_TOPICS)
+        return redirect('school:topics:index',
+                        school_name=request.school.short_name)
 
     new_q = _create_topic_checking_questionnaire(request)
 
@@ -361,6 +360,11 @@ def start_checking(request):
         new_q.save()
         return redirect('school:topics:finish',
                         school_name=request.school.short_name)
+
+    _update_questionnaire_status(
+        request.user,
+        request.questionnaire,
+        models.UserQuestionnaireStatus.Status.CHECK_TOPICS)
 
     return redirect('school:topics:check_topics',
                     school_name=request.school.short_name)

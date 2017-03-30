@@ -1,7 +1,10 @@
 import operator
+import datetime
 
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
+import django.core.mail
 
 from . import models
 
@@ -112,11 +115,27 @@ class TopicIssuer:
 
     @transaction.atomic
     def issue_topic(self, topic, scales_in_topic):
-        if models.TopicIssue.objects.filter(user=self.user,
-                                            topic=topic).exists():
-            raise AlreadyIssuedException(
-                'topics.issuer.TopicIssuer.issue_topic: this topic (%s: %s)'
-                'has been already issued to this user' % (topic.short_name, topic))
+        if models.TopicIssue.objects.filter(
+            user=self.user,
+            topic=topic,
+            created_at__lte=timezone.now() - datetime.timedelta(minutes=1)
+        ).exists():
+            all_marks = list(models.UserMark.objects.filter(
+                user=self.user,
+                scale_in_topic__topic__questionnaire=self.questionnaire
+            ))
+            message = ('{}: AlreadyIssuedException\n'
+                       '  user_id = {}\n'
+                       '  topic_id = {}\n'
+                       '  all marks = {}\n'
+                       ''.format(
+                            datetime.datetime.now(),
+                            self.user.id,
+                            topic.id,
+                            all_marks)
+                        )
+            print(message)
+            django.core.mail.mail_admins('topics: AlreadyIssuedException', message)
 
         return self._internal_issue_topic(topic, scales_in_topic)
 

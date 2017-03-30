@@ -433,8 +433,8 @@ class BaseMark(models.Model):
         super(BaseMark, self).save(*args, **kwargs)
 
     def __str__(self):
-        return 'Оценка %d пользователя %s за «%s» %s' % (
-            self.mark, self.user, self.scale_in_topic,
+        return 'Оценка %d пользователя %s за «%s» %s%s' % (
+            self.mark, self.user, self.scale_in_topic, self.created_at,
             ' (автоматически)' if self.is_automatically else '')
 
     class Meta:

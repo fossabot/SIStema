@@ -197,39 +197,6 @@ def _show_or_process_topic_form(request, topic_issue):
                 if is_correcting:
                     backup_user_marks(request.user, scale_in_topic)
 
-                if models.UserMark.objects.filter(
-                    user=request.user,
-                    scale_in_topic=scale_in_topic
-                ).exists():
-                    import datetime
-                    import django.core.mail
-
-                    user_marks = list(models.UserMark.objects.filter(
-                        user=request.user,
-                        scale_in_topic=scale_in_topic
-                    ))
-                    all_user_marks = list(models.UserMark.objects.filter(
-                        user=request.user,
-                        scale_in_topic__topic__questionnaire=request.questionnaire
-                    ))
-
-                    # Try to debug strange scenario: twice issued topics
-                    message = ('{}: Twice issued topic\n'
-                               '  user_id = {}\n'
-                               '  topic_id = {}\n'
-                               '  form data = {}\n'
-                               '  user marks = {}'
-                               '  all user marks = {}'
-                               ''.format(datetime.datetime.now(),
-                                         request.user.id,
-                                         form.cleaned_data['topic_id'],
-                                         form.cleaned_data,
-                                         user_marks,
-                                         all_user_marks))
-                    print(message)
-                    django.core.mail.mail_admins('topics: Twice issued topic', message)
-                    return redirect('.')
-
                 models.UserMark.objects.get_or_create(
                     user=request.user,
                     scale_in_topic=scale_in_topic,

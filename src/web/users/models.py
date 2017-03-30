@@ -1,11 +1,10 @@
+import datetime
+
 from django.contrib.auth import models as auth_models
 from django.core import mail, validators
 from django.db import models
-from django.utils import crypto
 from django.utils.translation import ugettext_lazy as _
 from djchoices import choices
-
-import datetime
 
 
 class UserManager(auth_models.UserManager):
@@ -65,8 +64,7 @@ class User(auth_models.AbstractBaseUser, auth_models.PermissionsMixin):
         """
         if hasattr(self, 'user_profile'):
             full_name = '%s %s' % (self.user_profile.first_name,
-                                   self.user_profile.last_name
-                                   )
+                                   self.user_profile.last_name)
         else:
             full_name = '%s %s' % (self.first_name, self.last_name)
         return full_name.strip()

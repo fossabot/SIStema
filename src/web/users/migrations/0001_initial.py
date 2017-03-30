@@ -2,10 +2,15 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+from django.utils import crypto
 import django.core.validators
 import django.utils.timezone
 import users.models
 import django.contrib.auth.models
+
+
+def generate_random_secret_string():
+    return crypto.get_random_string(length=32)
 
 
 class Migration(migrations.Migration):
@@ -30,7 +35,7 @@ class Migration(migrations.Migration):
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
                 ('city', models.CharField(max_length=100)),
-                ('email_confirmation_token', models.CharField(max_length=32, default=users.models.generate_random_secret_string)),
+                ('email_confirmation_token', models.CharField(max_length=32, default=generate_random_secret_string)),
                 ('is_email_confirmed', models.BooleanField(default=False)),
                 ('groups', models.ManyToManyField(help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_query_name='user', blank=True, verbose_name='groups', related_name='user_set', to='auth.Group')),
                 ('user_permissions', models.ManyToManyField(help_text='Specific permissions for this user.', related_query_name='user', blank=True, verbose_name='user permissions', related_name='user_set', to='auth.Permission')),

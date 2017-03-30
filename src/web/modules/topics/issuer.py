@@ -118,7 +118,7 @@ class TopicIssuer:
         if models.TopicIssue.objects.filter(
             user=self.user,
             topic=topic,
-            created_at__lte=timezone.now() - datetime.timedelta(minutes=1)
+            created_at__lte=timezone.now() - datetime.timedelta(seconds=10)
         ).exists():
             all_marks = list(models.UserMark.objects.filter(
                 user=self.user,

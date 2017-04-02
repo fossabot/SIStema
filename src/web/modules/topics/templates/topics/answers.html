@@ -32,13 +32,16 @@
 
                         {% for topic_with_marks in topics %}
                             <div class="row">
-                                <div class="col-xs-1">
-                                    <div class="mnw50 fs30 mr15 text-right text-alert">
-                                        {{ forloop.counter }}
+                                <div class="col-sm-1 hidden-xs">
+                                        <div class="mnw50 fs30 mr15 text-right text-{{ topic_with_marks.all_marks_are_automatically|yesno:"muted-lighter,alert" }}">
+                                            {{ forloop.revcounter }}
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-xs-11 mb10">
+                                <div class="col-sm-11 mb10">
                                     <p class="text-alert fs18 fw600 mt5">
+                                        <span class="visible-xs-inline">
+                                            {{ forloop.revcounter }}.
+                                        </span>
                                         {{ topic_with_marks.topic.title }}
                                     </p>
                                     {% for mark in topic_with_marks.marks %}

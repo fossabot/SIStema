@@ -99,7 +99,3 @@ class DocumentGenerator:
             'payment': user_payment_questionnaire,
             'price': price
         })
-
-
-
-

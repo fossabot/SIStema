@@ -15,11 +15,6 @@ class DocumentGenerator:
             short_name='payment'
         ).first()
 
-        self.enrolled_questionnaire = questionnaire.models.Questionnaire.objects.filter(
-            school=self.school,
-            short_name='enrolled'
-        ).first()
-
         self.payment_questions = questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
             questionnaire=self.payment_questionnaire
         )
@@ -61,21 +56,6 @@ class DocumentGenerator:
             for a in user_payment_questionnaire
         }
 
-        user_enrolled_questionnaire = list(
-            questionnaire.models.QuestionnaireAnswer.objects.filter(
-                questionnaire=self.enrolled_questionnaire,
-                user=user
-            )
-        )
-        user_enrolled_questionnaire = {
-            a.question_short_name: a.answer
-            for a in user_enrolled_questionnaire
-        }
-        # Only for 2016:
-        user.last_name = user_enrolled_questionnaire['last_name']
-        user.first_name = user_enrolled_questionnaire['first_name']
-        user.middle_name = user_enrolled_questionnaire['middle_name']
-
         entrance_status = EntranceStatus.objects.filter(
             school=self.school,
             user=user,
@@ -91,7 +71,7 @@ class DocumentGenerator:
         return g.generate({
             'school': self.school,
             'session': session,
-            'student': user,
+            'student': user.profile,
             'contract': {
                 'id': user.id,
                 'created_at': datetime.date.today()

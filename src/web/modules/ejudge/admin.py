@@ -46,6 +46,8 @@ class QueueElementAdmin(admin.ModelAdmin):
     search_fields = ('=id',)
 
     def submission_link(self, obj):
+        if obj.submission is None:
+            return ''
         url = urlresolvers.reverse('admin:ejudge_submission_change',
                                    args=[obj.submission.id])
         return '<a href="{}">{}</a>'.format(url, obj.submission)

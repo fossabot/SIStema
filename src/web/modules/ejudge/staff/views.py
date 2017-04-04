@@ -35,6 +35,8 @@ def count_stats(school):
         .annotate(count=Count('solutions'), status=F('result')))
     # Write django.choices in readable form
     for entry in queue_stats:
+        if entry['status'] is None:
+            continue
         entry['status'] = (
             ejudge_models.QueueElement.Status.values[entry['status']])
 

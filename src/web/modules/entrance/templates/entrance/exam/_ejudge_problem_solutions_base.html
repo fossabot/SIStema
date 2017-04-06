@@ -1,3 +1,5 @@
+{% load tz %}
+
 <h3 class="mt10">Ваши решения</h3>
 
 <input type="hidden" name="is_checking" value="{{ is_checking|yesno:'true,false' }}">
@@ -12,14 +14,22 @@
             Статус
         </div>
         <div class="submit__date">
-            Дата и&nbsp;время
+            <nobr>Дата и&nbsp;время (МСК)</nobr>
         </div>
     </div>
 {% endif %}
 
 {% for solution in solutions %}
     {% with solution.ejudge_queue_element.get_result as result %}
-        <div class="submit {% if result %}{{ result.is_success|yesno:'text-success,text-danger,'}}{% endif %}">
+        <div class="submit {% if result %}
+                {% if result.is_success %}
+                    text-success
+                {% elif result.is_partial %}
+                    text-partial
+                {% else %}
+                    text-danger
+                {% endif %}
+            {% endif %}">
             <div class="submit__counter"> {{ forloop.revcounter }}.</div>
             {% block additional_columns %}
             {% endblock %}
@@ -33,8 +43,9 @@
             </div>
 
             <div class="submit__date" title="{{ solution.created_at }}">
-                {% load date %}
-                {{ solution.created_at }}
+                {% timezone "Europe/Moscow" %}
+                    {{ solution.created_at }}
+                {% endtimezone %}
             </div>
         </div>
     {% endwith %}

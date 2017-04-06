@@ -77,6 +77,11 @@
 }
 
 
+.entrance-exam .text-partial {
+    color: #afab08;
+}
+
+
 @media (max-width: 768px) {
     .entrance-exam .tabs-left > li {
         max-width: 130px;

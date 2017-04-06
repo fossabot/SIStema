@@ -84,6 +84,10 @@ class CheckingResult(models.Model):
     def is_success(self):
         return self.result == CheckingResult.Result.OK
 
+    @property
+    def is_partial(self):
+        return not self.is_success and self.score is not None and self.score > 0
+
     class Meta:
         abstract = True
 

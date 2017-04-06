@@ -22,7 +22,7 @@
 {% block answer_form %}
     <div class="row">
         {% if not is_closed %}
-            <div class="col-sm-12 col-md-6 mw400">
+            <div class="col-sm-12 col-md-5 mw400">
                 <form method="POST" action="" enctype="multipart/form-data">
                     {% block form_title %}
                     {% endblock %}
@@ -42,7 +42,7 @@
             </div>
         {% endif %}
 
-        <div class="entrance-exam__task__program__submits col-sm-12 col-md-5 col-md-offset-1">
+        <div class="entrance-exam__task__program__submits col-sm-12 col-md-6 col-md-offset-1">
             {% include 'entrance/exam/'|add:task.solutions_template_file with task=task solutions=task.user_solutions %}
         </div>
     </div>

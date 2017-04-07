@@ -400,17 +400,22 @@ def enrolling_user(request, user_id):
 
 @sistema.staff.only_staff
 def solution(request, solution_id):
-    task_solution = get_object_or_404(models.EntranceExamTaskSolution, id=solution_id)
+    solution = get_object_or_404(models.EntranceExamTaskSolution, id=solution_id)
 
-    if hasattr(task_solution, 'fileentranceexamtasksolution'):
-        file_solution = task_solution.fileentranceexamtasksolution
-        original_filename = file_solution.original_filename
-        return respond_as_attachment(request, file_solution.solution,
-                                     '%06d_%s' % (int(task_solution.id), original_filename))
+    if type(solution) is models.FileEntranceExamTaskSolution:
+        original_filename = solution.original_filename
+        return respond_as_attachment(
+            request,
+            solution.solution,
+            '%06d_%s' % (int(solution.id), original_filename)
+        )
 
-    if hasattr(task_solution, 'programentranceexamtasksolution'):
-        program_solution = task_solution.programentranceexamtasksolution
-        return respond_as_attachment(request, program_solution.solution, '%06d' % int(task_solution.id))
+    if isinstance(solution, models.EjudgeEntranceExamTaskSolution):
+        return respond_as_attachment(
+            request,
+            solution.solution,
+            '%06d' % int(solution.id)
+        )
 
     return HttpResponseNotFound()
 

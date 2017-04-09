@@ -6,9 +6,9 @@ import requests
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.conf import settings
 
-from ... import models
-from sistema import settings
+from modules.ejudge import models
 
 
 class EjudgeException(Exception):
@@ -38,12 +38,28 @@ class Command(BaseCommand):
             finish_pos = len(text)
         return text[start_pos+len(pre):finish_pos]
 
-    # TODO: extract to EjudgeApi
+    def _build_client_url(self, sid='', action=0, additional_params=''):
+        params = ''
+        if sid != '':
+            params += '&SID=%s' % (sid, )
+        if action > 0:
+            params += '&action=%d' % (action, )
+        if additional_params != '':
+            params += '&%s' % (additional_params, )
+        if params.startswith('&'):
+            params = '?' + params[1:]
+
+        # TODO (andgein): build address with library functions
+        return '%s/cgi-bin/new-client%s' % (self.backend_address, params)
+
+    # TODO (andgein): extract to EjudgeApi
     def _login(self, contest_id):
-        self.stdout.write('Try to authorize in ejudge with login %s and password %s' % (
-            self.ejudge_login, '*' * len(self.ejudge_password)))
-        # TODO: build address with library functions
-        login_url = '%s/cgi-bin/new-client' % (self.backend_address,)
+        self.stdout.write(
+            'Try to authorize in ejudge with login %s and password %s' % (
+                self.ejudge_login, '*' * len(self.ejudge_password)
+            )
+        )
+        login_url = self._build_client_url()
         login_data = {'contest_id': contest_id,
                       'role': 0,
                       'prob_name': '',
@@ -64,7 +80,7 @@ class Command(BaseCommand):
         return sid
 
     def _submit_to_ejudge(self, sid, problem_id, language_id, file_name):
-        submit_url = '%s/cgi-bin/new-client' % (self.backend_address,)
+        submit_url = self._build_client_url()
         submit_data = {'SID': sid,
                        'prob_id': problem_id,
                        'lang_id': language_id,
@@ -93,7 +109,7 @@ class Command(BaseCommand):
 
         return run_id
 
-    def _get_ejudge_run_status_from_url(self, runs_url, ejudge_sid, submit_id):
+    def _get_ejudge_run_status_from_url(self, runs_url, submit_id):
         r = self.session.get(runs_url)
         if r.status_code != 200:
             raise EjudgeException('Bad http status code: %d' % r.status_code)
@@ -125,13 +141,39 @@ class Command(BaseCommand):
 
     def _get_ejudge_run_status(self, contest_id, submit_id):
         ejudge_sid = self._login(contest_id)
-        runs_url = '%s/cgi-bin/new-client?SID=%s&action=140' % (self.backend_address, ejudge_sid)
-        result, failed_test, score = self._get_ejudge_run_status_from_url(runs_url, ejudge_sid, submit_id)
-        if result is None:
-            runs_url = '%s/cgi-bin/new-client?SID=%s&action=140&all_runs=1' % (self.backend_address, ejudge_sid)
-            result, failed_test, score = self._get_ejudge_run_status_from_url(runs_url, ejudge_sid, submit_id)
+        runs_url = self._build_client_url(ejudge_sid, 140)
+        result, failed_test, score = self._get_ejudge_run_status_from_url(
+            runs_url,
+            submit_id
+        )
+        if result is not None:
+            return result, failed_test, score
 
-        return result, failed_test, score
+        runs_url = self._build_client_url(ejudge_sid, 140, 'all_runs=1')
+        return self._get_ejudge_run_status_from_url(
+            runs_url,
+            submit_id
+        )
+
+    def _get_ejudge_run_report(self, contest_id, submit_id):
+        ejudge_sid = self._login(contest_id)
+        report_url = self._build_client_url(
+            ejudge_sid, 37, 'run_id=%d' % (submit_id, )
+        )
+        self.stdout.write('Try to get report for submission from url: %s' % (
+            report_url,
+        ))
+
+        r = self.session.get(report_url)
+        if r.status_code != 200:
+            raise EjudgeException('Bad http status code: %d' % r.status_code)
+
+        soup = BeautifulSoup(r.text)
+        pres = soup.find_all('pre')
+        if len(pres) < 0:
+            return ''
+
+        return pres[0].get_text()
 
     def _submit_solution(self, contest_id, problem_id, language, file_name):
         ejudge_sid = self._login(contest_id)
@@ -146,17 +188,22 @@ class Command(BaseCommand):
         return ejudge_submit_id
 
     def _process_not_submitted(self):
-        not_fetched = models.QueueElement.objects.filter(status=models.QueueElement.Status.NOT_FETCHED) \
+        not_fetched = (
+            models.QueueElement.objects
+            .filter(status=models.QueueElement.Status.NOT_FETCHED)
             .select_related('language')
+        )
         for queue_element in not_fetched:
             try:
-                # TODO: For Django 1.9 use self.style.SUCCESS
-                self.stdout.write('Found new submit #%d in queue to contest %d, problem %d, created at %s, file %s' % (
-                    queue_element.id,
-                    queue_element.ejudge_contest_id,
-                    queue_element.ejudge_problem_id,
-                    queue_element.created_at,
-                    queue_element.file_name))
+                self.stdout.write(self.style.SUCCESS(
+                    'Found new submission #%d in queue: '
+                    'to contest %d, problem %d, created at %s, file %s' % (
+                        queue_element.id,
+                        queue_element.ejudge_contest_id,
+                        queue_element.ejudge_problem_id,
+                        queue_element.created_at,
+                        queue_element.file_name)
+                ))
 
                 try:
                     ejudge_submit_id = self._submit_solution(
@@ -173,41 +220,73 @@ class Command(BaseCommand):
                     continue
 
                 with transaction.atomic():
-                    self.stdout.write('Set status for queue element %d to SUBMITTED' % (queue_element.id, ))
-                    submission = models.Submission(ejudge_contest_id=queue_element.ejudge_contest_id,
-                                                   ejudge_submit_id=ejudge_submit_id)
+                    self.stdout.write(
+                        'Set status for queue element %d to SUBMITTED' % (
+                            queue_element.id,
+                        )
+                    )
+                    submission = models.Submission(
+                        ejudge_contest_id=queue_element.ejudge_contest_id,
+                        ejudge_submit_id=ejudge_submit_id
+                    )
                     submission.save()
 
                     queue_element.status = models.QueueElement.Status.SUBMITTED
                     queue_element.submission = submission
                     queue_element.save()
             except Exception as e:
-                self.stdout.write(self.style.ERROR('Exception while submit solution to ejudge: %s' % e))
+                self.stdout.write(self.style.ERROR(
+                    'Exception while submitting solution to ejudge: %s' % e
+                ))
                 traceback.print_exc()
 
     def _process_submitted(self):
-        submitted = models.QueueElement.objects.filter(status=models.QueueElement.Status.SUBMITTED)
+        submitted = models.QueueElement.objects.filter(
+            status=models.QueueElement.Status.SUBMITTED
+        )
         for queue_element in submitted:
+            contest_id = queue_element.submission.ejudge_contest_id
+            submit_id = queue_element.submission.ejudge_submit_id
+
             try:
-                self.stdout.write('Checking solution status in ejudge: contest %d, run %d' % (
-                    queue_element.submission.ejudge_contest_id,
-                    queue_element.submission.ejudge_submit_id))
+                self.stdout.write(
+                    'Checking submission status in ejudge: '
+                    'contest %d, run %d' % (contest_id, submit_id)
+                )
 
-                result, failed_test, score = self._get_ejudge_run_status(queue_element.submission.ejudge_contest_id,
-                                                                  queue_element.submission.ejudge_submit_id)
-                if result is None:
-                    self.stdout.write('Hmmm, strange.. I can\'t found run in ejudge: queue element #%d' % queue_element.id)
+                ejudge_result, failed_test, score = self._get_ejudge_run_status(
+                    contest_id, submit_id
+                )
+                if ejudge_result is None:
+                    self.stdout.write(
+                        'Hmmm, it\'s very strange... '
+                        'I can\'t found run in ejudge: queue element #%d' %
+                        (queue_element.id, )
+                    )
                     continue
 
-                if result in ['Running...', 'Waiting...', 'Compiling...', 'Compiled']:
-                    self.stdout.write('Submission has not been checked yet: result is %s' % result)
+                if ejudge_result in ['Running...', 'Waiting...',
+                                     'Compiling...', 'Compiled']:
+                    self.stdout.write(
+                        'Submission has not been checked yet: '
+                        'status is %s' % (ejudge_result, ))
                     continue
-                self.stdout.write('Submission has been checked: result is %s' % result)
+
+                report = self._get_ejudge_run_report(contest_id, submit_id)
+
+                self.stdout.write(
+                    'Submission has been checked: '
+                    'result is %s' % ejudge_result
+                )
+                result = models.CheckingResult.Result.from_ejudge_status(
+                    ejudge_result
+                )
                 with transaction.atomic():
                     checking_result = models.SolutionCheckingResult(
-                        result=models.CheckingResult.Result.from_ejudge_status(result),
+                        result=result,
                         failed_test=failed_test,
                         score=score,
+                        report=report,
                     )
                     checking_result.save()
                     queue_element.submission.result = checking_result
@@ -217,7 +296,10 @@ class Command(BaseCommand):
                     queue_element.save()
 
             except Exception as e:
-                self.stdout.write(self.style.ERROR('Exception while checking solution from ejudge: %s' % e))
+                self.stdout.write(self.style.ERROR(
+                    'Exception while checking submission status in ejudge: %s' %
+                    (e, )
+                ))
                 traceback.print_exc()
 
     def _one_step(self):

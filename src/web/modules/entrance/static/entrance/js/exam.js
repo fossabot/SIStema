@@ -67,6 +67,13 @@ $(document).ready(function(){
             });
     };
 
+    $('.entrance-exam').on('click', '.entrance-exam__solution-report__link', function(){
+        var $this = $(this);
+        var $target = $($this.data('target'));
+        $target.find('.modal-title').html($this.data('title'));
+        $target.find('.modal-body').html($this.data('report'));
+    });
+
     var initTasksControls = function() {
         $('.entrance-exam .nav li a').click(function(){
             var $this = $(this);

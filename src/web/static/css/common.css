@@ -34,6 +34,27 @@ a.non-underlined-link:active  .underlined-link {
     text-decoration: underline;
 }
 
+a.internal-page-link {
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+}
+
+a.internal-page-link.text-danger {
+    border-bottom-color: rgba(223, 86, 64, 0.7);
+}
+
+a.internal-page-link.text-danger:hover,
+a.internal-page-link.text-danger:focus,
+a.internal-page-link.text-danger:active {
+    border-bottom-color: rgba(158, 47, 29, 0.7);
+}
+
+a.text-danger:hover,
+a.text-danger:focus,
+a.text-danger:active {
+    color: #9e2f1d;
+}
+
 /* Navbar */
 .navbar {
     background-color: #fafafa;

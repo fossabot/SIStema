@@ -10,7 +10,6 @@
 {% endblock %}
 
 {% block content %}
-
     <h1 class="mt10 mb30 text-dark fw400 text-center">Вступительная работа</h1>
 
     <div class="entrance-exam__upgrade-panel" data-update-url="{% url 'school:entrance:upgrade_panel' request.school.short_name %}">
@@ -30,6 +29,21 @@
         </div>
     </div>
 
+    <div id="entrance-exam__modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;  </button>
+                    <h4 class="modal-title"></h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}

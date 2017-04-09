@@ -41,7 +41,7 @@ class CheckingResult(models.Model):
         UNKNOWN = djchoices.ChoiceItem(100, label='Unknown result')
 
         russian_labels = {
-            0: 'Задача решена',
+            0: 'OK',
             1: 'Ошибка компиляции',
             2: 'Ошибка во время выполнения',
             3: 'Превышено максимальное время работы',
@@ -96,9 +96,13 @@ class SolutionCheckingResult(CheckingResult):
     failed_test = models.PositiveIntegerField(
         blank=True, null=True, default=None)
 
+    report = models.TextField(blank=True)
+
     def __str__(self):
         super_str = super().__str__()
         if self.failed_test is None:
+            if self.result == CheckingResult.Result.OK:
+                return 'Задача решена'
             return super_str
         if self.score is not None:
             return 'Количество баллов: %d' % self.score

@@ -36,7 +36,17 @@
 
             <div class="submit__result">
                 {% if result %}
-                    {{ result }}
+                    {% if result.report %}
+                        <a href="#" data-toggle="modal" data-target="#entrance-exam__modal"
+                           data-report="{{ result.report|linebreaksbr }}"
+                           data-title="Ошибка компиляции"
+                           title="Посмотреть отчёт о компиляции"
+                           class="entrance-exam__solution-report__link internal-page-link text-danger">
+                            {{ result }}
+                        </a>
+                    {% else %}
+                        {{ result }}
+                    {% endif %}
                 {% else %}
                     Проверяется... <i class="fa fa-spin fa-spinner"></i>
                 {% endif %}

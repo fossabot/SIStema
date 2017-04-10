@@ -170,7 +170,7 @@ class Command(BaseCommand):
 
         soup = BeautifulSoup(r.text)
         pres = soup.find_all('pre')
-        if len(pres) < 0:
+        if len(pres) < 1:
             return ''
 
         return pres[0].get_text()

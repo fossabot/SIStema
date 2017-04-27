@@ -592,36 +592,40 @@ def solution(request, solution_id):
     return HttpResponseNotFound()
 
 
+def _get_ejudge_task_accepted_solutions(school, solution_model):
+    return solution_model.objects.filter(
+        task__exam__school=school,
+        ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
+    )
+
+
 @sistema.staff.only_staff
 def initial_auto_reject(request):
     users_ids = list(get_enrolling_users_ids(request.school))
 
-    program_solutions = group_by(
-        models.EjudgeEntranceExamTaskSolution.objects.filter(
-            task__exam__school=request.school,
-            user_id__in=users_ids,
-            ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
-        ),
-        operator.attrgetter('user_id')
-    )
-    file_solutions = group_by(
-        models.FileEntranceExamTaskSolution.objects.filter(
-            task__exam__school=request.school,
-            user_id__in=users_ids
-        ),
-        operator.attrgetter('user_id')
-    )
+    practice_users_ids = set(_get_ejudge_task_accepted_solutions(
+        request.school, models.ProgramEntranceExamTaskSolution
+    ).values_list('user_id', flat=True))
+    practice_users_ids.update(set(_get_ejudge_task_accepted_solutions(
+        request.school, models.OutputOnlyEntranceExamTaskSolution
+    ).values_list('user_id', flat=True)))
+
+    theory_users_ids = set(models.FileEntranceExamTaskSolution.objects.filter(
+        task__exam__school=request.school,
+    ).values_list('user_id', flat=True))
+
     already_in_groups_users_ids = set(models.UserInCheckingGroup.objects.filter(
-        user_id__in=users_ids
+        group__school=request.school,
+        is_actual=True
     ).values_list('user_id', flat=True))
 
     users_ids = set(users_ids) - already_in_groups_users_ids
 
     for user_id in users_ids:
         reason = None
-        if user_id not in program_solutions:
+        if user_id not in practice_users_ids:
             reason = 'Не решено полностью ни одной практической задачи'
-        if user_id not in file_solutions:
+        if user_id not in theory_users_ids:
             reason = 'Не сдано ни одной теоретический задачи'
         if reason is not None:
             models.EntranceStatus.objects.update_or_create(
@@ -634,7 +638,11 @@ def initial_auto_reject(request):
                 })
 
     return JsonResponse({
-        'rejected': [s.__dict__ for s in models.EntranceStatus.objects.filter(
+        'rejected': [{
+            'user_id': s.user_id,
+            'public_comment': s.public_comment,
+            'is_status_visible': s.is_status_visible,
+        } for s in models.EntranceStatus.objects.filter(
             school=request.school,
             status=models.EntranceStatus.Status.AUTO_REJECTED
         )]

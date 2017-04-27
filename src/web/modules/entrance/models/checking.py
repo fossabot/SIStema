@@ -77,7 +77,8 @@ class UserInCheckingGroup(models.Model):
 
 
 def get_locked_timeout():
-    return timezone.now() + config.SISTEMA_ENTRANCE_CHECKING_TIMEOUT
+    return (timezone.now() +
+            timezone.timedelta(minutes=config.SISTEMA_ENTRANCE_CHECKING_TIMEOUT))
 
 
 class CheckingLock(models.Model):

@@ -224,8 +224,8 @@ CONSTANCE_CONFIG = {
     'SISTEMA_EJUDGE_PASSWORD': ('', 'Пароль пользователя на еджадж-сервере'),
 
     'SISTEMA_ENTRANCE_CHECKING_TIMEOUT': (
-        timezone.timedelta(minutes=30),
-        'Время для проверки одного решения вступительной работы'
+        30,
+        'Время для проверки одного решения вступительной работы (в минутах)'
     ),
 
     'SMARTQ_MODULE_EXECUTION_TIMEOUT': (

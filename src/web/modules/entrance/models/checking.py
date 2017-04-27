@@ -26,7 +26,8 @@ class CheckingGroup(models.Model):
 
     tasks = models.ManyToManyField(
         main_models.FileEntranceExamTask,
-        related_name='+'
+        related_name='+',
+        blank=True
     )
 
     def __str__(self):

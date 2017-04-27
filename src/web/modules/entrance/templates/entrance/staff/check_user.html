@@ -205,7 +205,7 @@
                                     <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}" title="Скачать решение" class="btn btn-xs btn-default">
                                         <span class="fa fa-download"></span> Скачать
                                     </a>
-                                    <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=user.id task_id=file_task.id %}" title="Оценить решение" class="btn btn-xs btn-success">
+                                    <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=user_for_checking.id task_id=file_task.id %}" title="Оценить решение" class="btn btn-xs btn-success">
                                         Оценить
                                     </a>
                                 </div>

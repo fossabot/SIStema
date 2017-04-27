@@ -594,26 +594,28 @@ def solution(request, solution_id):
 
 @sistema.staff.only_staff
 def initial_auto_reject(request):
-    users_ids = get_enrolling_users_ids(request.school)
-
-    # In case of MySQL we need to make users_ids = list(users_ids) because of the MySQL's limitations
-    from django.conf import settings
-    if 'mysql' in settings.DATABASES['default']['ENGINE'].lower():
-        users_ids = list(users_ids)
+    users_ids = list(get_enrolling_users_ids(request.school))
 
     program_solutions = group_by(
-            models.EjudgeEntranceExamTaskSolution.objects.filter(
-                    task__exam__school=request.school,
-                    user_id__in=users_ids,
-                    ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
-            ),
-            operator.attrgetter('user_id')
+        models.EjudgeEntranceExamTaskSolution.objects.filter(
+            task__exam__school=request.school,
+            user_id__in=users_ids,
+            ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
+        ),
+        operator.attrgetter('user_id')
     )
     file_solutions = group_by(
-            models.FileEntranceExamTaskSolution.objects.filter(task__exam__school=request.school,
-                                                               user_id__in=users_ids),
-            operator.attrgetter('user_id')
+        models.FileEntranceExamTaskSolution.objects.filter(
+            task__exam__school=request.school,
+            user_id__in=users_ids
+        ),
+        operator.attrgetter('user_id')
     )
+    already_in_groups_users_ids = set(models.UserInCheckingGroup.objects.filter(
+        user_id__in=users_ids
+    ).values_list('user_id', flat=True))
+
+    users_ids = set(users_ids) - already_in_groups_users_ids
 
     for user_id in users_ids:
         reason = None
@@ -627,7 +629,7 @@ def initial_auto_reject(request):
                 user_id=user_id,
                 defaults={
                     'public_comment': reason,
-                    'is_status_visible': True,
+                    'is_status_visible': False,
                     'status': models.EntranceStatus.Status.AUTO_REJECTED
                 })
 

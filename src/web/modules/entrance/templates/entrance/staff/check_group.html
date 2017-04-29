@@ -3,14 +3,14 @@
 {% load markdown_deux_tags %}
 {% load number_to_text %}
 
-{% block title %}Проверка вступительной работы, группа {{ group.name }}{% endblock %}
+{% block title %}Проверка вступительной работы, {{ group.name }}{% endblock %}
 
 {% block topbar_left %}
     <ol class="breadcrumb">
         <li class="crumb-active">
             <a href="{% url 'school:entrance:check' request.school.short_name %}">Проверка вступительной работы</a>
         </li>
-        <li class="crumb-trail">Группа {{ group.name }}</li>
+        <li class="crumb-trail">{{ group.name }}</li>
     </ol>
 {% endblock %}
 
@@ -104,7 +104,7 @@
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
                                         <td>
-                                            <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=check.solution.user_id task_id=task.id %}">
+                                            <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name group_name=group.short_name user_id=check.solution.user_id task_id=task.id %}">
                                                 {{ check.created_at }}
                                             </a>
                                         </td>

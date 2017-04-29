@@ -3,7 +3,7 @@
 {% load number_to_text %}
 {% load dict_tags %}
 
-{% block title %}Проверка вступительной работы, группа {{ group.name }}{% endblock %}
+{% block title %}Проверка вступительной работы, {{ group.name }}{% endblock %}
 
 {% block topbar_left %}
     <ol class="breadcrumb">
@@ -12,12 +12,12 @@
         </li>
         {% if task %}
             <li class="crumb-link">
-                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">Группа {{ group.name }}</a>
+                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">{{ group.name }}</a>
             </li>
             <li class="crumb-trail">Задача «{{ task.title }}»</li>
         {% else %}
             <li class="crumb-link">
-                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">Группа {{ group.name }}</a>
+                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">{{ group.name }}</a>
             </li>
             <li class="crumb-trail">Проверенные решения</li>
         {% endif %}
@@ -61,7 +61,7 @@
                         <tr>
                             <td>{{ forloop.revcounter }}</td>
                             <td>
-                                <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=check.solution.user_id task_id=check.solution.task.id %}" title="Посмотреть проверку">
+                                <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name group_name=group.short_name user_id=check.solution.user_id task_id=check.solution.task.id %}" title="Посмотреть проверку">
                                     {{ check.created_at }}
                                 </a>
                             </td>

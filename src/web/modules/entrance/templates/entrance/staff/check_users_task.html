@@ -13,9 +13,9 @@
         <li class="crumb-active">
             <a href="{% url 'school:entrance:check' request.school.short_name %}">Проверка вступительной работы</a>
         </li>
-        {% if checking_group %}
+        {% if group %}
             <li class="crumb-link">
-                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">Группа {{ group.name }}</a>
+                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">{{ group.name }}</a>
             </li>
         {% endif %}
         <li class="crumb-link">
@@ -38,7 +38,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="mtn5 mb15">
+    <div class="mtn5 mb15 text-muted">
         Выданы задания уровня <span class="label label-sm label-{{ level_upgrades|yesno:'primary,success' }}">{{ base_entrance_level.name }}</span>
         {% if level_upgrades %}
             , повышения до
@@ -49,6 +49,19 @@
                 {% if not forloop.last %},{% endif %}
             {% endfor %}
         {% endif %}
+
+        <div class="pull-right">
+            Проверено {{ task.checked_solutions_count }} из {{ task.total_solutions_count }} решени{{ task.total_solutions_count|russian_pluralize:'я,й,й' }} этой задачи
+            {% if group %}
+                (в&nbsp;группе)
+            {% endif %}
+            <div class="progress progress-bar-xxs mbn mt5 bg-danger">
+                {% with percents=task.checked_solutions_count|multiply:100|divide:task.total_solutions_count|to_int %}
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{ task.checked_solutions_count }}" aria-valuemin="0" aria-valuemax="{{ task.total_solutions_count }}" style="width: {{ percents }}%;">
+                    </div>
+                {% endwith %}
+            </div>
+        </div>
     </div>
 
     <div class="row">

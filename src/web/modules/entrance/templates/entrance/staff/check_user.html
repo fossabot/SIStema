@@ -11,9 +11,9 @@
         <li class="crumb-active">
             <a href="{% url 'school:entrance:check' request.school.short_name %}">Проверка вступительной работы</a>
         </li>
-        {% if checking_group %}
+        {% if group %}
             <li class="crumb-link">
-                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">Группа {{ group.name }}</a>
+                <a href="{% url 'school:entrance:check_group' request.school.short_name group.short_name %}">{{ group.name }}</a>
             </li>
         {% endif %}
         <li class="crumb-trail">

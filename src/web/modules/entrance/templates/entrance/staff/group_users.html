@@ -57,7 +57,7 @@
                             <td>
                                 {# TODO: Show class for this school, not current #}
                                 {% if user.profile.current_class and user.profile.school_name%}
-                                    {{ user.profile.current_class }}, {{ user.profile.school_name }}
+                                    {{ user.profile.current_class }} класс, {{ user.profile.school_name }}
                                 {% else %}
                                     <span class="text-muted">—</span>
                                 {% endif %}

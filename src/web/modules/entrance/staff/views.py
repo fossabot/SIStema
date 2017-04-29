@@ -356,6 +356,7 @@ def check_group(request, group_name):
         task.checked_solutions_count = len(set(
             task.checks.values_list('solution__user_id', flat=True)
         ))
+        task.checks_count = task.checks.count()
         task.checks = list(task.checks.order_by('-created_at')[:20])
 
     return render(request, 'entrance/staff/check_group.html', {

@@ -84,6 +84,9 @@
                                 <a href="{% url 'school:entrance:task_checks' request.school.short_name group.short_name task.id %}" title="Смотреть все проверенные решения">
                                     {{ task.checked_solutions_count }}&nbsp;решени{{ task.checked_solutions_count|russian_pluralize:'е,я,й' }}
                                 </a>
+                                {% ifnotequal task.checked_solutions_count task.checks_count %}
+                                    ({{ task.checks_count }} провер{{ task.checks_count|russian_pluralize:'ка,ки,ок' }})
+                                {% endifnotequal %}
                             </p>
                             <table class="table table-condensed">
                                 <thead>
@@ -115,7 +118,7 @@
                                     </tr>
                                 {% endfor %}
                             </table>
-                            {% if checks|length >= 20 %}
+                            {% if task.checks_count > 20 %}
                                 <p class="text-muted mt15">
                                     Показаны последние 20 проверок. <a href="{% url 'school:entrance:task_checks' request.school.short_name group.short_name task.id %}">Посмотреть все?</a>
                                 </p>

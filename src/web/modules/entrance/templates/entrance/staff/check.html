@@ -33,14 +33,18 @@
                                         <li>{{ task.title }}
                                     {% endfor %}
                                 </ul>
-                            {% endif %}
 
-                            <p class="mt15 mbn">
-                                <a href="{% url 'school:entrance:check_group' school_name=request.school.short_name group_name=group.short_name %}"
-                                   class="btn btn-info btn-sm">
-                                    Начать проверку
-                                </a>
-                            </p>
+                                <p class="mt15 mbn">
+                                    <a href="{% url 'school:entrance:check_group' school_name=request.school.short_name group_name=group.short_name %}"
+                                       class="btn btn-info btn-sm">
+                                        Начать проверку
+                                    </a>
+                                </p>
+                            {% else %}
+                                <p class="text-muted">
+                                    Нет задач для проверки
+                                </p>
+                            {% endif %}
                         {% else %}
                             <div class="text-muted">Пустая группа. Добавьте школьников в&nbsp;группу, чтобы начать проверку.</div>
                         {% endif %}

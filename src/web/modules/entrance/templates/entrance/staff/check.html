@@ -52,7 +52,7 @@
                     {% if group.group_users %}
                         <div class="panel-footer p15">
                             <a href="{% url 'school:entrance:checking_group_users' school_name=request.school.short_name group_name=group.short_name %}" class="btn btn-sm btn-default mr10">Школьники</a>
-                            <a href="{% url 'school:entrance:checking_group_checks' school_name=request.school.short_name group_name=group.short_name %}" class="btn btn-sm btn-default">Проверенные работы</a>
+                            <a href="{% url 'school:entrance:checking_group_checks' school_name=request.school.short_name group_name=group.short_name %}" class="btn btn-sm btn-default">Проверенные решения</a>
                         </div>
                     {% endif %}
                 </div>

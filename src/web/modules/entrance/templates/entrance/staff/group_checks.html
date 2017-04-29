@@ -45,7 +45,7 @@
                     <thead>
                     <tr>
                         <th>№</th>
-                        <th>Дата и время</th>
+                        <th>Дата и&nbsp;время</th>
                         <th>Школьник</th>
                         {% if not task %}
                             <th>Задача</th>
@@ -61,7 +61,7 @@
                         <tr>
                             <td>{{ forloop.revcounter }}</td>
                             <td>
-                                <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=check.solution.user_id task_id=check.solution.task.id %}">
+                                <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=check.solution.user_id task_id=check.solution.task.id %}" title="Посмотреть проверку">
                                     {{ check.created_at }}
                                 </a>
                             </td>
@@ -73,7 +73,7 @@
                                 {{ check.score }}
                             </td>
                             <td>{{ check.checked_by.get_full_name }}</td>
-                            <td><i>{{ check.comment|truncatewords:10 }}</i></td>
+                            <td class="mw240"><i>{{ check.comment|truncatewords:10 }}</i></td>
                             <td>
                                 <a href="{% url 'school:entrance:user_solution' request.school.short_name check.solution.id %}" class="visible-on-row-hover" title="Скачать решение">
                                     <span class="fa fa-download"></span>

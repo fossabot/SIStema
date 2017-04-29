@@ -49,7 +49,7 @@
                                     </a>
                                 </nobr>
                             {% endif %}
-                        </span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -81,7 +81,7 @@
                         <div class="modal-body">
                             <p class="text-muted">
                                 Всего проверено
-                                <a href="{% url 'school:entrance:task_checks' request.school.short_name group.short_name task.id %}" title="Смотреть все проверенные решения">
+                                <a href="{% url 'school:entrance:task_checks' request.school.short_name group.short_name task.id %}" title="Посмотреть все проверенные решения">
                                     {{ task.checked_solutions_count }}&nbsp;решени{{ task.checked_solutions_count|russian_pluralize:'е,я,й' }}
                                 </a>
                                 {% ifnotequal task.checked_solutions_count task.checks_count %}

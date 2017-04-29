@@ -113,7 +113,7 @@
                                             {{ check.score }}
                                         </td>
                                         <td>{{ check.checked_by.get_full_name }}</td>
-                                        <td><i>{{ check.comment|truncatewords:10 }}</i></td>
+                                        <td class="mw240"><i>{{ check.comment|truncatewords:10 }}</i></td>
                                         <td><a href="{% url 'school:entrance:user_solution' request.school.short_name check.solution.id %}" class="visible-on-row-hover" title="Скачать решение"><span class="fa fa-download"></span></a></td>
                                     </tr>
                                 {% endfor %}

@@ -1,6 +1,6 @@
+import collections
 import operator
 import random
-import collections
 
 from django.contrib import messages
 from django.core.urlresolvers import reverse
@@ -20,7 +20,7 @@ import sistema.staff
 import users.models
 import users.views
 from modules.ejudge.models import CheckingResult
-from sistema.helpers import group_by, respond_as_attachment
+from sistema.helpers import group_by, respond_as_attachment, nested_query_list
 from . import forms
 from .. import models
 from .. import upgrades
@@ -328,20 +328,21 @@ def check_group(request, group_name):
     _remove_old_checking_locks()
 
     tasks = list(group.tasks.order_by('order'))
-    group_users_ids = list(group.actual_users.values_list('user_id', flat=True))
+    group_users_ids = nested_query_list(
+        group.actual_users.values_list('user_id', flat=True)
+    )
     for task in tasks:
-        task.solutions_count = len(set(
-            task.solutions
-                .filter(user_id__in=group_users_ids)
-                .values_list('user_id', flat=True)
-        ))
+        task.solutions_count = users.models.User.objects.filter(
+            id__in=group_users_ids,
+            entrance_exam_solutions__task=task
+        ).distinct().count()
         task.checks = models.CheckedSolution.objects.filter(
             solution__task=task,
             solution__user_id__in=group_users_ids
         )
-        task.checked_solutions_count = len(set(
-            task.checks.values_list('solution__user_id', flat=True)
-        ))
+        task.checked_solutions_count = task.checks.values_list(
+            'solution__user_id', flat=True
+        ).distinct().count()
         task.checks_count = task.checks.count()
         task.checks = list(task.checks.order_by('-created_at')[:20])
 
@@ -567,17 +568,15 @@ def check_users_task(request, task_id, user_id, group_name=None):
         # Select users from group
         group_users_ids = group.actual_users.values_list('user_id', flat=True)
 
-    task_solutions = task.solutions.filter(user_id__in=group_users_ids)
-    task_checked_solutions = models.CheckedSolution.objects.filter(
-        solution__task=task,
-        solution__user_id__in=group_users_ids
-    )
-    task.total_solutions_count = len(set(
-        task_solutions.values_list('user_id', flat=True)
-    ))
-    task.checked_solutions_count = len(set(
-        task_checked_solutions.values_list('solution__user_id', flat=True)
-    ))
+    task.total_solutions_count = users.models.User.objects.filter(
+        id__in=nested_query_list(group_users_ids),
+        entrance_exam_solutions__task=task
+    ).distinct().count()
+    task.checked_solutions_count = users.models.User.objects.filter(
+        id__in=nested_query_list(group_users_ids),
+        entrance_exam_solutions__task=task,
+        entrance_exam_solutions__checks__isnull=False
+    ).distinct().count()
 
     locked_by_me = True
     with transaction.atomic():

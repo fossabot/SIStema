@@ -5,6 +5,8 @@ import collections
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseNotFound
+from django.conf import settings
+import django.db
 
 
 def respond_as_attachment(request, file_path, original_filename):
@@ -50,3 +52,15 @@ def group_by(collection, extract_key_function, extract_value_function=None):
         result[key].append(value)
 
     return result
+
+
+# MySQL optimization is bad for nested queries such as
+# SELECT ... FROM ... WHERE id IN (SELECT id FROM ... WHERE ...)
+# So this function evaluate the queryset and convert it to the list
+def nested_query_list(queryset, use_db=None):
+    if use_db is None:
+        use_db = django.db.DEFAULT_DB_ALIAS
+    is_mysql = 'mysql' in settings.DATABASES[use_db]['ENGINE'].lower()
+    if is_mysql:
+        return list(queryset)
+    return queryset

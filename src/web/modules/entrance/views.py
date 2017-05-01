@@ -1,24 +1,23 @@
+import operator
+
+import ipware.ip
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http.response import HttpResponseNotFound, JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
-import ipware.ip
-import operator
-
-import questionnaire.models
-import sistema.uploads
-import sistema.helpers
-import modules.topics.entrance.levels
+import frontend.icons
+import frontend.table
 import modules.ejudge.queue
-from modules.entrance import forms
 import modules.entrance.levels
 import modules.entrance.staff.views as staff_views
+import modules.topics.entrance.levels
+import questionnaire.models
+import sistema.helpers
+import sistema.uploads
 from . import models
 from . import upgrades
-import frontend.table
-import frontend.icons
 
 
 def get_entrance_level_and_tasks(school, user):

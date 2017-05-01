@@ -5,6 +5,7 @@
 {% load number_to_text %}
 {% load math %}
 {% load markdown_deux_tags %}
+{% load groups %}
 
 {% block title %}{{ user_for_checking.get_full_name }}, «{{ task.title }}»{% endblock %}
 
@@ -19,7 +20,11 @@
             </li>
         {% endif %}
         <li class="crumb-link">
-            <a href="{% url 'school:entrance:enrolling_user' request.school.short_name user_for_checking.id %}">{{ user_for_checking.get_full_name }}</a>
+            {% ifingroup 'entrance__admins' %}
+                <a href="{% url 'school:entrance:enrolling_user' request.school.short_name user_for_checking.id %}">{{ user_for_checking.get_full_name }}</a>
+            {% else %}
+                {{ user_for_checking.get_full_name }}
+            {% endifingroup %}
         </li>
         <li class="crumb-trail">
             «{{ task.title }}»

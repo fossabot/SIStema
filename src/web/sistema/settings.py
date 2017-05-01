@@ -69,6 +69,7 @@ INSTALLED_APPS = (
     'questionnaire',
     'schools',
     'users',
+    'groups.apps.GroupsConfig',
 
     # Allauth should be after importing 'users'
     'allauth',
@@ -80,7 +81,7 @@ INSTALLED_APPS = (
     # Sistema modules (all should be modules.*)
     'modules.ejudge',
     'modules.enrolled_scans',
-    'modules.entrance',
+    'modules.entrance.apps.EntranceConfig',
     'modules.exam_scorer_2016',
     'modules.finance',
     'modules.poldnev',

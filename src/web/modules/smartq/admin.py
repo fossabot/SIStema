@@ -1,8 +1,6 @@
 from django.contrib import admin
-import django.forms
 
-from dal import autocomplete
-
+import sistema.admin
 from modules.smartq import models
 
 
@@ -15,21 +13,10 @@ class QuestionAdmin(admin.ModelAdmin):
     )
 
 
-class GeneratedQuestionAdminForm(django.forms.ModelForm):
-    class Meta:
-        model = models.GeneratedQuestion
-        fields = ('__all__')
-        widgets = {
-            'user': autocomplete.ModelSelect2(
-                url='users_admin:user-autocomplete')
-        }
-
-
 @admin.register(models.GeneratedQuestion)
 @admin.register(models.StaffGeneratedQuestion)
-class GeneratedQuestionAdmin(admin.ModelAdmin):
-    form = GeneratedQuestionAdminForm
-
+class GeneratedQuestionAdmin(sistema.admin.UserAutocompleteModelAdminMixIn,
+                             admin.ModelAdmin):
     list_display = (
         'base_question',
         'seed',

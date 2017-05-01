@@ -1,14 +1,13 @@
-from django.contrib.auth.decorators import login_required
-from django.core import urlresolvers
-from django.db import transaction
-from django.http.response import HttpResponseNotFound, HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404, redirect
-import django.views.decorators.http as http_decorators
 import django.utils.timezone
+import django.views.decorators.http as http_decorators
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.http.response import HttpResponseNotFound
+from django.shortcuts import render, get_object_or_404, redirect
 
-from . import models
 from . import issuer
 from . import mark_guesser
+from . import models
 
 
 class TopicWithUserMarks:

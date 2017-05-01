@@ -469,6 +469,8 @@ def check_task(request, group_name, task_id):
         short_name=group_name,
     )
 
+    _remove_old_checking_locks()
+
     if not group.tasks.filter(id=task_id).exists():
         return redirect('school:entrance:check',
                         school_name=request.school.short_name,
@@ -489,7 +491,6 @@ def check_task(request, group_name, task_id):
         )
 
     task = get_object_or_404(models.FileEntranceExamTask, id=task_id)
-    _remove_old_checking_locks()
 
     with transaction.atomic():
         locked_users_ids = set(models.CheckingLock.objects

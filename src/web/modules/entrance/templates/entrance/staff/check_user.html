@@ -214,10 +214,8 @@
                         <div>
                             <b>История:</b>
                             {% for status in user_summary.entrance_statuses %}
-                                <a href="{% url 'school:entrance:enrolling_user' status.school.short_name user_for_checking.id %}">
-                                    {{ status.school.short_name }}
-                                </a> -
-                                {{ status.is_enrolled|yesno:"Зачислен,Не зачислен" }}{% if not forloop.last %},{% endif %}
+                                <a href="{% url 'school:entrance:enrolling_user' status.school.short_name user_for_checking.id %}">{{ status.school.name }}</a>:
+                                {{ status.is_enrolled|yesno:"зачислен,не зачислен" }}(а){% if not forloop.last %},{% endif %}
                             {% endfor %}
                         </div>
                     {% endif %}

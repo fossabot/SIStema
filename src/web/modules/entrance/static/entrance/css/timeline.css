@@ -53,7 +53,7 @@
     padding-bottom: 0;
 }
 
-.entrance-timeline__block:not(.not-available):not(.done) .entrance-timeline__block__content {
+.entrance-timeline__block:not(.not-available):not(.done):not(.without-background) .entrance-timeline__block__content {
     background-color: #eaf2ff;
 }
 

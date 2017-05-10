@@ -126,6 +126,8 @@ class ParallelScoreEntranceUserMetric(EntranceUserMetric):
 
     max_possible_theory_score = models.IntegerField(blank=True, null=True)
 
+    max_possible_practice_score = models.IntegerField(blank=True, null=True)
+
     def _values_for_users(self, users):
         # Theory
         file_task_ids = self.file_task_entries.values_list('task_id', flat=True)
@@ -188,6 +190,9 @@ class ParallelScoreEntranceUserMetric(EntranceUserMetric):
                 elif replaces_left > 0:
                     replaces_left -= 1
                     practice_score += entry.score
+            if self.max_possible_practice_score is not None:
+                practice_score = min(practice_score,
+                                     self.max_possible_practice_score)
 
             yield round(theory_score + practice_score)
 

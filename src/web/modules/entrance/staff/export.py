@@ -146,10 +146,10 @@ class ExportCompleteEnrollingTable(django.views.View):
             data=self.get_ok_languages_for_users(request.school, enrollees),
         ))
 
-        # columns.append(PlainExcelColumn(
-            # name='Уровень',
-            # data=self.get_entrance_level_for_users(request.school, enrollees),
-        # ))
+        columns.append(PlainExcelColumn(
+            name='Уровень',
+            data=self.get_entrance_level_for_users(request.school, enrollees),
+        ))
 
         columns.append(PlainExcelColumn(
             name='Апгрейд',

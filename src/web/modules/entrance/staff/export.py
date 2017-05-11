@@ -4,6 +4,7 @@ import itertools
 
 import xlsxwriter
 
+from django.db.models import Count
 from django.http.response import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
@@ -34,6 +35,7 @@ class ExportCompleteEnrollingTable(django.views.View):
             .filter(entrance_statuses__school=request.school)
             .exclude(entrance_statuses__status=
                      models.EntranceStatus.Status.NOT_PARTICIPATED)
+            .order_by('id')
         )
 
         columns = self.get_enrolling_columns(request, enrollees)
@@ -159,13 +161,49 @@ class ExportCompleteEnrollingTable(django.views.View):
             data=self.get_checking_groups_for_users(request.school, enrollees),
         ))
 
+        file_tasks = (
+            models.FileEntranceExamTask.objects
+            .annotate(entrance_levels_count=Count('entrance_levels'))
+            .filter(exam__school=request.school, entrance_levels_count__gt=0)
+            .order_by('order')
+        )
+        if file_tasks.exists():
+            subcolumns = [
+                PlainExcelColumn(
+                    name='{}: {}'.format(task.id, task.title),
+                    cell_width=5,
+                    data=self.get_file_task_score_for_users(task, enrollees)
+                )
+                for task in file_tasks
+            ]
+            columns.append(ExcelMultiColumn(name='Теория',
+                                            subcolumns=subcolumns))
+
+        program_tasks = (
+            models.ProgramEntranceExamTask.objects
+            .annotate(entrance_levels_count=Count('entrance_levels'))
+            .filter(exam__school=request.school, entrance_levels_count__gt=0)
+            .order_by('order')
+        )
+        if program_tasks.exists():
+            subcolumns = [
+                PlainExcelColumn(
+                    name='{}: {}'.format(task.id, task.title),
+                    cell_width=5,
+                    data=self.get_program_task_score_for_users(task, enrollees)
+                )
+                for task in program_tasks
+            ]
+            columns.append(ExcelMultiColumn(name='Практика',
+                                            subcolumns=subcolumns))
+
         # TODO(artemtab): set of metrics to show shouldn't be hardcoded, but
         #     defined for each school/exam somewhere in the database.
         metrics = (models.EntranceUserMetric.objects
                    .filter(exam__school=request.school,
                            name__in=["C'", "C", "B'", "B", "A'", "A"])
                    .order_by('name'))
-        if metrics:
+        if metrics.exists():
             subcolumns = [
                 PlainExcelColumn(
                     name=metric.name,
@@ -490,6 +528,34 @@ class ExportCompleteEnrollingTable(django.views.View):
         for solution in ok_solutions:
             languages_by_user_id[solution.user_id].add(solution.language.name)
         return ['\n'.join(sorted(languages_by_user_id[user.id]))
+                for user in enrollees]
+
+    def get_file_task_score_for_users(self, task, enrollees):
+        checked_solutions = (
+            models.CheckedSolution.objects
+            .filter(solution__user__in=enrollees, solution__task=task)
+            .order_by('created_at')
+            .select_related('solution__user')
+        )
+        # If there are duplicate keys in dictionary comprehensions the last
+        # always wins. That way we will use the score from the last available
+        # check.
+        last_score_by_user_id = {
+            checked_solution.solution.user.id: checked_solution.score
+            for checked_solution in checked_solutions
+        }
+        return [last_score_by_user_id.get(user.id, '') for user in enrollees]
+
+    def get_program_task_score_for_users(self, task, enrollees):
+        OK = ejudge_models.CheckingResult.Result.OK
+        solved_user_ids = set(
+            models.ProgramEntranceExamTaskSolution.objects
+            .filter(user__in=enrollees,
+                    task=task,
+                    ejudge_queue_element__submission__result__result=OK)
+            .values_list('user_id')
+        )
+        return [('1' if user.id in solved_user_ids else '')
                 for user in enrollees]
 
 

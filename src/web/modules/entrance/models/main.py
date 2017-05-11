@@ -246,7 +246,11 @@ class EntranceLevel(models.Model):
 
     order = models.IntegerField(default=0)
 
-    tasks = models.ManyToManyField(EntranceExamTask, blank=True)
+    tasks = models.ManyToManyField(
+        EntranceExamTask,
+        blank=True,
+        related_name='entrance_levels',
+    )
 
     def __str__(self):
         return 'Уровень «%s» для %s' % (self.name, self.school)

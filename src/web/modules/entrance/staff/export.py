@@ -53,9 +53,11 @@ class ExportCompleteEnrollingTable(django.views.View):
         cell_fmt = book.add_format({
             'text_wrap': True,
         })
+        plain_header = (request.GET.get('plain_header') == 'true')
         for column in columns:
             column.header_format = header_fmt
             column.cell_format = cell_fmt
+            column.plain_header = plain_header
 
         # Write header
         header_height = max(column.header_height for column in columns)
@@ -64,7 +66,7 @@ class ExportCompleteEnrollingTable(django.views.View):
             column.write(sheet, irow, icol, header_height=header_height)
             icol += column.width
 
-        sheet.freeze_panes(header_height, 3)
+        sheet.freeze_panes(1 if plain_header else header_height, 3)
         book.close()
 
         return response
@@ -142,10 +144,10 @@ class ExportCompleteEnrollingTable(django.views.View):
             data=self.get_ok_languages_for_users(request.school, enrollees),
         ))
 
-        columns.append(PlainExcelColumn(
-            name='Уровень',
-            data=self.get_entrance_level_for_users(request.school, enrollees),
-        ))
+        # columns.append(PlainExcelColumn(
+            # name='Уровень',
+            # data=self.get_entrance_level_for_users(request.school, enrollees),
+        # ))
 
         columns.append(PlainExcelColumn(
             name='Апгрейд',
@@ -492,8 +494,9 @@ class ExportCompleteEnrollingTable(django.views.View):
 
 
 class ExcelColumn:
-    def __init__(self, name=''):
+    def __init__(self, name='', plain_header=False):
         self.name = name
+        self.plain_header = plain_header
 
     @property
     def width(self):
@@ -512,7 +515,7 @@ class ExcelColumn:
         return None
 
     def write_header(self, sheet, irow, icol, header_height=None):
-        if header_height == 1:
+        if self.plain_header or header_height == 1:
             sheet.write(irow, icol, self.name, self.header_format)
         else:
             sheet.merge_range(irow,
@@ -521,14 +524,17 @@ class ExcelColumn:
                               icol,
                               self.name,
                               cell_format=self.header_format)
-        return irow + header_height
+        return irow + (1 if self.plain_header else header_height)
 
     def write(self, sheet, irow, icol, header_height=None):
         return NotImplementedError()
 
 
 class PlainExcelColumn(ExcelColumn):
-    def __init__(self, data=None, cell_width=15, *args, **kwargs):
+    def __init__(self,
+                 data=None,
+                 cell_width=15,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data = [] if data is None else data
         self.cell_width = cell_width
@@ -579,17 +585,19 @@ class ExcelMultiColumn(ExcelColumn):
                        for subcolumn in self.subcolumns)
 
     def write(self, sheet, irow, icol, header_height=None):
-        if len(self.subcolumns) > 1:
-            sheet.merge_range(irow,
-                              icol,
-                              irow,
-                              icol + self.width - 1,
-                              self.name,
-                              self.header_format)
-        else:
-            sheet.write(irow, icol, self.name, self.header_format)
+        if not self.plain_header:
+            if len(self.subcolumns) > 1:
+                sheet.merge_range(irow,
+                                  icol,
+                                  irow,
+                                  icol + self.width - 1,
+                                  self.name,
+                                  self.header_format)
+            else:
+                sheet.write(irow, icol, self.name, self.header_format)
+            irow += 1
 
         for column in self.subcolumns:
             column.header_format = self.header_format
-            column.write(sheet, irow + 1, icol, header_height=header_height - 1)
+            column.write(sheet, irow, icol, header_height=header_height - 1)
             icol += column.width

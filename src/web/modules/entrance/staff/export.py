@@ -553,7 +553,7 @@ class ExportCompleteEnrollingTable(django.views.View):
             .filter(user__in=enrollees,
                     task=task,
                     ejudge_queue_element__submission__result__result=OK)
-            .values_list('user_id')
+            .values_list('user_id', flat=True)
         )
         return [('1' if user.id in solved_user_ids else '')
                 for user in enrollees]

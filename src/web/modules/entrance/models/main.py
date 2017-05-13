@@ -465,7 +465,12 @@ class EntranceStatus(models.Model):
 
     public_comment = models.TextField(
         help_text='Публичный комментарий. Может быть виден поступающему',
-        blank=True
+        blank=True,
+    )
+
+    private_comment = models.TextField(
+        help_text='Приватный комментарий. Виден только админам вступительной',
+        blank=True,
     )
 
     is_status_visible = models.BooleanField(default=False)

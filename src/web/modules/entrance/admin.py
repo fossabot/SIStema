@@ -158,8 +158,27 @@ class CheckingCommentAdmin(admin.ModelAdmin):
 
 @admin.register(models.EntranceStatus)
 class EntranceStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'school', 'user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
-    list_filter = (('school', admin.RelatedOnlyFieldListFilter), 'status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
+    list_display = (
+        'id',
+        'school',
+        'user',
+        'created_by',
+        'public_comment',
+        'private_comment',
+        'is_status_visible',
+        'status',
+        'session',
+        'parallel',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = (
+        ('school', admin.RelatedOnlyFieldListFilter),
+        'status',
+        'session',
+        'parallel',
+        ('created_by', admin.RelatedOnlyFieldListFilter),
+    )
     search_fields = (
         'user__profile__first_name',
         'user__profile__last_name',

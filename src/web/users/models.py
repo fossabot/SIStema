@@ -249,8 +249,6 @@ class UserProfile(models.Model):
     def is_fully_filled(self):
         for field_name in self.get_fully_filled_field_names():
             field = getattr(self, field_name)
-            if field is None:
-                return False
-            if type(field) is str and field == '':
+            if field is None or field == '':
                 return False
         return True

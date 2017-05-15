@@ -272,7 +272,7 @@ class UserProfileForm(forms.Form):
         widget=SistemaCheckboxSelect()
     )
 
-    def __init__(self, all_fields_are_required, *args, **kwargs):
+    def __init__(self, *args, all_fields_are_required=False, **kwargs):
         if 'initial' in kwargs and 'has_accepted_terms' in kwargs['initial']:
             # As has_accepted_terms is a ChoiceField,
             # its value should be a list, not a bool

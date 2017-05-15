@@ -92,18 +92,20 @@ class BaseTable:
             if callable(search_method):
                 self.qs = search_method(self.qs, query)
             else:
-                tokens = query.split()
+                tokens = [token for token in query.split() if token]
                 search_lookups = [
                     A(accessor_str).django_lookup + '__icontains'
                     for column in self.columns.values()
                     if column.searchable
                     for accessor_str in (column.search_in or
                                          (column.accessor,))]
-                global_search_lookup = reduce(and_, [
-                    reduce(or_, [Q((lookup, token))
-                                 for lookup in search_lookups])
-                    for token in tokens])
-                self.qs = self.qs.filter(global_search_lookup)
+
+                if tokens and search_lookups:
+                    global_search_lookup = reduce(and_, [
+                        reduce(or_, [Q((lookup, token))
+                                     for lookup in search_lookups])
+                        for token in tokens])
+                    self.qs = self.qs.filter(global_search_lookup)
         else:
             # Column search
             search_method = getattr(self, 'search_' + column_name, None)

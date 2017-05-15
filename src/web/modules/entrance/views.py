@@ -83,6 +83,8 @@ class EntrancedUsersTable(frontend.table.Table):
             entrance_statuses__status=models.EntranceStatus.Status.ENROLLED,
             entrance_statuses__is_status_visible=True,
         ).order_by(
+            'entrance_statuses__session__name',
+            'entrance_statuses__parallel__name',
             'profile__last_name',
             'profile__first_name',
         ).select_related('profile').prefetch_related(

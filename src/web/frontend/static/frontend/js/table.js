@@ -40,6 +40,7 @@ $(document).ready(function() {
             paging: paging,
             serverSide: true,
             processing: true,
+            searchDelay: 800,  // In ms
             order: [],  // TODO: order by the first orderable column
             ajax: function(data, callback, settings) {
                 var args = {

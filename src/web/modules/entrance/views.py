@@ -114,11 +114,13 @@ class EntrancedUsersTable(frontend.table.Table):
 
     def render_session(self, value):
         # TODO: will it be filtered?
-        return value.all()[0].session.name
+        status = value.all()[0]
+        return status.session.name if status.session else ''
 
     def render_parallel(self, value):
         # TODO: will it be filtered?
-        return value.all()[0].parallel.name
+        status = value.all()[0]
+        return status.parallel.name if status.parallel else ''
 
     def render_enrolled_status(self, record):
         absence_reasons = record.absence_reasons.all()

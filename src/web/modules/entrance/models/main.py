@@ -411,6 +411,9 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = 'Absence reason'
+
     @classmethod
     def for_user_in_school(cls, user, school):
         """
@@ -446,6 +449,7 @@ class EntranceStatus(models.Model):
         NOT_ENROLLED = djchoices.ChoiceItem(3, 'Не прошёл по конкурсу')
         ENROLLED = djchoices.ChoiceItem(4, 'Поступил')
         PARTICIPATING = djchoices.ChoiceItem(5, 'Подал заявку')
+        IN_RESERVE_LIST = djchoices.ChoiceItem(6, 'В резервном списке')
 
     school = models.ForeignKey(
         schools.models.School,
@@ -496,6 +500,10 @@ class EntranceStatus(models.Model):
     @property
     def is_enrolled(self):
         return self.status == self.Status.ENROLLED
+
+    @property
+    def is_in_reserve_list(self):
+        return self.status == self.Status.IN_RESERVE_LIST
 
     @classmethod
     def create_or_update(cls, school, user, status, **kwargs):

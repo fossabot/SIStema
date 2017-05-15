@@ -181,9 +181,23 @@ class UserProfileForm(forms.Form):
         })
     )
 
+    vk = forms.CharField(
+        required=True,
+        label='Адрес страницы ВКонтакте',
+        max_length=100,
+        help_text='Адрес страницы ВКонтакте нужен нам для оперативной '
+                  'и удобной связи с вами. '
+                  'Если у вас нет страницы, заполните поле прочерком',
+        widget=TextInputWithFaIcon(attrs={
+            'placeholder': 'vk.com/example',
+            'class': 'gui-input',
+            'fa': 'vk',
+        })
+    )
+
     telegram = forms.CharField(
         required=False,
-        label='Ник в Телеграмме',
+        label='Ник в Телеграме',
         max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': '@nick',
@@ -236,6 +250,12 @@ class UserProfileForm(forms.Form):
             'fa': 'file-text-o',
         })
     )
+
+    def __init__(self, all_fields_are_required, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if all_fields_are_required:
+            for field_name in models.UserProfile.get_fully_filled_field_names():
+                self.fields[field_name].required = True
 
     def fill_user_profile(self, user):
         if not user.is_authenticated:

@@ -89,6 +89,9 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
         help_text='Шаг доступен только при выполнении другого шага'
     )
 
+    class Meta:
+        verbose_name = 'Entrance step'
+
     """
     Override to False in your subclass if you don't want to see background
     around you block
@@ -240,10 +243,26 @@ class ConfirmProfileEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
     template_file = 'confirm_profile.html'
 
     def is_passed(self, user):
-        return super().is_passed(user) and user.profile.updated_at >= self.available_from_time
+        return (super().is_passed(user) and
+                user.profile.updated_at >= self.available_from_time)
 
     def __str__(self):
-        return 'Шаг подтверждения профиля для %s' % (str(self.school),)
+        return 'Шаг подтверждения профиля для %s' % str(self.school)
+
+
+class EnsureProfileIsFullEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
+    template_file = 'ensure_profile_is_full.html'
+
+    def is_passed(self, user):
+        if not super().is_passed(user):
+            return False
+        if not hasattr(user, 'profile'):
+            return False
+        profile = user.profile
+        return profile.is_fully_filled()
+
+    def __str__(self):
+        return 'Шаг полного заполнения профиля для %s' % str(self.school)
 
 
 class FillQuestionnaireEntranceStep(AbstractEntranceStep,
@@ -288,9 +307,8 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
                              'exam should belong to step\'s school')
         super().save(*args, **kwargs)
 
-    # Entrance exam is never passed. Mu-ha-ha!
     def is_passed(self, user):
-        return False
+        return super().is_passed(user) and self.is_closed
 
     @staticmethod
     def _get_solved_count(tasks):
@@ -388,6 +406,14 @@ class ResultsEntranceStep(AbstractEntranceStep):
             message = 'Поздравляем! Вы приняты в ' + session_name
             if entrance_status.parallel is not None:
                 message += ' в параллель ' + entrance_status.parallel.name
+        elif entrance_status.is_in_reserve_list:
+            message = ('Вы находитесь в резервном списке на поступление. '
+                       'Вы будете зачислены в ' + self.school.name + ' '
+                       'в случае появления свободных мест. '
+                       'К сожалению, мы не можем гарантировать, '
+                       'что это произойдёт.')
+            if entrance_status.public_comment:
+                message += '\nПричина: ' + entrance_status.public_comment
         else:
             message = 'К сожалению, вы не приняты в ' + self.school.name
             if entrance_status.public_comment:

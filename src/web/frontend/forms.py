@@ -129,7 +129,7 @@ class TextareaWithFaIcon(forms.Textarea):
 
 
 class SistemaChoiceInput(widgets.ChoiceInput):
-    def __init__(self, is_label_html, *args, **kwargs):
+    def __init__(self, *args, is_label_html=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_label_html = is_label_html
 
@@ -221,9 +221,10 @@ class SistemaChoiceFieldRendererWithDisabled(widgets.ChoiceFieldRenderer):
                 choice_label = choice_label['label']
 
             w = self.choice_input_class(
-                is_label_html,
                 self.name, self.value,
-                item_attrs, (choice_value, choice_label), i)
+                item_attrs, (choice_value, choice_label), i,
+                is_label_html=is_label_html
+            )
             output.append(format_html(self.inner_html,
                                       choice_value=force_text(w), sub_widgets=''))
         return format_html(self.outer_html,

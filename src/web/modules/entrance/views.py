@@ -169,7 +169,7 @@ def exam(request, selected_task_id=None):
             request.user,
             base_level
         ),
-        'can_upgrade': upgrades.can_user_upgrade(
+        'can_upgrade': not is_closed and upgrades.can_user_upgrade(
             request.school,
             request.user,
             base_level

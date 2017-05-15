@@ -174,7 +174,7 @@ class UserProfile(models.Model):
 
     insurance_number = models.CharField('Номер медицинского полиса', max_length=100, blank=True, default='')
 
-    is_agree = models.BooleanField('Согласие на обработку персональных данных', default=False)
+    has_accepted_terms = models.BooleanField('Согласие на обработку персональных данных', default=False)
 
     def get_zero_class_year(self):
         return self._zero_class_year
@@ -232,7 +232,7 @@ class UserProfile(models.Model):
             'document_type',
             'document_number',
             'insurance_number',
-            'is_agree',
+            'has_accepted_terms',
         ]
 
     @classmethod

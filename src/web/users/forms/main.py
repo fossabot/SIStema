@@ -251,7 +251,7 @@ class UserProfileForm(forms.Form):
         })
     )
 
-    is_agree = forms.TypedMultipleChoiceField(
+    has_accepted_terms = forms.TypedMultipleChoiceField(
         coerce=bool,
         choices=[(
             True,
@@ -273,10 +273,11 @@ class UserProfileForm(forms.Form):
     )
 
     def __init__(self, all_fields_are_required, *args, **kwargs):
-        if 'initial' in kwargs and 'is_agree' in kwargs['initial']:
-            # How soon is_agree is ChoiceField, it's value should be a list,
-            # not a bool
-            kwargs['initial']['is_agree'] = [kwargs['initial']['is_agree']]
+        if 'initial' in kwargs and 'has_accepted_terms' in kwargs['initial']:
+            # As has_accepted_terms is a ChoiceField,
+            # its value should be a list, not a bool
+            kwargs['initial']['has_accepted_terms'] = \
+                [kwargs['initial']['has_accepted_terms']]
         super().__init__(*args, **kwargs)
         if all_fields_are_required:
             for field_name in models.UserProfile.get_fully_filled_field_names():
@@ -292,9 +293,9 @@ class UserProfileForm(forms.Form):
         for field_name in user_profile.get_field_names():
             if field_name in self.cleaned_data:
                 field_value = self.cleaned_data.get(field_name)
-                # is_agree is a BooleanField in the database, so we need to
+                # has_accepted_terms is a BooleanField in the database, so we need to
                 # transform list to bool
-                if field_name == 'is_agree':
+                if field_name == 'has_accepted_terms':
                     field_value = field_value[0]
                 setattr(user_profile, field_name, field_value)
         return user_profile

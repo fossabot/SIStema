@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='userprofile',
-            name='is_agree',
+            name='has_accepted_terms',
             field=models.BooleanField(default=False, verbose_name='Согласие на обработку персональных данных'),
         ),
     ]

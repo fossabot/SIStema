@@ -129,6 +129,10 @@ class TextareaWithFaIcon(forms.Textarea):
 
 
 class SistemaChoiceInput(widgets.ChoiceInput):
+    def __init__(self, is_label_html, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_label_html = is_label_html
+
     def render(self, name=None, value=None, attrs=None, choices=()):
         if self.id_for_label:
             label_for = format_html(' for="{}"', self.id_for_label)
@@ -150,7 +154,7 @@ class SistemaChoiceInput(widgets.ChoiceInput):
             ' '.join(label_classes),
             self.tag(attrs),
             self.input_type,
-            self.choice_label
+            mark_safe(self.choice_label) if self.is_label_html else self.choice_label
         )
 
 
@@ -198,6 +202,9 @@ class SistemaChoiceFieldRendererWithDisabled(widgets.ChoiceFieldRenderer):
         To disable an option, pass a dict instead of a string for its label,
         of the form: {'label': 'option label', 'disabled': True}
 
+        You can also add {..., 'is_html': True} for inserting some links or other HTML
+        insire label
+
         Based on django.forms.widgets.ChoiceFieldRenderer.render()
         """
         id_ = self.attrs.get('id')
@@ -206,13 +213,17 @@ class SistemaChoiceFieldRendererWithDisabled(widgets.ChoiceFieldRenderer):
         for i, choice in enumerate(self.choices):
             item_attrs = self.attrs.copy()
             choice_value, choice_label = choice
+            is_label_html = False
             if isinstance(choice_label, dict):
                 if 'disabled' in choice_label and choice_label['disabled']:
                     item_attrs['disabled'] = choice_label['disabled']
+                is_label_html = choice_label.get('is_html', False)
                 choice_label = choice_label['label']
 
-            w = self.choice_input_class(self.name, self.value,
-                                        item_attrs, (choice_value, choice_label), i)
+            w = self.choice_input_class(
+                is_label_html,
+                self.name, self.value,
+                item_attrs, (choice_value, choice_label), i)
             output.append(format_html(self.inner_html,
                                       choice_value=force_text(w), sub_widgets=''))
         return format_html(self.outer_html,

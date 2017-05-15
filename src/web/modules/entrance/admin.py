@@ -254,6 +254,11 @@ class ConfirmProfileEntranceStepAdmin(AbstractEntranceStepAdmin):
     base_model = models.ConfirmProfileEntranceStep
 
 
+@admin.register(models.EnsureProfileIsFullEntranceStep)
+class EnsureProfileIsFullEntranceStepAdmin(AbstractEntranceStepAdmin):
+    base_model = models.EnsureProfileIsFullEntranceStep
+
+
 @admin.register(models.FillQuestionnaireEntranceStep)
 class FillQuestionnaireEntranceStepAdmin(AbstractEntranceStepAdmin):
     base_model = models.FillQuestionnaireEntranceStep

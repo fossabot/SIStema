@@ -142,7 +142,8 @@ class UserProfile(models.Model):
     school_name = models.CharField('Школа', max_length=250, blank=True, default='')
 
     phone = models.CharField('Телефон', max_length=100, blank=True, default='')
-    telegram = models.CharField('Телеграмм', max_length=100, blank=True, default='')
+    vk = models.CharField('ВКонтакте', max_length=100, blank=True, default='')
+    telegram = models.CharField('Телеграм', max_length=100, blank=True, default='')
 
     poldnev_person = models.ForeignKey(
         'poldnev.Person',
@@ -222,6 +223,7 @@ class UserProfile(models.Model):
             'city',
             'school_name',
             'phone',
+            'vk',
             'telegram',
             'citizenship',
             'citizenship_other',
@@ -229,3 +231,23 @@ class UserProfile(models.Model):
             'document_number',
             'insurance_number',
         ]
+
+    @classmethod
+    def get_fully_filled_field_names(cls):
+        """
+        Returns list of field names which should be filled
+        in the fully-filled profile
+        """
+        fields = cls.get_field_names()
+        fields.remove('citizenship_other')
+        fields.remove('telegram')
+        return fields
+
+    def is_fully_filled(self):
+        for field_name in self.get_fully_filled_field_names():
+            field = getattr(self, field_name)
+            if field is None:
+                return False
+            if type(field) is str and field == '':
+                return False
+        return True

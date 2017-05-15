@@ -42,3 +42,7 @@
 
     <a href="{{ entrance_block.step.exam.get_absolute_url }}" class="btn btn-primary">Решить задачи</a>
 {% endblock %}
+
+{% block passed_after_text %}
+    <a href="{{ entrance_block.step.exam.get_absolute_url }}" class="btn btn-success">Посмотреть отправленные решения</a>
+{% endblock %}

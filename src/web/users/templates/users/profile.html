@@ -30,6 +30,13 @@
                             </div>
                         {% endif %}
 
+                        {% if form.errors %}
+                            <div class="alert alert-micro alert-danger alert-border-left">
+                                <span class="fa fa-remove pr10"></span>
+                                Есть некоторые ошибки, давайте поправим
+                            </div>
+                        {% endif %}
+
                         {# TODO (andgein) It's copy-paste #}
                         {% for field_name in form.fields %}
                             {% with field=form|get_item:field_name %}

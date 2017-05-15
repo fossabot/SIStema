@@ -7,7 +7,7 @@ from allauth.socialaccount import forms as social_account_forms
 from django.core import exceptions as django_exceptions
 from django.utils.translation import ugettext_lazy as _
 from frontend.forms import TextInputWithFaIcon, PasswordInputWithFaIcon, \
-    SistemaRadioSelect
+    SistemaRadioSelect, SistemaCheckboxSelect
 
 from users import models
 from modules.poldnev import forms as poldnev_forms
@@ -251,7 +251,32 @@ class UserProfileForm(forms.Form):
         })
     )
 
+    is_agree = forms.TypedMultipleChoiceField(
+        coerce=bool,
+        choices=[(
+            True,
+            {
+                # TODO (andgein): doesn't hard-code url to the agreement.pdf
+                'label':
+                    'Я даю свое согласие на передачу организатору ЛКШ, НОУ «МЦНМО», '
+                    'анкеты, содержащей мои персональные данные, и согласен с тем, '
+                    'что они будут храниться в НОУ «МЦНМО» и будут использованы '
+                    'в соответствии с Федеральным законом «О персональных данных». '
+                    'Даю согласие на обработку и проверку своего вступительного '
+                    'испытания. Ознакомлен с <a href="/static/users/agreement.pdf">договором присоединения</a>.',
+                'is_html': True,
+             }
+        )],
+        label='Согласие на обработку персональных данных',
+        required=True,
+        widget=SistemaCheckboxSelect()
+    )
+
     def __init__(self, all_fields_are_required, *args, **kwargs):
+        if 'initial' in kwargs and 'is_agree' in kwargs['initial']:
+            # How soon is_agree is ChoiceField, it's value should be a list,
+            # not a bool
+            kwargs['initial']['is_agree'] = [kwargs['initial']['is_agree']]
         super().__init__(*args, **kwargs)
         if all_fields_are_required:
             for field_name in models.UserProfile.get_fully_filled_field_names():
@@ -266,7 +291,12 @@ class UserProfileForm(forms.Form):
             user_profile = models.UserProfile(user=user)
         for field_name in user_profile.get_field_names():
             if field_name in self.cleaned_data:
-                setattr(user_profile, field_name, self.cleaned_data.get(field_name))
+                field_value = self.cleaned_data.get(field_name)
+                # is_agree is a BooleanField in the database, so we need to
+                # transform list to bool
+                if field_name == 'is_agree':
+                    field_value = field_value[0]
+                setattr(user_profile, field_name, field_value)
         return user_profile
 
 

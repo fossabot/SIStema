@@ -240,17 +240,6 @@ class UserProfileForm(forms.Form):
         })
     )
 
-    insurance_number = forms.CharField(
-        label='Номер медицинского полиса',
-        help_text='Только для проживающих в России',
-        required=False,
-        max_length=100,
-        widget=TextInputWithFaIcon(attrs={
-            'class': 'gui-input',
-            'fa': 'file-text-o',
-        })
-    )
-
     has_accepted_terms = forms.TypedMultipleChoiceField(
         coerce=bool,
         choices=[(

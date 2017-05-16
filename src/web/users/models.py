@@ -243,6 +243,7 @@ class UserProfile(models.Model):
         """
         fields = cls.get_field_names()
         fields.remove('citizenship_other')
+        fields.remove('poldnev_person')
         fields.remove('telegram')
         return fields
 

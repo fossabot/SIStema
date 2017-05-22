@@ -217,14 +217,23 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 class Questionnaire(models.Model):
     title = models.CharField(max_length=100, help_text='Название анкеты')
 
-    short_name = models.CharField(max_length=100,
-                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, '
+                  'цифрами и подчёркиванием',
+    )
 
     school = models.ForeignKey(schools.models.School, blank=True, null=True)
 
     session = models.ForeignKey(schools.models.Session, blank=True, null=True)
 
     close_time = models.DateTimeField(blank=True, null=True, default=None)
+
+    enable_autofocus = models.BooleanField(
+        default=True,
+        help_text='Будет ли курсор автоматически фокусироваться на первом '
+                  'вопросе при загрузке страницы',
+    )
 
     def __str__(self):
         if self.school is not None:
@@ -261,7 +270,8 @@ class Questionnaire(models.Model):
         for question in self.questions:
             question_attrs = copy.copy(attrs)
             if is_first:
-                question_attrs['autofocus'] = 'autofocus'
+                if self.enable_autofocus:
+                    question_attrs['autofocus'] = 'autofocus'
                 is_first = False
 
             fields[question.short_name] = question.get_form_field(question_attrs)

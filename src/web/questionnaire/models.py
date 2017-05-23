@@ -292,7 +292,7 @@ class Questionnaire(models.Model):
         return form_class
 
     def get_prefix(self):
-        return 'questionnaire.' + self.short_name
+        return 'questionnaire_' + self.short_name
 
     def get_absolute_url(self):
         if self.school is None:

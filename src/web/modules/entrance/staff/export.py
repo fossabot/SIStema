@@ -106,6 +106,12 @@ class ExportCompleteEnrollingTable(django.views.View):
         ))
 
         columns.append(PlainExcelColumn(
+            name='Пол',
+            data=['жм'[user.profile.sex == users.models.UserProfile.Sex.MALE]
+                  for user in enrollees],
+        ))
+
+        columns.append(PlainExcelColumn(
             name='Город',
             data=[user.profile.city for user in enrollees],
         ))

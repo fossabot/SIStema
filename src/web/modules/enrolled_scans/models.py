@@ -6,11 +6,21 @@ import questionnaire.models
 
 import polymorphic.models
 
+from modules.enrolled_scans.entrance.steps import *
+
 
 class EnrolledScanRequirement(models.Model):
-    school = models.ForeignKey(schools.models.School)
+    school = models.ForeignKey(
+        schools.models.School,
+        related_name='enrolled_scan_requirements',
+        on_delete=models.CASCADE,
+    )
 
-    short_name = models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись маленькими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. '
+                  'Лучше обойтись маленькими буквами, цифрами и подчёркиванием',
+    )
 
     name = models.TextField(help_text='Например, «Квитанция об оплате»')
 
@@ -33,7 +43,11 @@ class EnrolledScanRequirement(models.Model):
 
 
 class EnrolledScan(models.Model):
-    requirement = models.ForeignKey(EnrolledScanRequirement)
+    requirement = models.ForeignKey(
+        EnrolledScanRequirement,
+        related_name='scans',
+        on_delete=models.CASCADE,
+    )
 
     user = models.ForeignKey(users.models.User)
 

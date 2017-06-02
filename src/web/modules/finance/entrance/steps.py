@@ -42,6 +42,9 @@ class DocumentsEntranceStep(steps.AbstractEntranceStep, steps.EntranceStepTextsM
         blank=True,
     )
 
+    def __str__(self):
+        return 'Шаг скачивания документов для %s' % self.school
+
     template_file = 'finance/documents.html'
 
     def is_passed(self, user):

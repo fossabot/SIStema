@@ -3,6 +3,7 @@ from django.contrib import admin
 from polymorphic.admin import (StackedPolymorphicInline,
                                PolymorphicInlineSupportMixin)
 
+import modules.entrance.admin
 from . import models
 
 
@@ -30,3 +31,7 @@ class EnrolledScanRequirementAdmin(PolymorphicInlineSupportMixin,
 class EnrolledScanAdmin(admin.ModelAdmin):
     list_display = ('id', 'requirement', 'user')
     list_filter = ('requirement__school', 'requirement')
+
+
+admin.site.register(models.EnrolledScansEntranceStep,
+                    modules.entrance.admin.EntranceStepChildAdmin)

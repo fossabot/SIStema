@@ -1,3 +1,5 @@
+import functools
+
 import djchoices
 import polymorphic.models
 import relativefilepathfield.fields
@@ -446,8 +448,13 @@ class AbstractTableStyleCommand(polymorphic.models.PolymorphicModel):
         return self.stop_column, self.stop_row
 
     @property
-    def params(self):
-        return [getattr(self, param) for param in self.command_params]
+    def params(self):        
+        # param can be dotted path to the nested attribute, i.e. "font.name". 
+        # In this case we need get self.font.name, so we split param by "." and apply
+        # functools.reduce with getattr
+        return [
+            functools.reduce(getattr, [self] + param.split('.')) for param in self.command_params
+        ]
 
     def __str__(self):
         return '%s[%s:%s].%s(%s)' % (
@@ -471,7 +478,7 @@ class CellFormattingTableStyleCommand(AbstractTableStyleCommand):
 class FontTableStyleCommand(CellFormattingTableStyleCommand):
     command_name = 'FONT'
 
-    command_params = ['font__name', 'size']
+    command_params = ['font.name', 'size']
 
     font = models.ForeignKey(Font)
 

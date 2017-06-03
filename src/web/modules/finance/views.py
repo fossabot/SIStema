@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 
-from . import models
 from . import documents
+from . import models
 
 
 @login_required

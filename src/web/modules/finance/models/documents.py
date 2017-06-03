@@ -20,13 +20,26 @@ __all__ = ['DocumentType',
 
 
 class DocumentType(models.Model):
-    short_name = models.CharField(max_length=100,
-                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. '
+                  'Лучше обойтись латинскими буквами, цифрами и подчёркиванием'
+    )
 
     school = models.ForeignKey(
         schools.models.School,
         related_name='finance_document_types',
         on_delete=models.CASCADE,
+    )
+
+    session = models.ForeignKey(
+        schools.models.Session,
+        related_name='+',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        default=None,
+        help_text='Документ будет показан только школьникам, зачисленным в эту смену'
     )
 
     name = models.TextField()
@@ -56,10 +69,26 @@ class DocumentType(models.Model):
     def __str__(self):
         return '%s. %s' % (self.school, self.name)
 
-    # Document is need for user if there is no generation conditions for it
-    # or if it is satisfied at least one of them
+    def save(self, *args, **kwargs):
+        if self.session is not None and self.session.school_id != self.school_id:
+            raise ValueError('Session should belong to the same school ')
+        super().save(*args, **kwargs)
+
     def is_need_for_user(self, user):
+        # If session is defined check that user has been enrolled in it
+        if self.session is not None:
+            entrance_status = (
+                user.entrance_statuses.filter(school=self.school).first()
+            )
+            if (entrance_status is not None and
+               entrance_status.is_enrolled and
+               entrance_status.session_id != self.session.id):
+                return False
+
+        # Document is need for user if there is no generation conditions for it
+        # or if it is satisfied at least one of them
         conditions = self.generation_conditions.all()
+
         if len(conditions) == 0:
             return True
 

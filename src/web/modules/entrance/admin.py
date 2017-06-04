@@ -3,12 +3,12 @@ from polymorphic.admin import (PolymorphicChildModelAdmin,
                                PolymorphicChildModelFilter,
                                PolymorphicParentModelAdmin)
 
-import sistema.polymorphic
 from home.admin import AbstractHomePageBlockAdmin
-from . import models
-
+import sistema.admin
+import sistema.polymorphic
 import users.models
 
+from . import models
 
 @admin.register(models.EntranceExamTask)
 class EntranceExamTaskAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
@@ -82,7 +82,9 @@ class EntranceExamTaskSolutionAdmin(
 @admin.register(models.FileEntranceExamTaskSolution)
 @admin.register(models.ProgramEntranceExamTaskSolution)
 @admin.register(models.OutputOnlyEntranceExamTaskSolution)
-class EntranceExamTaskSolutionChildAdmin(PolymorphicChildModelAdmin):
+class EntranceExamTaskSolutionChildAdmin(
+        sistema.admin.SistemaPolymorphicChildModelAdmin
+):
     base_model = models.EntranceExamTaskSolution
 
 

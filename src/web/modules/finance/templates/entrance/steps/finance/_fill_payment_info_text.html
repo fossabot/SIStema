@@ -9,7 +9,7 @@
         Стоимость участия с&nbsp;учётом скидок составляет <b>{{ entrance_block.payment_amount }} рублей</b>.
     {% endif %}
 </p>
-{% if entrance_block.payment_amount %}
+{% if entrance_block.payment_amount != None %}
     <p>
         {% if entrance_block.actual_discounts %}
             <b>Предоставленн{{ entrance_block.actual_discounts.count|pluralize:'ая,ые' }} скидк{{ entrance_block.actual_discounts.count|pluralize:'а,и' }}: </b>

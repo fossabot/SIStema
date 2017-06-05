@@ -14,34 +14,50 @@ def register_autocomplete_field_for_foreign_key(
     if queryset is None:
         queryset = model_cls.objects.all()
 
-    form_field = django.forms.ModelChoiceField(
-        queryset=queryset,
-        empty_label=empty_label,
-        widget=autocomplete.ModelSelect2(
-            url=url,
-            attrs={'data-placeholder': placeholder, 'data-html': 'true'}
+    def form_field_factory():
+        return django.forms.ModelChoiceField(
+            queryset=queryset,
+            empty_label=empty_label,
+            widget=autocomplete.ModelSelect2(
+                url=url,
+                attrs={'data-placeholder': placeholder, 'data-html': 'true'}
+            )
         )
-    )
 
-    register_form_field_for_foreign_key(model_cls, form_field)
+    register_form_field_for_foreign_key(model_cls, form_field_factory)
 
 
-def register_form_field_for_foreign_key(model_cls, form_field):
-    SistemaAdminMixin.register_form_field_for_foreign_key(model_cls, form_field)
+def register_form_field_for_foreign_key(model_cls, form_field_factory):
+    SistemaAdminMixin.register_form_field_for_foreign_key(model_cls,
+                                                          form_field_factory)
+
+
+class AlreadyRegisteredException(Exception):
+    pass
 
 
 class SistemaAdminMixin:
-    form_fields_for_foreign_keys = []
+    form_fields_for_foreign_keys = {}
 
     @classmethod
-    def register_form_field_for_foreign_key(cls, model_cls, form_field):
-        assert issubclass(model_cls, models.Model)
-        cls.form_fields_for_foreign_keys.append((model_cls, form_field))
+    def register_form_field_for_foreign_key(cls, model_cls, form_field_factory):
+        if not issubclass(model_cls, models.Model):
+            raise ValueError('Cannot register form field for class not derived '
+                             'from django.db.modes.Model')
+        if model_cls in cls.form_fields_for_foreign_keys:
+            raise AlreadyRegisteredException(
+                'Admin form field for {} is already registered'
+                .format(model_cls.__name__))
+        if not callable(form_field_factory):
+            raise ValueError('Form field factory should be callable')
+
+        cls.form_fields_for_foreign_keys[model_cls] = form_field_factory
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        for model_cls, form_field in self.form_fields_for_foreign_keys:
-            if db_field.related_model is model_cls:
-                return form_field() if callable(form_field) else form_field
+        form_field_factory = self.form_fields_for_foreign_keys.get(
+            db_field.related_model)
+        if form_field_factory is not None:
+            return form_field_factory()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 

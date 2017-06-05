@@ -2,7 +2,7 @@ from django.contrib import admin
 from polymorphic.admin import (PolymorphicChildModelAdmin,
                                PolymorphicChildModelFilter)
 
-import sistema.polymorphic
+import sistema.admin.polymorphic
 from . import models
 
 
@@ -13,7 +13,7 @@ class QuestionnaireAdmin(admin.ModelAdmin):
 
 @admin.register(models.AbstractQuestionnaireBlock)
 class AbstractQuestionnaireBlockAdmin(
-        sistema.polymorphic.PolymorphicParentModelAdmin
+        sistema.admin.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.AbstractQuestionnaireBlock
     list_display = (

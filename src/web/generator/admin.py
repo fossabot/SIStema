@@ -4,7 +4,7 @@ from polymorphic.admin import (PolymorphicChildModelAdmin,
                                PolymorphicInlineSupportMixin,
                                StackedPolymorphicInline)
 
-import sistema.polymorphic
+import sistema.admin.polymorphic
 
 from . import models
 
@@ -80,7 +80,7 @@ class AbstractTableStyleCommandInline(StackedPolymorphicInline):
 
 @admin.register(models.AbstractDocumentBlock)
 class AbstractDocumentBlockAdmin(
-        sistema.polymorphic.PolymorphicParentModelAdmin
+        sistema.admin.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.AbstractDocumentBlock
     list_display = ('id', 'document', 'order')

@@ -5,13 +5,15 @@ from polymorphic.admin import (PolymorphicChildModelAdmin,
 
 from home.admin import AbstractHomePageBlockAdmin
 import sistema.admin
-import sistema.polymorphic
+import sistema.admin.polymorphic
 import users.models
 
 from . import models
 
 @admin.register(models.EntranceExamTask)
-class EntranceExamTaskAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
+class EntranceExamTaskAdmin(
+        sistema.admin.polymorphic.PolymorphicParentModelAdmin
+):
     base_model = models.EntranceExamTask
     list_display = ('id', 'get_class', 'title', 'exam', 'order')
     list_filter = ('exam', PolymorphicChildModelFilter)
@@ -64,7 +66,7 @@ class EntranceLevelOverrideAdmin(admin.ModelAdmin):
 
 @admin.register(models.EntranceExamTaskSolution)
 class EntranceExamTaskSolutionAdmin(
-    sistema.polymorphic.PolymorphicParentModelAdmin
+    sistema.admin.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.EntranceExamTaskSolution
     list_display = ('id', 'get_class', 'task', 'user', 'ip')
@@ -112,7 +114,7 @@ class EntranceLevelUpgradeAdmin(admin.ModelAdmin):
 
 @admin.register(models.EntranceLevelUpgradeRequirement)
 class EntranceLevelUpgradeRequirementAdmin(
-    sistema.polymorphic.PolymorphicParentModelAdmin
+    sistema.admin.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.EntranceLevelUpgradeRequirement
     list_display = ('id', 'get_class', 'base_level')
@@ -190,7 +192,7 @@ class EntranceStatusAdmin(admin.ModelAdmin):
 
 @admin.register(models.AbstractAbsenceReason)
 class AbstractAbsenceReasonAdmin(
-    sistema.polymorphic.PolymorphicParentModelAdmin
+    sistema.admin.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.AbstractAbsenceReason
     list_display = ('id', 'get_class', 'school', 'user', 'created_by', 'public_comment',
@@ -228,7 +230,7 @@ admin.site.register(models.EntranceStepsHomePageBlock,
 
 
 @admin.register(models.AbstractEntranceStep)
-class EntranceStepsAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
+class EntranceStepsAdmin(sistema.admin.polymorphic.PolymorphicParentModelAdmin):
     base_model = models.AbstractEntranceStep
     list_display = ('id',
                     'get_class',
@@ -254,7 +256,9 @@ class EntranceStepChildAdmin(PolymorphicChildModelAdmin):
 
 
 @admin.register(models.EntranceUserMetric)
-class EntranceUserMetricAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
+class EntranceUserMetricAdmin(
+        sistema.admin.polymorphic.PolymorphicParentModelAdmin
+):
     base_model = models.EntranceUserMetric
     list_display = ('id', 'exam', 'name')
     list_filter = ('exam', PolymorphicChildModelFilter)

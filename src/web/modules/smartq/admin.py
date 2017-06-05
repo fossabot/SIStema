@@ -1,14 +1,11 @@
 from django.contrib import admin
-import django.forms
-
-from dal import autocomplete
 
 from modules.smartq import models
 import sistema.admin
 
 
 @admin.register(models.Question)
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(sistema.admin.ModelAdmin):
     list_display = (
         'short_name',
         'created_date',

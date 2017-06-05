@@ -5,9 +5,8 @@ from dal import autocomplete
 from hijack_admin.admin import HijackUserAdminMixin
 from reversion.admin import VersionAdmin
 
+from users import models
 import sistema.admin
-
-from . import models
 
 
 @admin.register(models.User)

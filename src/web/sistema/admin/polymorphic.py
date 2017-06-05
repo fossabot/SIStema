@@ -3,20 +3,22 @@ import polymorphic.admin
 from . import main
 
 
-class PolymorphicParentModelAdmin(polymorphic.admin.PolymorphicParentModelAdmin):
+class PolymorphicParentModelAdmin(
+        main.SistemaAdminMixin,
+        polymorphic.admin.PolymorphicParentModelAdmin
+):
     def get_child_models(self):
         inheritors = get_all_inheritors(self.base_model)
         # Remove absctract models
-        inheritors = [c for c in inheritors if not c._meta.abstract]
-        return inheritors
+        return [c for c in inheritors if not c._meta.abstract]
 
     def get_class(self, obj):
         return obj.get_real_instance_class().__name__
     get_class.short_description = 'Type'
 
 
-class SistemaPolymorphicChildModelAdmin(
-        main.SistemaAdminMixin, polymorphic.admin.PolymorphicChildModelAdmin):
+class PolymorphicChildModelAdmin(main.SistemaAdminMixin,
+                                 polymorphic.admin.PolymorphicChildModelAdmin):
     pass
 
 

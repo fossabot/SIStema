@@ -61,5 +61,5 @@ class SistemaAdminMixin:
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class SistemaModelAdmin(SistemaAdminMixin, admin.ModelAdmin):
+class ModelAdmin(SistemaAdminMixin, admin.ModelAdmin):
     pass

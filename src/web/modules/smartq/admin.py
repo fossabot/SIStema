@@ -18,7 +18,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(models.GeneratedQuestion)
 @admin.register(models.StaffGeneratedQuestion)
-class GeneratedQuestionAdmin(sistema.admin.SistemaModelAdmin):
+class GeneratedQuestionAdmin(sistema.admin.ModelAdmin):
     list_display = (
         'base_question',
         'seed',

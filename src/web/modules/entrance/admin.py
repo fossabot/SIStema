@@ -85,7 +85,7 @@ class EntranceExamTaskSolutionAdmin(
 @admin.register(models.ProgramEntranceExamTaskSolution)
 @admin.register(models.OutputOnlyEntranceExamTaskSolution)
 class EntranceExamTaskSolutionChildAdmin(
-        sistema.admin.SistemaPolymorphicChildModelAdmin
+        sistema.admin.polymorphic.PolymorphicChildModelAdmin
 ):
     base_model = models.EntranceExamTaskSolution
 

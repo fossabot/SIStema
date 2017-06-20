@@ -13,6 +13,7 @@ class Discount(models.Model):
         PARTNER = djchoices.ChoiceItem(2, 'Скидка от партнёра')
         STATE = djchoices.ChoiceItem(3, 'Скидка от государства')
         OLYMPIADS = djchoices.ChoiceItem(4, 'Олимпиадная скидка')
+        ORGANIZATION = djchoices.ChoiceItem(5, 'Частичная оплата от организации')
 
     school = models.ForeignKey(schools.models.School, related_name='+')
 

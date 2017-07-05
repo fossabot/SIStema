@@ -15,6 +15,7 @@ def download(request, document_type):
     response = HttpResponse(content_type='application/pdf')
     filename = '%s. %s' % (request.school.full_name, document_type.name)
     response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % (filename, )
+    response['Content-Type'] = 'application/pdf'
     response.write(document)
 
     return response

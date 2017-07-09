@@ -160,6 +160,9 @@ class Group(models.Model):
     class Meta:
         unique_together = ('session', 'parallel', 'short_name')
 
+    def __str__(self):
+        return '{}.{}'.format(self.session, self.name)
+
     def save(self, *args, **kwargs):
         if self.parallel.school_id != self.session.school_id:
             raise ValueError(

@@ -239,6 +239,7 @@ class UserProfile(models.Model):
         in the fully-filled profile
         """
         fields = cls.get_field_names()
+        fields.remove('middle_name')
         fields.remove('citizenship_other')
         fields.remove('poldnev_person')
         fields.remove('telegram')

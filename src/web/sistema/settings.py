@@ -250,6 +250,13 @@ else:
     if not os.path.isdir(SISTEMA_UPLOAD_FILES_DIR):
         raise Exception('Upload directory (SISTEMA_UPLOAD_FILES_DIR) exists but is not a folder')
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+if not os.path.exists(MEDIA_ROOT):
+    os.mkdir(MEDIA_ROOT)
+else:
+    if not os.path.isdir(MEDIA_ROOT):
+        raise Exception('Upload directory (MEDIA_ROOT) exists but is not a folder')
+
 
 SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-fonts')
 # I.e. for images used in generate documents

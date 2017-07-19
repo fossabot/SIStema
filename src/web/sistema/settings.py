@@ -24,6 +24,13 @@ SECRET_KEY = '&2_k-9xguisgilttn3^akg2v0@%8&d8_l)g_5_yha0yvxll^)%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# TODO: remove after sorl-thumbnail>12.4a1 is released on pip.
+# This setting is removed from django but still referenced by sorl-thumbnail
+# which is the dependency of wiki.plugins.images. The issue is already fixed,
+# but not released on pip. See
+# https://github.com/jazzband/sorl-thumbnail/issues/476 for more details.
+TEMPLATE_DEBUG = DEBUG
+
 ALLOWED_HOSTS = []
 
 ADMINS = [('Андрей Гейн', 'andgein@yandex.ru')]

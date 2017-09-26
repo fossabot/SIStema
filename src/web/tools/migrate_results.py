@@ -43,7 +43,7 @@ def get_parallel_from_group(group, school):
         if group[1] in '123':
             parallel = 'c.python'
         elif group[1] in '56':
-            parallel = 'c.cplusplus'
+            parallel = 'c.cpp'
     if int(group[1]) >= 7:
         parallel += '_prime'
     print(parallel, end=' ', flush=True)

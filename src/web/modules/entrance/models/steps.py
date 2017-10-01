@@ -507,5 +507,8 @@ class UserPaticipatedInSchoolEntranceStep(AbstractEntranceStep,
 
     def build(self, user):
         block = super().build(user)
-        block.school_to_check_participation = self.school_to_check_participation
+        # block may be equal to None if it's invisible to the current user
+        if block is not None:
+            block.school_to_check_participation = (
+                self.school_to_check_participation)
         return block

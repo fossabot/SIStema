@@ -478,8 +478,8 @@ class MakeUserParticipatingEntranceStep(AbstractEntranceStep):
         return 'Шаг, объявляющий школьника поступающим в ' + self.school.name
 
 
-class UserPaticipatedInSchoolEntranceStep(AbstractEntranceStep,
-                                          EntranceStepTextsMixIn):
+class UserParticipatedInSchoolEntranceStep(AbstractEntranceStep,
+                                           EntranceStepTextsMixIn):
     """
     Step considered as passed only if a user has participated in a specified
     school.

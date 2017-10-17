@@ -2,6 +2,7 @@
 
 import collections
 import enum
+import itertools
 import json
 import re
 
@@ -164,10 +165,12 @@ class PoldnevUpdate:
         person_by_id = {p.poldnev_id: p for p in models.Person.objects.all()}
         person_ids_to_delete = set(person_by_id.keys())
 
-        for person_id in range(1, len(first_names)):
-            new_names = (first_names[person_id],
-                         middle_names[person_id],
-                         last_names[person_id])
+        for person_id, all_names in enumerate(itertools.zip_longest(
+                                                  first_names,
+                                                  middle_names,
+                                                  last_names)):
+            new_names = tuple(name or '' for name in all_names)
+            first_name, middle_name, last_name = new_names
 
             # Skip gaps
             if new_names == ('', '', ''):
@@ -176,9 +179,9 @@ class PoldnevUpdate:
             if person_id not in person_by_id:
                 # Person is new
                 person = models.Person(poldnev_id=person_id,
-                                       first_name=first_names[person_id],
-                                       middle_name=middle_names[person_id],
-                                       last_name=last_names[person_id])
+                                       first_name=first_name,
+                                       middle_name=middle_name,
+                                       last_name=last_name)
                 person_by_id[person_id] = person
                 update.objects_to_save.append(person)
                 update.add_change(person.__class__, Action.CREATE, str(person))

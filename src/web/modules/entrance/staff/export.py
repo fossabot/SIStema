@@ -15,6 +15,7 @@ from modules.entrance import upgrades
 import questionnaire.models
 import modules.ejudge.models as ejudge_models
 import modules.study_results.models as study_results_models
+import schools.models
 import sistema.staff
 import users.models
 
@@ -143,6 +144,12 @@ class ExportCompleteEnrollingTable(django.views.View):
         columns.append(PlainExcelColumn(
             name='История (poldnev.ru)',
             data=self.get_poldnev_history_for_users(enrollees),
+        ))
+
+        previous_school = schools.models.School.objects.get(short_name='2017')
+        columns.append(PlainExcelColumn(
+            name='Параллель',
+            data=self.get_real_parallel_for_users(enrollees, previous_school),
         ))
 
         if self.question_exists(request.school, 'main_langauge'):
@@ -401,6 +408,16 @@ class ExportCompleteEnrollingTable(django.views.View):
                 if not entry.role # Student
             )
         return [history_by_user.get(user, '') for user in enrollees]
+
+    def get_real_parallel_for_users(self, enrollees, school):
+        real_parallels = []
+        for user in enrollees:
+            participation = (user.school_participations
+                             .filter(school=school)
+                             .first())
+            real_parallels.append('' if participation is None
+                                  else participation.parallel.name)
+        return real_parallels
 
     def get_entrance_level_for_users(self, school, enrollees):
         return [upgrades.get_base_entrance_level(school, user).name

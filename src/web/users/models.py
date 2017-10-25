@@ -12,9 +12,9 @@ class UserManager(auth_models.UserManager):
     pass
 
 
-# See the django.contrib.auth.models.User for details
-# We need to copy it here for enlarge username, first_name and last_name's
-# lengths from 30 to 100 characters
+# This class is copied from django.contrib.auth.models.User. We need to do this
+# to increase maximum length of username, first_name and last_name from 30 to
+# 100 characters.
 class User(auth_models.AbstractBaseUser, auth_models.PermissionsMixin):
     username = models.CharField(
         _('username'),

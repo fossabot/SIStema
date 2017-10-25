@@ -146,6 +146,7 @@ class UserProfile(models.Model):
     vk = models.CharField('ВКонтакте', max_length=100, blank=True, default='')
     telegram = models.CharField('Телеграм', max_length=100, blank=True, default='')
 
+    # TODO(artemtab): find a way to remove dependency on the non-core module
     poldnev_person = models.ForeignKey(
         'poldnev.Person',
         on_delete=models.SET_NULL,

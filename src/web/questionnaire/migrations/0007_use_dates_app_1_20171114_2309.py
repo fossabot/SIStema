@@ -48,13 +48,4 @@ class Migration(migrations.Migration):
             code=make_key_dates,
             reverse_code=make_key_dates_reverse,
         ),
-        migrations.RemoveField(
-            model_name='questionnaire',
-            name='close_time',
-        ),
-        migrations.RenameField(
-            model_name='questionnaire',
-            old_name='close_time_key_date',
-            new_name='close_time',
-        )
     ]

@@ -50,7 +50,7 @@ def make_key_dates_reverse(apps, _schema_editor):
                 step.available_from_time_key_date.datetime)
             step.save()
 
-        if step.available_to_time is not None:
+        if step.available_to_time_key_date is not None:
             step.available_to_time = step.available_to_time_key_date.datetime
             step.save()
 
@@ -76,23 +76,5 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             code=make_key_dates,
             reverse_code=make_key_dates_reverse,
-        ),
-        migrations.RemoveField(
-            model_name='abstractentrancestep',
-            name='available_from_time',
-        ),
-        migrations.RemoveField(
-            model_name='abstractentrancestep',
-            name='available_to_time',
-        ),
-        migrations.RenameField(
-            model_name='abstractentrancestep',
-            old_name='available_from_time_key_date',
-            new_name='available_from_time',
-        ),
-        migrations.RenameField(
-            model_name='abstractentrancestep',
-            old_name='available_to_time_key_date',
-            new_name='available_to_time',
         ),
     ]

@@ -22,6 +22,7 @@ import users.views
 from modules.ejudge.models import CheckingResult
 from sistema.helpers import group_by, respond_as_attachment, nested_query_list
 from . import forms
+from .. import helpers
 from .. import models
 from .. import upgrades
 import groups.decorators
@@ -68,7 +69,7 @@ class EnrollingUsersTable(frontend.table.Table):
     # Need refactoring
     @classmethod
     def create(cls, school):
-        users_ids = get_enrolling_users_ids(school)
+        users_ids = helpers.get_enrolling_users_ids(school)
         table = cls(school, users_ids)
         table.after_filter_applying()
         return table
@@ -103,7 +104,7 @@ class EnrollingUsersTable(frontend.table.Table):
         if not school_qs.exists():
             raise NameError('Bad school name')
         _school = school_qs.first()
-        users_ids = get_enrolling_users_ids(_school)
+        users_ids = helpers.get_enrolling_users_ids(_school)
         return cls(_school, users_ids)
 
     @staticmethod
@@ -128,14 +129,6 @@ class EnrollingUsersTable(frontend.table.Table):
         if user_school == '':
             return '%s класс' % user_class
         return '%s, %s класс' % (user_school, user_class)
-
-
-def get_enrolling_users_ids(school):
-    return models.EntranceStatus.objects.filter(
-        school=school
-    ).exclude(
-        status=models.EntranceStatus.Status.NOT_PARTICIPATED
-    ).values_list('user_id', flat=True)
 
 
 @sistema.staff.only_staff
@@ -200,12 +193,6 @@ def check(request):
     return render(request, 'entrance/staff/check.html', {
         'checking_groups': checking_groups,
     })
-
-
-@sistema.staff.only_staff
-@groups.decorators.only_for_groups('entrance__admins')
-def results(request):
-    return None
 
 
 class UserSummary:
@@ -754,7 +741,7 @@ def _get_ejudge_task_accepted_solutions(school, solution_model):
 @sistema.staff.only_staff
 @groups.decorators.only_for_groups('entrance__admins')
 def initial_auto_reject(request):
-    users_ids = list(get_enrolling_users_ids(request.school))
+    users_ids = list(helpes.get_enrolling_users_ids(request.school))
 
     practice_users_ids = set(_get_ejudge_task_accepted_solutions(
         request.school, models.ProgramEntranceExamTaskSolution
@@ -800,9 +787,3 @@ def initial_auto_reject(request):
             status=models.EntranceStatus.Status.AUTO_REJECTED
         )]
     })
-
-
-@sistema.staff.only_staff
-@groups.decorators.only_for_groups('entrance__admins')
-def initial_checking_groups(request):
-    return None

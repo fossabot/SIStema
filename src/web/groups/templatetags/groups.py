@@ -1,6 +1,6 @@
 from django.template import Library, Node, TemplateSyntaxError, NodeList
 
-import groups.api
+import groups
 
 
 register = Library()
@@ -25,7 +25,7 @@ class IfInGroupNode(Node):
         else:
             user = self.user.resolve(context, True)
         group_name = self.group_name.resolve(context, True)
-        if groups.api.is_user_in_group(user, school, group_name):
+        if groups.is_user_in_group(user, group_name, school):
             return self.nodelist_true.render(context)
         return self.nodelist_false.render(context)
 

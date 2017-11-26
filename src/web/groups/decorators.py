@@ -1,16 +1,24 @@
 from functools import wraps
 
+from django.db.models import Q
 from django.http.response import HttpResponseNotFound, HttpResponseForbidden
 
-from groups.models import Group
+from groups.models import AbstractGroup
 
 __all__ = ['only_for_groups']
 
 
-def only_for_groups(*groups_names):
-    if len(groups_names) == 0:
+def only_for_groups(*group_names):
+    """
+    This decorators passes the request if user is a member of at least one
+    of groups defined in `group_names`. Groups should be defined for
+    school from request (`request.school`) or as system-wide.
+    Otherwise decorator returns HttpResponseNotFound()
+    :param group_names: list of group's short_names
+    """
+    if len(group_names) == 0:
         raise ValueError(
-            '@only_for_groups() should be used with groups names as arguments'
+            '@only_for_groups() should be used with group names as arguments'
         )
 
     def decorator(handler):
@@ -20,12 +28,17 @@ def only_for_groups(*groups_names):
                 return HttpResponseNotFound()
 
             school = None if not hasattr(request, 'school') else request.school
-            for group_name in groups_names:
-                group = Group.objects.filter(
-                    school=school,
-                    short_name=group_name
-                ).first()
-                if group is None:
+
+            matched_groups = AbstractGroup.objects.filter(
+                Q(short_name__in=group_names) &
+                (Q(school=school) | Q(school__isnull=True))
+            )
+            groups_by_short_name = {}
+            for group in matched_groups:
+                groups_by_short_name[group.short_name] = group
+
+            for group_name in group_names:
+                if group_name not in groups_by_short_name:
                     raise ValueError(
                         'Invalid group_name in only_for_groups(): %s. '
                         'Can\'t find this group for school %s' % (
@@ -33,10 +46,11 @@ def only_for_groups(*groups_names):
                             school
                         ))
 
+                group = groups_by_short_name[group_name]
                 if group.is_user_in_group(request.user):
                     return handler(request, *args, **kwargs)
 
-            return HttpResponseForbidden()
+            return HttpResponseNotFound()
         return func_wrapper
     return decorator
 

@@ -38,12 +38,3 @@ class AutocompleteModelAdminMixIn:
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-
-class UserAutocompleteModelAdminMixIn(AutocompleteModelAdminMixIn):
-    """ Add UserAutocompleteModelAdminMixIn as first base class of your
-        admin class and all foreign keys to User class will be rendered
-        via Select2 with autocomplete """
-
-    object_model = users.models.User
-    url = 'users_admin:user-autocomplete'
-    placeholder = 'Выберите пользователя'

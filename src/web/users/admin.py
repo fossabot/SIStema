@@ -3,9 +3,11 @@ from django.contrib import admin
 from hijack_admin.admin import HijackUserAdminMixin
 from reversion.admin import VersionAdmin
 
+from sistema.admin import AutocompleteModelAdminMixIn
 from . import models
 
 
+@admin.register(models.User)
 class UserAdmin(VersionAdmin, HijackUserAdminMixin):
     list_display = (
         'id',
@@ -37,6 +39,7 @@ class UserAdmin(VersionAdmin, HijackUserAdminMixin):
     )
 
 
+@admin.register(models.UserProfile)
 class UserProfileAdmin(VersionAdmin):
     list_display = (
         'user_id',
@@ -52,5 +55,11 @@ class UserProfileAdmin(VersionAdmin):
     )
 
 
-admin.site.register(models.User, UserAdmin)
-admin.site.register(models.UserProfile, UserProfileAdmin)
+class UserAutocompleteModelAdminMixIn(AutocompleteModelAdminMixIn):
+    """ Add UserAutocompleteModelAdminMixIn as first base class of your
+        admin class and all foreign keys to User class will be rendered
+        via Select2 with autocomplete """
+
+    object_model = models.User
+    url = 'users_admin:user-autocomplete'
+    placeholder = 'Выберите пользователя'

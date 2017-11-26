@@ -1,26 +1,26 @@
 import frontend.icons
 import sistema.staff
 from . import views
-import groups.api
+from .. import helpers
+import groups
 
 
 @sistema.staff.register_staff_interface
 class EntranceStaffInterface(sistema.staff.StaffInterface):
     def __init__(self, request):
         super().__init__(request)
-        self._filled_an_application_count = len(
-            views.get_enrolling_users_ids(request.school)
-        )
+        self._enrollees_count = \
+            helpers.get_enrolling_users_ids(request.school).count()
 
-        self.is_entrance_admin = groups.api.is_user_in_group(
+        self.is_entrance_admin = groups.is_user_in_group(
             request.user,
-            request.school,
-            'entrance__admins'
+            'entrance__admins',
+            request.school
         )
-        self.can_check = groups.api.is_user_in_group(
+        self.can_check = groups.is_user_in_group(
             request.user,
-            request.school,
-            'entrance__can_check'
+            'entrance__can_check',
+            request.school
         )
 
     def get_sidebar_menu(self):
@@ -29,7 +29,7 @@ class EntranceStaffInterface(sistema.staff.StaffInterface):
             'Подавшие заявку',
             'school:entrance:enrolling',
             frontend.icons.FaIcon('envelope-o'),
-            label=sistema.staff.MenuItemLabel(self._filled_an_application_count, 'system')
+            label=sistema.staff.MenuItemLabel(self._enrollees_count, 'system')
         )
 
         exam_tasks = sistema.staff.MenuItem(

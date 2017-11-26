@@ -12,123 +12,128 @@ class GroupsConfig(AppConfig):
         self._auto_members = []
 
     def ready(self):
-        self._auto_members = []
-        self._auto_access = []
+        self._ensure_all_groups_exist_and_configured()
+        self._set_hook_for_new_school()
+
+    def _ensure_all_groups_exist_and_configured(self):
+        self._auto_members.clear()
+        self._auto_access.clear()
 
         for app_config in apps.get_app_configs():
             if not hasattr(app_config, 'sistema_groups'):
                 continue
 
             groups = app_config.sistema_groups
-            for group_name, group in groups.items():
-                self._ensure_group_exists(group_name, group)
+            for group_name, group_spec in groups.items():
+                self._ensure_group_exists(group_name, group_spec)
 
         for group, auto_members in self._auto_members:
             self._set_auto_members(group, auto_members)
-
         for group, auto_access in self._auto_access:
             self._set_auto_access(group, auto_access)
 
-        self._set_hook_for_new_school()
-
     @transaction.atomic
-    def _ensure_group_exists(self, group_name, group_params):
-        system_wide = group_params.get('system_wide', False)
+    def _ensure_group_exists(self, group_name, group_spec):
+        system_wide = group_spec.get('system_wide', False)
         if system_wide:
-            self._ensure_system_wide_group_exists(group_name, group_params)
+            self._ensure_system_wide_group_exists(group_name, group_spec)
         else:
-            self._ensure_school_group_exists(group_name, group_params)
+            self._ensure_school_group_exists(group_name, group_spec)
 
     def _ensure_system_wide_group_exists(self, group_name, group_params):
         # You can't import models on module level:
         # https://docs.djangoproject.com/en/1.11/ref/applications/#django.apps.AppConfig.ready
-        from groups.models import Group
+        from groups.models import ManuallyFilledGroup
 
-        group = Group.objects.filter(school__isnull=True,
-                                     short_name=group_name).first()
+        group = ManuallyFilledGroup.objects.filter(
+            school__isnull=True,
+            short_name=group_name
+        ).first()
         if group is None:
             self._create_system_wide_group(group_name, group_params)
         else:
             self._update_group(group, group_params)
 
-    def _ensure_school_group_exists(self, group_name, group_params):
+    def _ensure_school_group_exists(self, group_name, group_spec):
         from schools.models import School
-        from groups.models import Group
+        from groups.models import ManuallyFilledGroup
 
         for school in School.objects.all():
-            group = Group.objects.filter(school=school,
-                                         short_name=group_name).first()
+            group = ManuallyFilledGroup.objects.filter(
+                school=school,
+                short_name=group_name
+            ).first()
             if group is None:
-                self._create_group(school, group_name, group_params)
+                self._create_group(school, group_name, group_spec)
             else:
-                self._update_group(group, group_params)
+                self._update_group(group, group_spec)
 
-    def _create_system_wide_group(self, group_name, group_params):
-        self._create_group(None, group_name, group_params)
+    def _create_system_wide_group(self, group_name, group_spec):
+        self._create_group(None, group_name, group_spec)
 
-    def _create_group(self, school, group_name, group_params):
-        from groups.models import Group
+    def _create_group(self, school, group_name, group_spec):
+        from groups.models import ManuallyFilledGroup
 
-        group = Group.objects.create(
+        group = ManuallyFilledGroup.objects.create(
             school=school,
             short_name=group_name,
-            label=group_params.get('label', ''),
-            description=group_params.get('description', ''),
-            owner=None,
+            name=group_spec.get('name', ''),
+            description=group_spec.get('description', ''),
+            created_by=None,
             can_be_deleted=False,
         )
 
-        self._auto_members.append((group, group_params.get('auto_members', [])))
-        self._auto_access.append((group, group_params.get('auto_access', {})))
+        self._auto_members.append((group, group_spec.get('auto_members', [])))
+        self._auto_access.append((group, group_spec.get('auto_access', {})))
 
         print('Group #%d [%s] «%s» has been created for school %s' % (
             group.id,
             group.short_name,
-            group.label,
+            group.name,
             group.school
         ))
 
     def _update_group(self, group, group_params):
-        group.label = group_params.get('label', '')
+        group.name = group_params.get('name', '')
         group.description = group_params.get('description', '')
-        group.owner = None
+        group.created_by = None
         group.can_be_deleted = False
         self._auto_members.append((group, group_params.get('auto_members', [])))
         self._auto_access.append((group, group_params.get('auto_access', {})))
         group.save()
 
     def _set_auto_members(self, group, auto_members):
-        from groups.models import Group, GroupInGroupMembership
+        from groups.models import ManuallyFilledGroup, GroupInGroupMembership
 
         for member_group_name in auto_members:
-            member_group = Group.objects.filter(
+            member_group = ManuallyFilledGroup.objects.filter(
                 school=group.school, short_name=member_group_name
             ).first()
             if member_group is None:
                 raise LookupError(
-                    'Can\'t find group %s for settings auto_member' % (
-                        member_group_name,
+                    'Can\'t find group %s for settings auto_member in %s' % (
+                        member_group_name, str(group)
                     ))
 
             GroupInGroupMembership.objects.update_or_create(
                 group=group,
                 member=member_group,
                 defaults={
-                    'added_by': None,
+                    'created_by': None,
                 }
             )
 
     def _set_auto_access(self, group, auto_access):
-        from groups.models import Group, GroupAccessForGroup, GroupAccessType
+        from groups.models import ManuallyFilledGroup, GroupAccessForGroup, GroupAccess
+
+        access_type_by_name = {
+            'admin': GroupAccess.Type.ADMIN,
+            'list_members': GroupAccess.Type.LIST_MEMBERS,
+            'edit_members': GroupAccess.Type.EDIT_MEMBERS,
+        }
 
         for access_group_name, access_group_access_type in auto_access.items():
-            if access_group_access_type == 'admin':
-                access_type = GroupAccessType.ADMIN
-            elif access_group_access_type == 'list_members':
-                access_type = GroupAccessType.LIST_MEMBERS
-            elif access_group_access_type == 'edit_members':
-                access_type = GroupAccessType.EDIT_MEMBERS
-            else:
+            if access_group_access_type not in access_type_by_name:
                 raise ValueError(
                     'Invalid access_type in sistema_groups '
                     'for auto_accessed group %s: %s' % (
@@ -136,7 +141,9 @@ class GroupsConfig(AppConfig):
                         access_group_access_type,
                     ))
 
-            access_group = Group.objects.filter(
+            access_type = access_type_by_name[access_group_access_type]
+
+            access_group = ManuallyFilledGroup.objects.filter(
                 school=group.school, short_name=access_group_name
             ).first()
             if access_group is None:
@@ -149,7 +156,7 @@ class GroupsConfig(AppConfig):
                 to_group=group,
                 group=access_group,
                 defaults={
-                    'added_by': None,
+                    'created_by': None,
                     'access_type': access_type,
                 }
             )
@@ -161,5 +168,5 @@ class GroupsConfig(AppConfig):
         )
 
     def _on_new_school(self, school):
-        # Recall self.ready() for creating groups for the new school
-        self.ready()
+        # Call initializing method again for creating groups for the new school
+        self._ensure_all_groups_exist_and_configured()

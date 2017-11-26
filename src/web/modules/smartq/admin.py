@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-import sistema.admin
+import users.admin
 from modules.smartq import models
 
 
@@ -15,7 +15,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(models.GeneratedQuestion)
 @admin.register(models.StaffGeneratedQuestion)
-class GeneratedQuestionAdmin(sistema.admin.UserAutocompleteModelAdminMixIn,
+class GeneratedQuestionAdmin(users.admin.UserAutocompleteModelAdminMixIn,
                              admin.ModelAdmin):
     list_display = (
         'base_question',

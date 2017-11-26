@@ -3,29 +3,30 @@ from polymorphic.admin import (PolymorphicChildModelFilter,
                                PolymorphicChildModelAdmin)
 
 import sistema.polymorphic
-import sistema.admin
+import users.admin
 from groups import models
 
 
-@admin.register(models.Group)
-class GroupAdmin(sistema.admin.UserAutocompleteModelAdminMixIn, admin.ModelAdmin):
-    list_display = ('id', 'school', 'owner', 'short_name', 'label',
+@admin.register(models.AbstractGroup)
+class GroupAdmin(users.admin.UserAutocompleteModelAdminMixIn, admin.ModelAdmin):
+    list_display = ('id', 'school', 'created_by', 'short_name', 'name',
                     'can_be_deleted', )
     list_filter = (('school', admin.RelatedOnlyFieldListFilter), )
     search_fields = (
-        'id',
-        'owner__first_name',
-        'owner__last_name',
-        '=owner__email',
+        '=id',
+        'created_by__profile__first_name',
+        '=created_by__profile__middle_name',
+        '=created_by__profile__last_name',
+        'created_by__email',
         'short_name',
-        'label',
+        'name',
         'description'
     )
 
 
 @admin.register(models.GroupInGroupMembership)
 @admin.register(models.UserInGroupMembership)
-class GroupMembershipAdmin(sistema.admin.UserAutocompleteModelAdminMixIn,
+class GroupMembershipAdmin(users.admin.UserAutocompleteModelAdminMixIn,
                            admin.ModelAdmin):
     list_display = ('id', 'group', 'member')
     list_filter = (('group', admin.RelatedOnlyFieldListFilter), )
@@ -35,7 +36,7 @@ class GroupMembershipAdmin(sistema.admin.UserAutocompleteModelAdminMixIn,
 class GroupAccessAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
     base_model = models.GroupAccess
     list_display = ('id', 'get_class', 'to_group', 'access_type',
-                    'added_by', 'created_at')
+                    'created_by', 'created_at')
     list_filter = ('to_group__school',
                    'access_type',
                    PolymorphicChildModelFilter)
@@ -44,7 +45,7 @@ class GroupAccessAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
 
 @admin.register(models.GroupAccessForUser)
 @admin.register(models.GroupAccessForGroup)
-class GroupAccessChildAdmin(sistema.admin.UserAutocompleteModelAdminMixIn,
+class GroupAccessChildAdmin(users.admin.UserAutocompleteModelAdminMixIn,
                             PolymorphicChildModelAdmin):
     base_model = models.GroupAccess
 

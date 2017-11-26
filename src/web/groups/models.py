@@ -4,11 +4,13 @@ from django.utils.functional import cached_property
 import djchoices
 import polymorphic.models
 
+import collections
+
 import schools.models
 import users.models
 
 
-class Group(models.Model):
+class AbstractGroup(polymorphic.models.PolymorphicModel):
     school = models.ForeignKey(
         schools.models.School,
         null=True,
@@ -17,13 +19,15 @@ class Group(models.Model):
         on_delete=models.CASCADE,
     )
 
-    owner = models.ForeignKey(
+    created_by = models.ForeignKey(
         users.models.User,
         null=True,
         blank=True,
-        related_name='owned_groups',
+        related_name='created_groups',
         on_delete=models.CASCADE,
-        help_text='None, если владелец группы — система'
+        help_text='Создатель группы. Не может никогда измениться и ' +
+                  'всегда имеет полные права на группу.' +
+                  'None, если владелец группы — система'
     )
 
     short_name = models.CharField(
@@ -33,7 +37,7 @@ class Group(models.Model):
         db_index=True,
     )
 
-    label = models.CharField(
+    name = models.CharField(
         max_length=30,
         help_text='Покороче, используется на метках'
     )
@@ -47,46 +51,23 @@ class Group(models.Model):
 
     list_members_to_everyone = models.BooleanField(
         default=False,
-        help_text='Видны ли всем список участников и принадлежность '
-                  'пользователей группе',
+        help_text='Видно ли всем участие других в этой группе',
     )
 
-    @cached_property
-    def group_members(self):
-        return (GroupInGroupMembership.objects.filter(group=self)
-                .select_related('member'))
-
-    @cached_property
-    def user_members(self):
-        return (UserInGroupMembership.objects.filter(group=self)
-                .select_related('member'))
-
-    @cached_property
-    def child(self):
-        return self.group_members + self.user_members
-
-    @cached_property
-    def members(self):
-        members = set()
-        visited_groups_ids = {self.id}
-        queue = [self]
-        for group in queue:
-            user_members = [m.member for m in group.user_members]
-            members.update(user_members)
-            for child_group in group.group_members:
-                if child_group.member.id not in visited_groups_ids:
-                    visited_groups_ids.add(child_group.member.id)
-                    queue.append(child_group.member)
-        return list(members)
+    class Meta:
+        unique_together = ('short_name', 'school')
 
     def is_user_in_group(self, user):
-        return user.id in [u.id for u in self.members]
+        raise NotImplementedError(
+            'Each group type should implement is_user_in_group(), but %s has no it' %
+            self.__class__.__name__
+        )
 
     @property
     def default_access_type(self):
         if self.list_members_to_everyone:
-            return GroupAccessType.LIST_MEMBERS
-        return GroupAccessType.NONE
+            return GroupAccess.Type.LIST_MEMBERS
+        return GroupAccess.Type.NONE
 
     def get_access_type_for_user(self, user):
         user_access = GroupAccessForUser.objects.filter(
@@ -97,10 +78,15 @@ class Group(models.Model):
         else:
             user_access = user_access.access_type
 
+        # We need to cast queryset to list because following call
+        # group_access.group.is_user_in_group() produces another query to database
+        # and this query should be finished at this time
         group_accesses = list(GroupAccessForGroup.objects.filter(
             to_group=self
         ).select_related('group').order_by('-access_type'))
         for group_access in group_accesses:
+            # Access levels are sorted in decreasing order,
+            # so we use the first one granted to the user
             if user_access > group_access.access_type:
                 break
 
@@ -110,18 +96,51 @@ class Group(models.Model):
         return user_access
 
     def __str__(self):
-        result = 'Группа «%s»' % (self.label, )
+        result = 'Группа «%s»' % self.name
         if self.school is not None:
-            result += ' для %s' % (str(self.school), )
+            result += ' для ' + str(self.school)
         return result
 
-    class Meta:
-        unique_together = ('short_name', 'school')
+
+class ManuallyFilledGroup(AbstractGroup):
+    def is_user_in_group(self, user):
+        return self.members.filter(id=user.id).exists()
+
+    @cached_property
+    def group_memberships(self):
+        return (GroupInGroupMembership.objects.filter(group=self)
+                .select_related('member'))
+
+    @cached_property
+    def user_memberships(self):
+        return (UserInGroupMembership.objects.filter(group=self)
+                .select_related('member'))
+
+    @cached_property
+    def memberships(self):
+        return self.group_memberships + self.user_memberships
+
+    # If there will be problems with performance of this method,
+    # it can be useful to cache full list of group's members and
+    # rebuild it after adding or removing a new member
+    @cached_property
+    def members(self):
+        visited_groups_ids = {self.id}
+        queue = collections.deque([self])
+        while queue:
+            group = queue.popleft()
+            for child_group in group.group_memberships:
+                if child_group.member.id not in visited_groups_ids:
+                    visited_groups_ids.add(child_group.member.id)
+                    queue.append(child_group.member)
+        return users.models.User.objects.filter(
+            member_in_groups__id__in=visited_groups_ids
+        ).distinct()
 
 
 class GroupMembership(models.Model):
     group = models.ForeignKey(
-        Group,
+        ManuallyFilledGroup,
         related_name='+',
         on_delete=models.CASCADE,
     )
@@ -146,7 +165,7 @@ class GroupMembership(models.Model):
 
 class GroupInGroupMembership(GroupMembership):
     member = models.ForeignKey(
-        Group,
+        AbstractGroup,
         related_name='member_in_groups',
         on_delete=models.CASCADE,
     )
@@ -160,40 +179,39 @@ class UserInGroupMembership(GroupMembership):
     )
 
 
-class GroupAccessType(djchoices.DjangoChoices):
-    NONE = djchoices.ChoiceItem(
-        value=0,
-        label='Нет доступа, группа не видна',
-    )
-
-    LIST_MEMBERS = djchoices.ChoiceItem(
-        value=1,
-        label='Может просматривать участников',
-    )
-    EDIT_MEMBERS = djchoices.ChoiceItem(
-        value=2,
-        label='Может добавлять и удалять участников',
-    )
-    ADMIN = djchoices.ChoiceItem(
-        value=3,
-        label='Полный доступ',
-    )
-
-
 class GroupAccess(polymorphic.models.PolymorphicModel):
+    class Type(djchoices.DjangoChoices):
+        NONE = djchoices.ChoiceItem(
+            value=0,
+            label='Нет доступа, группа не видна',
+        )
+
+        LIST_MEMBERS = djchoices.ChoiceItem(
+            value=10,
+            label='Может просматривать участников',
+        )
+        EDIT_MEMBERS = djchoices.ChoiceItem(
+            value=20,
+            label='Может добавлять и удалять участников',
+        )
+        ADMIN = djchoices.ChoiceItem(
+            value=30,
+            label='Полный доступ',
+        )
+
     to_group = models.ForeignKey(
-        Group,
+        AbstractGroup,
         related_name='accesses',
         on_delete=models.CASCADE,
     )
 
     access_type = models.PositiveIntegerField(
-        choices=GroupAccessType.choices,
-        validators=[GroupAccessType.validator],
+        choices=Type.choices,
+        validators=[Type.validator],
         db_index=True,
     )
 
-    added_by = models.ForeignKey(
+    created_by = models.ForeignKey(
         users.models.User,
         related_name='+',
         on_delete=models.CASCADE,
@@ -221,7 +239,7 @@ class GroupAccessForUser(GroupAccess):
 
 class GroupAccessForGroup(GroupAccess):
     group = models.ForeignKey(
-        Group,
+        AbstractGroup,
         related_name='+',
         on_delete=models.CASCADE,
     )

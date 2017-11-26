@@ -35,5 +35,4 @@ urlpatterns = [
     url(r'^solution/(?P<solution_id>\d+)/$', staff_views.solution, name='user_solution'),
 
     url(r'^initial/auto_reject/$', staff_views.initial_auto_reject, name='initial.auto_reject'),
-    url(r'^initial/checking_groups/$', staff_views.initial_checking_groups, name='initial.checking_groups'),
     ]

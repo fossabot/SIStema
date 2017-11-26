@@ -6,18 +6,18 @@ class EntranceConfig(AppConfig):
 
     sistema_groups = {
         'entrance__admins': {
-            'label': 'Админы вступительной',
+            'name': 'Админы вступительной',
             'description': 'Группа администраторов вступительной работы',
         },
         'entrance__can_check': {
-            'label': 'Проверяющие вступительную',
+            'name': 'Проверяющие вступительную',
             'description': 'Группа пользователей, '
                            'которые могут проверять вступительную работу: '
-                           'смотреть решения школьников, писать комментарии и '
-                           'ставить баллы за них',
-            'auto_members': ['entrance__admin'],
+                           'смотреть решения школьников, писать к ним комментарии и '
+                           'ставить за них баллы',
+            'auto_members': ['entrance__admins'],
             'auto_access': {
-                'entrance__admin': 'admin',
+                'entrance__admins': 'admin',
             }
         },
     }

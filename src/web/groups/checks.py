@@ -33,7 +33,7 @@ def check_groups_in_app_configs(app_configs, **kwargs):
 
             if len(group_name) > 100:
                 errors.append(Error(
-                    'Group\'s short_name can\'t be more than 100 chars',
+                    'Group\'s short_name can\'t be more then 100 chars',
                     obj=app_config,
                     id='groups.E003',
                 ))
@@ -61,7 +61,7 @@ def check_groups_in_app_configs(app_configs, **kwargs):
 
             if len(label) > 30:
                 errors.append(Error(
-                    'Group\'s label can\'t be more than 30 chars',
+                    'Group\'s label can\'t be more then 30 chars',
                     obj=app_config,
                     id='groups.E006',
                 ))

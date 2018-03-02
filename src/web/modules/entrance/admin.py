@@ -1,11 +1,10 @@
 from django.contrib import admin
 from polymorphic.admin import (PolymorphicChildModelAdmin,
-                               PolymorphicChildModelFilter,
-                               PolymorphicParentModelAdmin)
+                               PolymorphicChildModelFilter)
 
+from modules.entrance import models
+import home.models
 import sistema.polymorphic
-from home.admin import AbstractHomePageBlockAdmin
-from . import models
 
 import users.models
 import groups.admin
@@ -28,6 +27,13 @@ class EntranceExamTaskChildAdmin(PolymorphicChildModelAdmin):
 
 
 admin.site.register(models.EntranceExam)
+
+@admin.register(models.EntranceExam)
+class EntranceExamAdmin(admin.ModelAdmin):
+    list_display = ('id', 'school', 'close_time')
+    list_filter = ('school',)
+    search_fields = ('=id',)
+    ordering = ('-school', 'id')
 
 
 @admin.register(models.EntranceLevel)
@@ -160,8 +166,27 @@ class CheckingCommentAdmin(admin.ModelAdmin):
 
 @admin.register(models.EntranceStatus)
 class EntranceStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'school', 'user', 'created_by', 'public_comment', 'is_status_visible', 'status', 'session', 'parallel', 'created_at', 'updated_at')
-    list_filter = (('school', admin.RelatedOnlyFieldListFilter), 'status', 'session', 'parallel', ('created_by', admin.RelatedOnlyFieldListFilter))
+    list_display = (
+        'id',
+        'school',
+        'user',
+        'created_by',
+        'public_comment',
+        'private_comment',
+        'is_status_visible',
+        'status',
+        'session',
+        'parallel',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = (
+        ('school', admin.RelatedOnlyFieldListFilter),
+        'status',
+        'session',
+        'parallel',
+        ('created_by', admin.RelatedOnlyFieldListFilter),
+    )
     search_fields = (
         'user__profile__first_name',
         'user__profile__last_name',
@@ -171,18 +196,34 @@ class EntranceStatusAdmin(admin.ModelAdmin):
 
 @admin.register(models.AbstractAbsenceReason)
 class AbstractAbsenceReasonAdmin(
-    sistema.polymorphic.PolymorphicParentModelAdmin
+        sistema.polymorphic.PolymorphicParentModelAdmin
 ):
     base_model = models.AbstractAbsenceReason
-    list_display = ('id', 'get_class', 'school', 'user', 'created_by', 'public_comment',
-                    'private_comment', 'created_at')
-    list_filter = (('school', admin.RelatedOnlyFieldListFilter),
-                   ('created_by', admin.RelatedOnlyFieldListFilter),
-                   PolymorphicChildModelFilter)
-    search_fields = ('user__profile__first_name',
-                     'user__profile__last_name',
-                     'user__username',
-                     'public_comment')
+    list_display = (
+        'id',
+        'get_class',
+        'school',
+        'user',
+        'created_by',
+        'public_comment',
+        'private_comment',
+        'created_at',
+    )
+    list_filter = (
+        ('school', admin.RelatedOnlyFieldListFilter),
+        ('created_by', admin.RelatedOnlyFieldListFilter),
+        PolymorphicChildModelFilter,
+    )
+    search_fields = (
+        '=id',
+        '=user__id',
+        'user__profile__first_name',
+        'user__profile__last_name',
+        'user__username',
+        'user__email',
+        'public_comment',
+        'private_comment',
+    )
 
 
 @admin.register(models.RejectionAbsenceReason)
@@ -204,18 +245,9 @@ class AbsenceReasonChildAdmin(PolymorphicChildModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-admin.site.register(models.EntranceStepsHomePageBlock,
-                    AbstractHomePageBlockAdmin)
-
-
-class AbstractEntranceStepAdmin(PolymorphicChildModelAdmin):
-    base_model = models.AbstractEntranceStep
-
-    list_display = ('id', 'school', 'order',
-                    'available_from_time', 'available_to_time',
-                    'available_after_step')
-    list_filter = (('school', admin.RelatedOnlyFieldListFilter), )
-    ordering = ('school', 'order')
+@admin.register(models.EntranceStepsHomePageBlock)
+class EntranceStepsHomePageBlockAdmin(PolymorphicChildModelAdmin):
+    base_model = home.models.AbstractHomePageBlock
 
 
 @admin.register(models.AbstractEntranceStep)
@@ -227,36 +259,67 @@ class EntranceStepsAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
                     'available_from_time',
                     'available_to_time',
                     'available_after_step')
-    list_filter = (('school', admin.RelatedOnlyFieldListFilter),
-                   )
+    list_filter = (
+        ('school', admin.RelatedOnlyFieldListFilter),
+        PolymorphicChildModelFilter
+    )
     ordering = ('school', 'order')
 
 
 @admin.register(models.ConfirmProfileEntranceStep)
-class ConfirmProfileEntranceStepAdmin(AbstractEntranceStepAdmin):
-    base_model = models.ConfirmProfileEntranceStep
-
-
+@admin.register(models.EnsureProfileIsFullEntranceStep)
 @admin.register(models.FillQuestionnaireEntranceStep)
-class FillQuestionnaireEntranceStepAdmin(AbstractEntranceStepAdmin):
-    base_model = models.FillQuestionnaireEntranceStep
-
-
 @admin.register(models.SolveExamEntranceStep)
-class SolveExamEntranceStepAdmin(AbstractEntranceStepAdmin):
-    base_model = models.SolveExamEntranceStep
-
-
 @admin.register(models.ResultsEntranceStep)
-class ResultsEntranceStepAdmin(AbstractEntranceStepAdmin):
-    base_model = models.ResultsEntranceStep
-
-
 @admin.register(models.MakeUserParticipatingEntranceStep)
-class MakeUserParticipatingEntranceStepAdmin(AbstractEntranceStepAdmin):
-    base_model = models.MakeUserParticipatingEntranceStep
+class EntranceStepChildAdmin(PolymorphicChildModelAdmin):
+    base_model = models.AbstractEntranceStep
+
+
+class UserParticipatedInSchoolEntranceStepExceptionInline(admin.StackedInline):
+    model = models.UserParticipatedInSchoolEntranceStepException
+    extra = 0
+
+
+@admin.register(models.UserParticipatedInSchoolEntranceStep)
+class UserParticipatedInSchoolEntranceStepChildAdmin(
+        PolymorphicChildModelAdmin
+):
+    base_model = models.AbstractEntranceStep
+    inlines = (
+        UserParticipatedInSchoolEntranceStepExceptionInline,
+    )
+
+
+@admin.register(models.EntranceUserMetric)
+class EntranceUserMetricAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
+    base_model = models.EntranceUserMetric
+    list_display = ('id', 'exam', 'name')
+    list_filter = ('exam', PolymorphicChildModelFilter)
+    ordering = ('-exam', '-id')
+
+
+class ParallelScoreEntranceUserMetricFileTaskEntryInline(admin.StackedInline):
+    model = models.ParallelScoreEntranceUserMetricFileTaskEntry
+    extra = 1
+
+
+class ParallelScoreEntranceUserMetricProgramTaskEntryInline(
+        admin.StackedInline
+):
+    model = models.ParallelScoreEntranceUserMetricProgramTaskEntry
+    extra = 1
+
+
+@admin.register(models.ParallelScoreEntranceUserMetric)
+class ParallelScoreEntranceUserMetricAdmin(PolymorphicChildModelAdmin):
+    base_model = models.EntranceUserMetric
+    inlines = (
+        ParallelScoreEntranceUserMetricFileTaskEntryInline,
+        ParallelScoreEntranceUserMetricProgramTaskEntryInline,
+    )
 
 
 @admin.register(models.EntranceStatusGroup)
-class ManuallyFilledGroupAdmin(groups.admin.AbstractGroupAdmin):
+class EntranceStatusGroupAdmin(groups.admin.AbstractGroupAdmin):
     base_model = models.EntranceStatusGroup

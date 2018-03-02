@@ -6,11 +6,21 @@ import questionnaire.models
 
 import polymorphic.models
 
+from modules.enrolled_scans.entrance.steps import *
+
 
 class EnrolledScanRequirement(models.Model):
-    school = models.ForeignKey(schools.models.School)
+    school = models.ForeignKey(
+        schools.models.School,
+        related_name='enrolled_scan_requirements',
+        on_delete=models.CASCADE,
+    )
 
-    short_name = models.CharField(max_length=100, help_text='Используется в урлах. Лучше обойтись маленькими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. '
+                  'Лучше обойтись маленькими буквами, цифрами и подчёркиванием',
+    )
 
     name = models.TextField(help_text='Например, «Квитанция об оплате»')
 
@@ -33,9 +43,13 @@ class EnrolledScanRequirement(models.Model):
 
 
 class EnrolledScan(models.Model):
-    requirement = models.ForeignKey(EnrolledScanRequirement)
+    requirement = models.ForeignKey(
+        EnrolledScanRequirement,
+        related_name='scans',
+        on_delete=models.CASCADE,
+    )
 
-    user = models.ForeignKey(users.models.User)
+    user = models.ForeignKey(users.models.User, on_delete=models.CASCADE)
 
     original_filename = models.TextField()
 
@@ -48,16 +62,23 @@ class EnrolledScan(models.Model):
 
 
 class EnrolledScanRequirementCondition(polymorphic.models.PolymorphicModel):
-    requirement = models.ForeignKey(EnrolledScanRequirement, related_name='conditions')
+    requirement = models.ForeignKey(
+        EnrolledScanRequirement,
+        on_delete=models.CASCADE,
+        related_name='conditions',
+    )
 
     def is_satisfied(self, user):
         raise NotImplementedError('Child should implement its own is_satisfied()')
 
 
 class QuestionnaireVariantEnrolledScanRequirementCondition(EnrolledScanRequirementCondition):
-    variant = models.ForeignKey(questionnaire.models.ChoiceQuestionnaireQuestionVariant,
-                                related_name='+',
-                                help_text='Вариант, который должен быть отмечен')
+    variant = models.ForeignKey(
+        questionnaire.models.ChoiceQuestionnaireQuestionVariant,
+        on_delete=models.CASCADE,
+        related_name='+',
+        help_text='Вариант, который должен быть отмечен',
+    )
 
     def is_satisfied(self, user):
         return questionnaire.models.QuestionnaireAnswer.objects.filter(

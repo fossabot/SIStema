@@ -25,19 +25,20 @@ def _render_user_account(user):
 
 @http_decorators.require_POST
 def find_similar_accounts(request):
-    form = forms.UserProfileForm(data=request.POST)
+    form = forms.UserProfileForm(all_fields_are_required=False, data=request.POST)
     form.full_clean()
     users = search_utils.SimilarAccountSearcher(form.fill_user_profile(request.user)).search()
     return django.http.JsonResponse({user.id: _render_user_account(user) for user in users})
 
 
 def profile_for_user(request, user):
+    all_fields_are_required = request.GET.get('full', False)
+
     if request.method == 'POST':
-        form = forms.UserProfileForm(data=request.POST)
+        form = forms.UserProfileForm(all_fields_are_required=all_fields_are_required, data=request.POST)
         if form.is_valid():
             form.fill_user_profile(user).save()
             return shortcuts.redirect('home')
-        return shortcuts.render(request, 'users/profile.html', {'form': form})
     else:
         if hasattr(user, 'profile'):
             initial_data = {}
@@ -46,11 +47,13 @@ def profile_for_user(request, user):
         else:
             initial_data = {'first_name': user.first_name,
                             'last_name': user.last_name}
-        form = forms.UserProfileForm(initial=initial_data)
-        return shortcuts.render(request, 'users/profile.html',
-                                {'form': form,
-                                 'is_creating': not hasattr(user, 'profile'),
-                                 'is_confirming': request.GET.get('confirm', False)})
+        form = forms.UserProfileForm(all_fields_are_required=all_fields_are_required,
+                                     initial=initial_data)
+
+    return shortcuts.render(request, 'users/profile.html',
+                            {'form': form,
+                             'is_creating': not hasattr(user, 'profile'),
+                             'is_confirming': request.GET.get('confirm', False)})
 
 
 @auth_decorators.login_required()

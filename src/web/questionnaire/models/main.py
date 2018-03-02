@@ -12,6 +12,7 @@ from django.db import models
 import frontend.forms
 import groups.models
 import schools.models
+import sistema.models
 import users.models
 from sistema.helpers import group_by
 import questionnaire.forms as forms
@@ -21,11 +22,14 @@ class AbstractQuestionnaireBlock(polymorphic.models.PolymorphicModel):
     questionnaire = models.ForeignKey('Questionnaire',
                                       on_delete=models.CASCADE)
 
-    short_name = models.CharField(max_length=100,
-                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, '
+                  'цифрами и подчёркиванием')
 
-    order = models.IntegerField(help_text='Блоки выстраиваются по возрастанию порядка',
-                                default=0)
+    order = models.IntegerField(
+        default=0,
+        help_text='Блоки выстраиваются по возрастанию порядка')
 
     is_question = False
 
@@ -33,7 +37,9 @@ class AbstractQuestionnaireBlock(polymorphic.models.PolymorphicModel):
         return '%s. %s' % (self.questionnaire, self.short_name)
 
     class Meta:
-        unique_together = [('short_name', 'questionnaire'), ('questionnaire', 'order')]
+        verbose_name = 'questionnaire block'
+        unique_together = [('short_name', 'questionnaire'),
+                           ('questionnaire', 'order')]
         ordering = ('questionnaire_id', 'order')
 
 
@@ -69,7 +75,7 @@ class AbstractQuestionnaireQuestion(AbstractQuestionnaireBlock):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.text
+        return '%s: %s' % (self.questionnaire, self.text)
 
 
 class TextQuestionnaireQuestion(AbstractQuestionnaireQuestion):
@@ -125,6 +131,8 @@ class ChoiceQuestionnaireQuestionVariant(models.Model):
                                  on_delete=models.CASCADE,
                                  related_name='variants')
 
+    order = models.PositiveIntegerField(default=0)
+
     # If variant is disabled it shows as gray and can't be selected
     is_disabled = models.BooleanField(default=False)
 
@@ -146,7 +154,8 @@ class ChoiceQuestionnaireQuestion(AbstractQuestionnaireQuestion):
         if attrs is None:
             attrs = {}
 
-        choices = ((v.id, {'label': v.text, 'disabled': v.is_disabled}) for v in self.variants.all())
+        choices = ((v.id, {'label': v.text, 'disabled': v.is_disabled})
+                   for v in self.variants.order_by('order', 'id'))
 
         attrs['inline'] = self.is_inline
         if self.is_multiple:
@@ -214,14 +223,44 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 class Questionnaire(models.Model):
     title = models.CharField(max_length=100, help_text='Название анкеты')
 
-    short_name = models.CharField(max_length=100,
-                                  help_text='Используется в урлах. Лучше обойтись латинскими буквами, цифрами и подчёркиванием')
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, '
+                  'цифрами и подчёркиванием',
+    )
 
-    school = models.ForeignKey(schools.models.School, blank=True, null=True)
+    school = models.ForeignKey(
+        schools.models.School,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
-    session = models.ForeignKey(schools.models.Session, blank=True, null=True)
+    session = models.ForeignKey(
+        schools.models.Session,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
-    close_time = models.DateTimeField(blank=True, null=True, default=None)
+    close_time = models.ForeignKey(
+        'dates.KeyDate',
+        on_delete=models.SET_NULL,
+        related_name='+',
+        blank=True,
+        null=True,
+        verbose_name='Время закрытия',
+        help_text='Начиная с этого момента пользователи видят анкету в режиме '
+                  'только для чтения',
+    )
+
+    enable_autofocus = models.BooleanField(
+        default=True,
+        help_text='Будет ли курсор автоматически фокусироваться на первом '
+                  'вопросе при загрузке страницы',
+    )
+
+    should_record_typing_dynamics = models.BooleanField(default=False)
 
     must_fill = models.ForeignKey(
         groups.models.AbstractGroup,
@@ -243,8 +282,9 @@ class Questionnaire(models.Model):
         return self.title
 
     # TODO: Extract to ModelWithCloseTime?
-    def is_closed(self):
-        return self.close_time is not None and django.utils.timezone.now() >= self.close_time
+    def is_closed_for_user(self, user):
+        return (self.close_time is not None and
+                self.close_time.passed_for_user(user))
 
     @cached_property
     def blocks(self):
@@ -266,26 +306,41 @@ class Questionnaire(models.Model):
         if attrs is None:
             attrs = {}
 
-        fields = {}
+        fields = {
+            'prefix': self.get_prefix(),
+        }
 
         is_first = True
         for question in self.questions:
             question_attrs = copy.copy(attrs)
             if is_first:
-                question_attrs['autofocus'] = 'autofocus'
+                if self.enable_autofocus:
+                    question_attrs['autofocus'] = 'autofocus'
                 is_first = False
 
-            fields[question.short_name] = question.get_form_field(question_attrs)
+            fields[question.short_name] = (
+                question.get_form_field(question_attrs))
 
-        form_class = type('%sForm' % self.short_name.title(), (forms.QuestionnaireForm,), fields)
+        form_class = type('%sForm' % self.short_name.title(),
+                          (forms.QuestionnaireForm,),
+                          fields)
         return form_class
+
+    def get_prefix(self):
+        return 'questionnaire_' + self.short_name
 
     def get_absolute_url(self):
         if self.school is None:
-            return urlresolvers.reverse('questionnaire', kwargs={'questionnaire_name': self.short_name})
+            return urlresolvers.reverse(
+                'questionnaire',
+                kwargs={'questionnaire_name': self.short_name},
+            )
         else:
-            return urlresolvers.reverse('school:questionnaire', kwargs={'questionnaire_name': self.short_name,
-                                                                        'school_name': self.school.short_name})
+            return urlresolvers.reverse(
+                'school:questionnaire',
+                kwargs={'questionnaire_name': self.short_name,
+                        'school_name': self.school.short_name}
+            )
 
     def is_filled_by(self, user):
         user_status = self.statuses.filter(user=user).first()
@@ -310,9 +365,17 @@ class Questionnaire(models.Model):
 
 
 class QuestionnaireAnswer(models.Model):
-    questionnaire = models.ForeignKey(Questionnaire)
+    questionnaire = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        related_name='answers',
+    )
 
-    user = models.ForeignKey(users.models.User)
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='questionnaire_answers',
+    )
 
     # TODO: may be ForeignKey is better?
     question_short_name = models.CharField(max_length=100)
@@ -336,9 +399,17 @@ class UserQuestionnaireStatus(models.Model):
         NOT_FILLED = djchoices.ChoiceItem(1)
         FILLED = djchoices.ChoiceItem(2)
 
-    user = models.ForeignKey(users.models.User, related_name='+')
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
-    questionnaire = models.ForeignKey(Questionnaire, related_name='statuses')
+    questionnaire = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        related_name='statuses',
+    )
 
     status = models.PositiveIntegerField(choices=Status.choices, validators=[Status.validator])
 
@@ -353,9 +424,41 @@ class UserQuestionnaireStatus(models.Model):
 class QuestionnaireBlockShowCondition(models.Model):
     # If there is at least one conditions for `block`,
     # it will be visible only if one `need_to_be_checked` is checked
-    block = models.ForeignKey(AbstractQuestionnaireBlock, related_name='show_conditions')
+    block = models.ForeignKey(
+        AbstractQuestionnaireBlock,
+        on_delete=models.CASCADE,
+        related_name='show_conditions',
+    )
 
-    need_to_be_checked = models.ForeignKey(ChoiceQuestionnaireQuestionVariant, related_name='+')
+    need_to_be_checked = models.ForeignKey(
+        ChoiceQuestionnaireQuestionVariant,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     def __str__(self):
         return 'Show %s only if %s' % (self.block, self.need_to_be_checked)
+
+
+# Used to evalute fraction of accounts where different persons filled
+# questionnairies for students and parents. The estimation will be biased, but
+# we will probably be able to measure changes in the next year comparing with
+# the current one.
+class QuestionnaireTypingDynamics(models.Model):
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+
+    questionnaire = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+
+    typing_data = sistema.models.CompressedTextField(
+        help_text='JSON с данными о нажатиях клавиш'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)

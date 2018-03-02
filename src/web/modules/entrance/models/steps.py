@@ -1,7 +1,6 @@
 import enum
 
 from django.db import models, transaction
-from django.utils import timezone
 from polymorphic import models as polymorphic_models
 
 import questionnaire.models
@@ -29,30 +28,44 @@ class EntranceStepBlock:
         self.user = user
         self.state = state
 
+        # Pre-compute step fields for the particular user to be used in
+        # templates
+        self.step_available_from_time = (
+            None if step.available_from_time is None
+            else step.available_from_time.datetime_for_user(user))
+        self.step_available_to_time = (
+            None if step.available_to_time is None
+            else step.available_to_time.datetime_for_user(user))
+        self.step_is_opened = step.is_opened(user)
+        self.step_is_closed = step.is_closed(user)
+
 
 class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
     school = models.ForeignKey(
         schools.models.School,
+        on_delete=models.CASCADE,
         related_name='entrance_steps',
-        help_text='Школа, к которой относится шаг'
+        help_text='Школа, к которой относится шаг',
     )
 
     session = models.ForeignKey(
         schools.models.Session,
+        on_delete=models.CASCADE,
         related_name='+',
         help_text='Шаг будет показывать только зачисленным в эту смену',
         blank=True,
         null=True,
-        default=None
+        default=None,
     )
 
     parallel = models.ForeignKey(
         schools.models.Parallel,
+        on_delete=models.CASCADE,
         related_name='+',
         help_text='Шаг будет показывать только зачисленным в эту параллель',
         blank=True,
         null=True,
-        default=None
+        default=None,
     )
 
     visible_only_for_enrolled = models.BooleanField(
@@ -65,29 +78,37 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
         help_text='Шаги упорядочиваются по возрастанию этого параметра'
     )
 
-    available_from_time = models.DateTimeField(
+    available_from_time = models.ForeignKey(
+        'dates.KeyDate',
+        on_delete=models.SET_NULL,
+        related_name='+',
         null=True,
         blank=True,
-        default=None,
-        help_text='Начиная с какого времени доступен шаг'
+        verbose_name='Доступен с',
     )
 
-    available_to_time = models.DateTimeField(
+    available_to_time = models.ForeignKey(
+        'dates.KeyDate',
+        on_delete=models.SET_NULL,
+        related_name='+',
         null=True,
         blank=True,
-        default=None,
-        help_text='До какого времени доступен доступен шаг'
+        verbose_name='Доступен до',
     )
 
     # TODO (andgein): Возможно, это должен быть ManyToManyField
     available_after_step = models.ForeignKey(
         'self',
+        on_delete=models.CASCADE,
         related_name='+',
         null=True,
         blank=True,
         default=None,
-        help_text='Шаг доступен только при выполнении другого шага'
+        help_text='Шаг доступен только при выполнении другого шага',
     )
+
+    class Meta:
+        verbose_name = 'entrance step'
 
     """
     Override to False in your subclass if you don't want to see background
@@ -120,10 +141,17 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
 
     def get_state(self, user):
         """
-         Returns state of this step for user. You can override it in subclass
+         Returns state of this step for user. You can override it in subclass,
+         but do it carefully please.
+         `get_state()` should always return EntranceStepState.
+          If step is closed by time, return NOT_OPENED or NOT_CLOSED.
+          If previous step is not passed return WAITING_FOR_OTHER_STEP
+
+          If you want just override PASSED/NOT_PASSED selection, don't override
+          `get_state`, override `is_passed` instead of it.
          :returns EntranceStepState
         """
-        if not self.is_opened:
+        if not self.is_opened(user):
             return EntranceStepState.NOT_OPENED
 
         if (self.available_after_step is not None and
@@ -133,7 +161,7 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
         if self.is_passed(user):
             return EntranceStepState.PASSED
 
-        if self.is_closed:
+        if self.is_closed(user):
             return EntranceStepState.CLOSED
 
         return EntranceStepState.NOT_PASSED
@@ -169,19 +197,15 @@ class AbstractEntranceStep(polymorphic_models.PolymorphicModel):
                              'parallel should belong to the same school as step')
         super().save(*args, **kwargs)
 
-    @property
-    def is_opened(self):
+    def is_opened(self, user):
         if self.available_from_time is None:
             return True
-        now = timezone.now()
-        return now >= self.available_from_time
+        return self.available_from_time.passed_for_user(user)
 
-    @property
-    def is_closed(self):
+    def is_closed(self, user):
         if self.available_to_time is None:
             return False
-        now = timezone.now()
-        return now > self.available_to_time
+        return self.available_to_time.passed_for_user(user)
 
 
 class EntranceStepTextsMixIn(models.Model):
@@ -240,10 +264,28 @@ class ConfirmProfileEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
     template_file = 'confirm_profile.html'
 
     def is_passed(self, user):
-        return super().is_passed(user) and user.profile.updated_at >= self.available_from_time
+        available_from_for_user = (
+            self.available_from_time.datetime_for_user(user))
+        return (super().is_passed(user) and
+                user.profile.updated_at >= available_from_for_user)
 
     def __str__(self):
-        return 'Шаг подтверждения профиля для %s' % (str(self.school),)
+        return 'Шаг подтверждения профиля для %s' % str(self.school)
+
+
+class EnsureProfileIsFullEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
+    template_file = 'ensure_profile_is_full.html'
+
+    def is_passed(self, user):
+        if not super().is_passed(user):
+            return False
+        if not hasattr(user, 'profile'):
+            return False
+        profile = user.profile
+        return profile.is_fully_filled()
+
+    def __str__(self):
+        return 'Шаг полного заполнения профиля для %s' % str(self.school)
 
 
 class FillQuestionnaireEntranceStep(AbstractEntranceStep,
@@ -252,8 +294,9 @@ class FillQuestionnaireEntranceStep(AbstractEntranceStep,
 
     questionnaire = models.ForeignKey(
         questionnaire.models.Questionnaire,
+        on_delete=models.CASCADE,
         help_text='Анкета, которую нужно заполнить',
-        related_name='+'
+        related_name='+',
     )
 
     def save(self, *args, **kwargs):
@@ -277,6 +320,7 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
 
     exam = models.ForeignKey(
         'entrance.EntranceExam',
+        on_delete=models.CASCADE,
         help_text='Вступительная работа, которую нужно решить',
         related_name='+'
     )
@@ -288,9 +332,8 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
                              'exam should belong to step\'s school')
         super().save(*args, **kwargs)
 
-    # Entrance exam is never passed. Mu-ha-ha!
     def is_passed(self, user):
-        return False
+        return super().is_passed(user) and self.is_closed(user)
 
     @staticmethod
     def _get_solved_count(tasks):
@@ -388,6 +431,14 @@ class ResultsEntranceStep(AbstractEntranceStep):
             message = 'Поздравляем! Вы приняты в ' + session_name
             if entrance_status.parallel is not None:
                 message += ' в параллель ' + entrance_status.parallel.name
+        elif entrance_status.is_in_reserve_list:
+            message = ('Вы находитесь в резервном списке на поступление. '
+                       'Вы будете зачислены в ' + self.school.name + ' '
+                       'в случае появления свободных мест. '
+                       'К сожалению, мы не можем гарантировать, '
+                       'что это произойдёт.')
+            if entrance_status.public_comment:
+                message += '\nПричина: ' + entrance_status.public_comment
         else:
             message = 'К сожалению, вы не приняты в ' + self.school.name
             if entrance_status.public_comment:
@@ -443,3 +494,79 @@ class MakeUserParticipatingEntranceStep(AbstractEntranceStep):
 
     def __str__(self):
         return 'Шаг, объявляющий школьника поступающим в ' + self.school.name
+
+
+class UserParticipatedInSchoolEntranceStep(AbstractEntranceStep,
+                                           EntranceStepTextsMixIn):
+    """
+    Step considered as passed only if a user has participated in a specified
+    school.
+
+    Visible only if not passed.
+    """
+
+    template_file = 'user_participated_in_school.html'
+
+    school_to_check_participation = models.ForeignKey(
+        schools.models.School,
+        on_delete=models.CASCADE,
+        related_name='+',
+        help_text='Шаг будет считаться пройденным только если пользователь '
+                  'принимал участие в этой школе',
+    )
+
+    def __str__(self):
+        return 'Шаг проверки участия в {} для {}'.format(
+            self.school_to_check_participation.name, self.school.name)
+
+    def is_visible(self, user):
+        return not self.is_passed(user)
+
+    def is_passed(self, user):
+        return (
+            user.school_participations
+            .filter(school=self.school_to_check_participation)
+            .exists()
+        ) or (
+            self.exceptions
+            .filter(user_id=user.id)
+            .exists()
+        )
+
+    def build(self, user):
+        block = super().build(user)
+        # block may be equal to None if it's invisible to the current user
+        if block is not None:
+            block.school_to_check_participation = (
+                self.school_to_check_participation)
+        return block
+
+
+class UserParticipatedInSchoolEntranceStepException(models.Model):
+    """
+    Exception for UserParticipatedInSchoolEntranceStep. For the specified user
+    the step considered passed regardless of the participation in the
+    corresponding school.
+    """
+    step = models.ForeignKey(
+        'UserParticipatedInSchoolEntranceStep',
+        on_delete=models.CASCADE,
+        related_name='exceptions',
+        help_text='Шаг, для которого предназначено данное исключение',
+    )
+
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='+',
+        help_text='Пользователь, для которого шаг считается выполненным, даже '
+                  'если он не участвовал в соответствующей школе',
+    )
+
+    def __str__(self):
+        return (
+            'Исключение для пользователя {} в шаге проверки участия в {} для {}'
+            .format(self.user,
+                    self.step.school_to_check_participation.name,
+                    self.step.school.name)
+        )

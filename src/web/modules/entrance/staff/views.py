@@ -3,47 +3,69 @@ import operator
 import random
 
 from django.contrib import messages
-from django.core.urlresolvers import reverse
+from django.core import urlresolvers
 from django.db import transaction
+from django.db.models import F
 from django.http.response import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+import django.urls
+from django.utils.http import is_safe_url
 
+from frontend.table.utils import A, TableDataSource
+from modules.ejudge import models as ejudge_models
+from modules.entrance import models
+from modules.entrance import upgrades
+from modules.entrance import utils
+from modules.entrance.staff import forms
+from sistema.helpers import group_by, respond_as_attachment, nested_query_list
+from users import search_utils
 import frontend.icons
 import frontend.table
 import modules.topics.views as topics_views
 import questionnaire.models
 import questionnaire.views
-import schools.models
 import sistema.staff
 import users.models
 import users.views
-from modules.ejudge.models import CheckingResult
-from sistema.helpers import group_by, respond_as_attachment, nested_query_list
-from . import forms
-from .. import groups as entrance_groups
 from .. import helpers
-from .. import models
-from .. import upgrades
-import groups.decorators
 
 
 class EnrollingUsersTable(frontend.table.Table):
-    icon = frontend.icons.FaIcon('envelope-o')
+    name = frontend.table.LinkColumn(
+        accessor='get_full_name',
+        verbose_name='Имя',
+        order_by=('profile.last_name',
+                  'profile.first_name',
+                  'profile.middle_name'),
+        search_in=('profile.first_name',
+                   'profile.middle_name',
+                   'profile.last_name'),
+        viewname='school:entrance:enrolling_user',
+        args=[A('school_short_name'), A('id')])
 
-    title = 'Подавшие заявку'
+    email = frontend.table.EmailColumn(
+        accessor='email',
+        orderable=True,
+        searchable=True,
+        verbose_name='Почта')
 
-    def __init__(self, school, users_ids):
-        super().__init__(users.models.User, users.models.User.objects.filter(id__in=users_ids))
-        self.school = school
-        self.identifiers = {'school_name': school.short_name}
+    city = frontend.table.Column(
+        accessor='profile.city',
+        orderable=True,
+        searchable=True,
+        verbose_name='Город')
 
         self.about_questionnaire = questionnaire.models.Questionnaire.objects.filter(short_name='about').first()
         self.enrollee_questionnaire = questionnaire.models.Questionnaire.objects.filter(
             school=self.school,
             short_name='enrollee'
         ).first()
+    school_and_class = frontend.table.Column(
+        accessor='profile',
+        search_in='profile.school_name',
+        verbose_name='Школа и класс')
 
         name_column = frontend.table.SimplePropertyColumn(
             'get_full_name', 'Имя',
@@ -52,91 +74,54 @@ class EnrollingUsersTable(frontend.table.Table):
             frontend.table.StringDataType(),
             lambda user: reverse('school:entrance:enrolling_user', args=(self.school.short_name, user.id))
         )
+    class Meta:
+        icon = frontend.icons.FaIcon('envelope-o')
+        title = 'Подавшие заявку'
+        exportable = True
 
         email_column = frontend.table.SimplePropertyColumn('email', 'Почта')
         email_column.data_type = frontend.table.LinkDataType(
             frontend.table.StringDataType(),
             lambda user: 'mailto:%s' % user.email
         )
+    def __init__(self, school, *args, **kwargs):
+        qs = (users.models.User.objects
+              .filter(entrance_statuses__school=school)
+              .exclude(entrance_statuses__status=
+                       models.EntranceStatus.Status.NOT_PARTICIPATED)
+              .annotate(school_short_name=F('entrance_statuses__school'
+                                            '__short_name'))
+              .select_related('profile'))
+        super().__init__(
+            qs,
+            django.urls.reverse('school:entrance:enrolling_data',
+                                args=[school.short_name]),
+            *args, **kwargs)
 
-        self.columns = (name_column,
-                        email_column,
-                        frontend.table.SimpleFuncColumn(self.city, 'Город'),
-                        frontend.table.SimpleFuncColumn(self.school_and_class, 'Школа и класс')
-                        )
+    def render_school_and_class(self, value):
+        parts = []
+        if value.school_name:
+            parts.append(value.school_name)
+        if value.current_class is not None:
+            parts.append(str(value.current_class) + ' класс')
+        return ', '.join(parts)
 
-    # TODO: bad architecture :(
-    # We need to define create for calling .after_filter_applying() without any filter.
-    # Need refactoring
-    @classmethod
-    def create(cls, school):
-        users_ids = helpers.get_enrolling_users_ids(school)
-        table = cls(school, users_ids)
-        table.after_filter_applying()
-        return table
-
-    def after_filter_applying(self):
-        # TODO: use only id's via .values_list('id', flat=True)?
-        filtered_users = list(self.paged_queryset)
-
-        self.about_questionnaire_answers = group_by(
-                questionnaire.models.QuestionnaireAnswer.objects.filter(
-                        questionnaire=self.about_questionnaire,
-                        user__in=filtered_users
-                ),
-                operator.attrgetter('user_id')
-        )
-
-        self.enrollee_questionnaire_answers = group_by(
-                questionnaire.models.QuestionnaireAnswer.objects.filter(
-                        questionnaire=self.enrollee_questionnaire,
-                        user__in=filtered_users
-                ),
-                operator.attrgetter('user_id')
-        )
-
-    def get_header(self):
+    def search_column_name(self, qs, query):
         pass
-
-    @classmethod
-    def restore(cls, identifiers):
-        school_name = identifiers['school_name'][0]
-        school_qs = schools.models.School.objects.filter(short_name=school_name)
-        if not school_qs.exists():
-            raise NameError('Bad school name')
-        _school = school_qs.first()
-        users_ids = helpers.get_enrolling_users_ids(_school)
-        return cls(_school, users_ids)
-
-    @staticmethod
-    def _get_questionnaire_answer(questionnaire_answers, field):
-        for answer in questionnaire_answers:
-            if answer.question_short_name == field:
-                return answer.answer
-        return ''
-
-    def _get_user_about_field(self, user, field):
-        return self._get_questionnaire_answer(self.about_questionnaire_answers[user.id], field)
-
-    def _get_user_enrollee_field(self, user, field):
-        return self._get_questionnaire_answer(self.enrollee_questionnaire_answers[user.id], field)
-
-    def city(self, user):
-        return self._get_user_about_field(user, 'city')
-
-    def school_and_class(self, user):
-        user_school = self._get_user_about_field(user, 'school')
-        user_class = self._get_user_enrollee_field(user, 'class')
-        if user_school == '':
-            return '%s класс' % user_class
-        return '%s, %s класс' % (user_school, user_class)
 
 
 @sistema.staff.only_staff
-@groups.decorators.only_for_groups(entrance_groups.admins)
 def enrolling(request):
-    users_table = EnrollingUsersTable.create(request.school)
-    return render(request, 'entrance/staff/enrolling.html', {'users_table': users_table})
+    users_table = EnrollingUsersTable(request.school)
+    frontend.table.RequestConfig(request).configure(users_table)
+    return render(
+        request, 'entrance/staff/enrolling.html', {'users_table': users_table})
+
+
+@sistema.staff.only_staff
+def enrolling_data(request):
+    users_table = EnrollingUsersTable(request.school)
+    return TableDataSource(users_table).get_response(request)
 
 
 @sistema.staff.only_staff
@@ -197,18 +182,21 @@ def check(request):
 
 
 class UserSummary:
-    def __init__(self, class_number, school, city, previous_parallels, a_ml):
+    def __init__(self, class_number, school, city, previous_parallels, a_ml, entrance_reason_text, entrance_statuses):
         self.class_number = class_number
         self.school = school
         self.city = city
         self.previous_parallels = previous_parallels
         self.a_ml = a_ml
+        self.entrance_reason_text = entrance_reason_text
+        self.entrance_statuses = entrance_statuses
 
     @classmethod
-    def get_answer(cls, user, answer_model, question_short_name):
+    def get_answer(cls, user, school, answer_model, question_short_name):
         answer = answer_model.objects.filter(
-                user=user,
-                question_short_name=question_short_name
+            user=user,
+            questionnaire__school=school,
+            question_short_name=question_short_name
         ).first()
         return answer.answer if answer is not None else None
 
@@ -224,9 +212,12 @@ class UserSummary:
             school_name = user.profile.school_name
             city = user.profile.city
         else:
-            class_number = 'N/A'
-            school_name = 'N/A'
-            city = 'N/A'
+            class_number = cls.get_answer(user, school, AnswerModel, 'class')
+            school_name = cls.get_answer(user, school, AnswerModel, 'school')
+            city = cls.get_answer(user, school, AnswerModel, 'city')
+
+        entrance_reason_id = cls.get_answer(user, school, AnswerModel, 'entrance_reason')
+        entrance_reason_text = variant_by_id[entrance_reason_id].text if entrance_reason_id else None
 
         prev_parallel_answers = AnswerModel.objects.filter(
             user=user,
@@ -242,57 +233,78 @@ class UserSummary:
             question_short_name='a_ml'
         ).exists()
 
-        return cls(class_number, school_name, city, previous_parallels, a_ml)
+        entrance_statuses = list(models.EntranceStatus.objects.filter(user=user))
+
+        return cls(class_number, school_name, city, previous_parallels, a_ml, entrance_reason_text, entrance_statuses)
+
+
+def _find_clones(user):
+    if not hasattr(user, 'profile'):
+        return []
+    similar_accounts = search_utils.SimilarAccountSearcher(user.profile).search(strict=False)
+    return [similar_user for similar_user in similar_accounts if user.id != similar_user.id]
 
 
 def check_user(request, user, group=None):
-    entrance_exam = models.EntranceExam.objects.filter(school=request.school).first()
-    base_entrance_level = upgrades.get_base_entrance_level(request.school, user)
-    level_upgrades = models.EntranceLevelUpgrade.objects.filter(
-        upgraded_to__school=request.school,
-        user=user
-    )
-    tasks = upgrades.get_entrance_tasks(
-        request.school,
-        user,
-        base_entrance_level
-    )
-    tasks_solutions = group_by(
-        user.entrance_exam_solutions.filter(task__exam=entrance_exam).order_by('-created_at'),
-        operator.attrgetter('task_id')
-    )
-
-    for task in tasks:
-        task.user_solutions = tasks_solutions[task.id]
-        task.is_solved = task.is_solved_by_user(user)
-        if type(task) is models.TestEntranceExamTask:
-            if len(task.user_solutions) > 0:
-                task.last_try = task.user_solutions[0].solution
-                task.is_last_correct = task.check_solution(task.last_try)
-            else:
-                task.last_try = None
-                task.is_last_correct = None
-        if type(task) is models.FileEntranceExamTask:
-            if len(task.user_solutions) > 0:
-                task.last_solution = task.user_solutions[0]
-                task.checks = list(task.last_solution.checks.all())
-            else:
-                task.last_solution = None
-                task.checks = []
-
-    test_tasks = list(filter(
-        lambda t: type(t) is models.TestEntranceExamTask, tasks
-    ))
-    file_tasks = list(filter(
-        lambda t: type(t) is models.FileEntranceExamTask, tasks
-    ))
-    program_tasks = list(filter(
-        lambda t: isinstance(t, models.EjudgeEntranceExamTask), tasks
-    ))
+    entrance_exam = (
+        models.EntranceExam.objects.filter(school=request.school).first())
 
     move_into_checking_group_form = forms.MoveIntoCheckingGroupForm(request.school)
 
-    checking_comments = user.entrance_checking_comments.filter(school=request.school).order_by('created_at')
+    checking_comments = user.entrance_checking_comments.filter(
+        school=request.school
+    ).order_by('created_at')
+
+    add_checking_comment_form = forms.AddCheckingCommentForm()
+
+    base_entrance_level = None
+    level_upgrades = []
+    test_tasks = []
+    file_tasks = []
+    program_tasks = []
+    if entrance_exam is not None:
+        base_entrance_level = upgrades.get_base_entrance_level(request.school, user)
+        level_upgrades = models.EntranceLevelUpgrade.objects.filter(
+            upgraded_to__school=request.school,
+            user=user
+        )
+        tasks = upgrades.get_entrance_tasks(
+            request.school,
+            user,
+            base_entrance_level
+        )
+        tasks_solutions = group_by(
+            user.entrance_exam_solutions.filter(task__exam=entrance_exam).order_by('-created_at'),
+            operator.attrgetter('task_id')
+        )
+
+        for task in tasks:
+            task.user_solutions = tasks_solutions[task.id]
+            task.is_solved = task.is_solved_by_user(user)
+            if type(task) is models.TestEntranceExamTask:
+                if len(task.user_solutions) > 0:
+                    task.last_try = task.user_solutions[0].solution
+                    task.is_last_correct = task.check_solution(task.last_try)
+                else:
+                    task.last_try = None
+                    task.is_last_correct = None
+            if type(task) is models.FileEntranceExamTask:
+                if len(task.user_solutions) > 0:
+                    task.last_solution = task.user_solutions[0]
+                    task.checks = list(task.last_solution.checks.all())
+                else:
+                    task.last_solution = None
+                    task.checks = []
+
+        test_tasks = list(filter(
+            lambda t: type(t) is models.TestEntranceExamTask, tasks
+        ))
+        file_tasks = list(filter(
+            lambda t: type(t) is models.FileEntranceExamTask, tasks
+        ))
+        program_tasks = list(filter(
+            lambda t: isinstance(t, models.EjudgeEntranceExamTask), tasks
+        ))
 
     return render(request, 'entrance/staff/check_user.html', {
         'group': group,
@@ -305,12 +317,11 @@ def check_user(request, user, group=None):
         'program_tasks': program_tasks,
 
         'checking_comments': checking_comments,
+        'add_checking_comment_form': add_checking_comment_form,
         'move_into_checking_group_form': move_into_checking_group_form,
 
-        'user_summary': UserSummary.summary_for_user(
-            request.school,
-            user
-        ),
+        'user_summary': UserSummary.summary_for_user(request.school, user),
+        'clone_accounts': _find_clones(user)
     })
 
 
@@ -679,6 +690,7 @@ def check_users_task(request, task_id, user_id, group_name=None):
     )
 
     move_into_checking_group_form = forms.MoveIntoCheckingGroupForm(request.school)
+    add_checking_comment_form = forms.AddCheckingCommentForm()
 
     return render(request, 'entrance/staff/check_users_task.html', {
         'group': group,
@@ -694,6 +706,7 @@ def check_users_task(request, task_id, user_id, group_name=None):
         'checks': checks,
         'last_mark': last_mark,
         'checking_comments': checking_comments,
+        'add_checking_comment_form': add_checking_comment_form,
 
         'move_into_checking_group_form': move_into_checking_group_form,
         'mark_form': mark_form
@@ -732,10 +745,38 @@ def solution(request, solution_id):
     return HttpResponseNotFound()
 
 
+@sistema.staff.only_staff
+@require_POST
+def add_comment(request, user_id):
+    redirect_url = request.POST.get('next', '')
+    if not is_safe_url(redirect_url, request.get_host()):
+        redirect_url = urlresolvers.reverse('school:entrance:enrolling_user', kwargs={
+            'school_name': request.school.short_name,
+            'user_id': user_id,
+        })
+
+    form = forms.AddCheckingCommentForm(data=request.POST)
+    if form.is_valid():
+        models.CheckingComment.objects.create(
+            school=request.school,
+            user_id=user_id,
+            comment=form.cleaned_data['comment'],
+            commented_by=request.user,
+        )
+    else:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            form['comment'].errors[0]
+        )
+
+    return redirect(redirect_url)
+
+
 def _get_ejudge_task_accepted_solutions(school, solution_model):
     return solution_model.objects.filter(
         task__exam__school=school,
-        ejudge_queue_element__submission__result__result=CheckingResult.Result.OK
+        ejudge_queue_element__submission__result__result=ejudge_models.CheckingResult.Result.OK
     )
 
 

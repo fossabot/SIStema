@@ -34,7 +34,9 @@
 
 {% block content %}
     <div class="mtn5 mb15">
-        Выданы задания уровня <span class="label label-sm label-{{ level_upgrades|yesno:'primary,success' }}">{{ base_entrance_level.name }}</span>
+        {% if base_entrance_level %}
+            Выданы задания уровня <span class="label label-sm label-{{ level_upgrades|yesno:'primary,success' }}">{{ base_entrance_level.name }}</span>
+        {% endif %}
         {% if level_upgrades %}
             , повышения до
             {% for upgrade in level_upgrades %}
@@ -45,6 +47,17 @@
             {% endfor %}
         {% endif %}
     </div>
+
+    {% if clone_accounts %}
+        <div class="alert alert-micro alert-danger">
+            <b>Клоны:</b>
+            {% for clone in clone_accounts %}
+                <a href="{% url 'school:entrance:enrolling_user' request.school.short_name clone.id %}">
+                    {{ clone.get_full_name }}
+                </a>{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <div class="row">
         <div class="col-md-4 col-sm-6 col-xs-12">
@@ -79,6 +92,7 @@
                                                     <h4>
                                                         {{ forloop.revcounter }}. {{ solution.created_at }}
                                                     </h4>
+
                                                     <div class="mb10">
                                                         <span class="{{ solution.is_correct|yesno:'text-success,text-danger' }}">{{ solution.solution }}</span>
                                                     </div>
@@ -194,7 +208,21 @@
                             <b>Не был в ЛКШ</b>
                         {% endif %}
                     </div>
+                    {% if user_summary.entrance_reason_text %}
+                        <div>
+                            <b>Основание для поступления:</b> {{ user_summary.entrance_reason_text }}
+                        </div>
+                    {% endif %}
                     <div><b>Хочет в A-ML:</b> {{ user_summary.a_ml|yesno:"Да,Нет" }}</div>
+                    {% if user_summary.entrance_statuses %}
+                        <div>
+                            <b>История:</b>
+                            {% for status in user_summary.entrance_statuses %}
+                                <a href="{% url 'school:entrance:enrolling_user' status.school.short_name user_for_checking.id %}">{{ status.school.name }}</a>:
+                                {{ status.is_enrolled|yesno:"зачислен,не зачислен" }}(а){% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -233,6 +261,15 @@
                             {% endif %}
                         </div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-heading">
+                    <span class="panel-title">Комментарии</span>
+                </div>
+                <div class="panel-body pt5">
+                    {% include 'entrance/staff/_checking_comments.html' with user=user_for_checking %}
                 </div>
             </div>
 

@@ -24,7 +24,6 @@ class ChoiceQuestionField(forms.Field):
                 qs = self.question.variants.filter(id=initial, disable_question_if_chosen=True)
             if qs.exists():
                 self.disabled = True
-                self.widget.attrs['disabled'] = True
 
 
 class TypedMultipleChoiceFieldForChoiceQuestion(ChoiceQuestionField, forms.TypedMultipleChoiceField):
@@ -33,3 +32,12 @@ class TypedMultipleChoiceFieldForChoiceQuestion(ChoiceQuestionField, forms.Typed
 
 class TypedChoiceFieldForChoiceQuestion(ChoiceQuestionField, forms.TypedChoiceField):
     pass
+
+
+class QuestionnaireTypingDynamicsForm(forms.Form):
+    prefix = 'typing-dynamics'
+
+    # TODO(artemtab): look into compressing data before sending
+    # We send about 100 characters for each keypress
+    typing_data = forms.CharField(max_length=10000 * 100,
+                                  widget=forms.HiddenInput())

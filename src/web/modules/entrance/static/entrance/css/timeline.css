@@ -38,7 +38,8 @@
     color: #9196a2;
 }
 
-.entrance-timeline__block.without-background .entrance-timeline__block__header {
+.entrance-timeline__block.without-background .entrance-timeline__block__header,
+.entrance-timeline__block.without-background .entrance-timeline__block__header:hover {
     color: #505563;
     background: none;
 }
@@ -53,7 +54,11 @@
     padding-bottom: 0;
 }
 
-.entrance-timeline__block:not(.not-available):not(.done) .entrance-timeline__block__content {
+.entrance-timeline__block.without-background .entrance-timeline__block__text {
+    padding-top: 0;
+}
+
+.entrance-timeline__block:not(.not-available):not(.done):not(.without-background) .entrance-timeline__block__content {
     background-color: #eaf2ff;
 }
 

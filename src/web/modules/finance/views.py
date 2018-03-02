@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 
-from . import models
 from . import documents
+from . import models
 
 
 @login_required
@@ -15,6 +15,7 @@ def download(request, document_type):
     response = HttpResponse(content_type='application/pdf')
     filename = '%s. %s' % (request.school.full_name, document_type.name)
     response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % (filename, )
+    response['Content-Type'] = 'application/pdf'
     response.write(document)
 
     return response

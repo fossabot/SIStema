@@ -13,10 +13,19 @@ class Discount(models.Model):
         PARTNER = djchoices.ChoiceItem(2, 'Скидка от партнёра')
         STATE = djchoices.ChoiceItem(3, 'Скидка от государства')
         OLYMPIADS = djchoices.ChoiceItem(4, 'Олимпиадная скидка')
+        ORGANIZATION = djchoices.ChoiceItem(5, 'Частичная оплата от организации')
 
-    school = models.ForeignKey(schools.models.School, related_name='+')
+    school = models.ForeignKey(
+        schools.models.School,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
-    user = models.ForeignKey(users.models.User, related_name='discounts')
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='discounts',
+    )
 
     type = models.PositiveIntegerField(choices=Type.choices, validators=[Type.validator])
 

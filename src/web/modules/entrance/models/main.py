@@ -18,7 +18,11 @@ class EntranceExamTask(polymorphic.models.PolymorphicModel):
 
     text = models.TextField(help_text='Формулировка задания')
 
-    exam = models.ForeignKey('EntranceExam', related_name='%(class)s')
+    exam = models.ForeignKey(
+        'EntranceExam',
+        on_delete=models.CASCADE,
+        related_name='%(class)s',
+    )
 
     help_text = models.CharField(
         max_length=100,
@@ -209,6 +213,7 @@ class EntranceExam(models.Model):
     school = models.OneToOneField(
         schools.models.School,
         on_delete=models.CASCADE,
+        related_name='entrance_exam',
     )
 
     close_time = models.DateTimeField(blank=True, default=None, null=True)
@@ -234,7 +239,7 @@ class EntranceLevel(models.Model):
     на основе тематической анкеты из модуля topics, класса в школе
     или учёбы в других параллелях в прошлые годы)
     """
-    school = models.ForeignKey(schools.models.School)
+    school = models.ForeignKey(schools.models.School, on_delete=models.CASCADE)
 
     short_name = models.CharField(
         max_length=100,
@@ -246,7 +251,11 @@ class EntranceLevel(models.Model):
 
     order = models.IntegerField(default=0)
 
-    tasks = models.ManyToManyField(EntranceExamTask, blank=True)
+    tasks = models.ManyToManyField(
+        EntranceExamTask,
+        blank=True,
+        related_name='entrance_levels',
+    )
 
     def __str__(self):
         return 'Уровень «%s» для %s' % (self.name, self.school)
@@ -271,12 +280,23 @@ class EntranceLevelOverride(models.Model):
     """
     If present this level is used instead of dynamically computed one.
     """
-    school = models.ForeignKey(schools.models.School, related_name='+')
+    school = models.ForeignKey(
+        schools.models.School,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
-    user = models.ForeignKey(users.models.User,
-                             related_name='entrance_level_overrides')
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='entrance_level_overrides',
+    )
 
-    entrance_level = models.ForeignKey(EntranceLevel, related_name='overrides')
+    entrance_level = models.ForeignKey(
+        EntranceLevel,
+        on_delete=models.CASCADE,
+        related_name='overrides',
+    )
 
     class Meta:
         unique_together = ('school', 'user')
@@ -295,12 +315,14 @@ class EntranceLevelOverride(models.Model):
 class EntranceExamTaskSolution(polymorphic.models.PolymorphicModel):
     task = models.ForeignKey(
         EntranceExamTask,
-        related_name='solutions'
+        on_delete=models.CASCADE,
+        related_name='solutions',
     )
 
     user = models.ForeignKey(
         users.models.User,
-        related_name='entrance_exam_solutions'
+        on_delete=models.CASCADE,
+        related_name='entrance_exam_solutions',
     )
 
     solution = models.TextField()
@@ -333,7 +355,10 @@ class FileEntranceExamTaskSolution(EntranceExamTaskSolution):
 
 
 class EjudgeEntranceExamTaskSolution(EntranceExamTaskSolution):
-    ejudge_queue_element = models.ForeignKey(modules.ejudge.models.QueueElement)
+    ejudge_queue_element = models.ForeignKey(
+        modules.ejudge.models.QueueElement,
+        on_delete=models.CASCADE,
+    )
 
     @property
     def is_checked(self):
@@ -349,7 +374,11 @@ class EjudgeEntranceExamTaskSolution(EntranceExamTaskSolution):
 
 
 class ProgramEntranceExamTaskSolution(EjudgeEntranceExamTaskSolution):
-    language = models.ForeignKey(modules.ejudge.models.ProgrammingLanguage)
+    language = models.ForeignKey(
+        modules.ejudge.models.ProgrammingLanguage,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
 
 class OutputOnlyEntranceExamTaskSolution(EjudgeEntranceExamTaskSolution):
@@ -357,15 +386,26 @@ class OutputOnlyEntranceExamTaskSolution(EjudgeEntranceExamTaskSolution):
 
 
 class EntranceLevelUpgrade(models.Model):
-    user = models.ForeignKey(users.models.User)
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+    )
 
-    upgraded_to = models.ForeignKey(EntranceLevel, related_name='+')
+    upgraded_to = models.ForeignKey(
+        EntranceLevel,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class EntranceLevelUpgradeRequirement(polymorphic.models.PolymorphicModel):
-    base_level = models.ForeignKey(EntranceLevel, related_name='+')
+    base_level = models.ForeignKey(
+        EntranceLevel,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -375,7 +415,11 @@ class EntranceLevelUpgradeRequirement(polymorphic.models.PolymorphicModel):
 
 
 class SolveTaskEntranceLevelUpgradeRequirement(EntranceLevelUpgradeRequirement):
-    task = models.ForeignKey(EntranceExamTask, related_name='+')
+    task = models.ForeignKey(
+        EntranceExamTask,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     def is_met_by_user(self, user):
         return self.task.is_solved_by_user(user)
@@ -384,10 +428,15 @@ class SolveTaskEntranceLevelUpgradeRequirement(EntranceLevelUpgradeRequirement):
 class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
     school = models.ForeignKey(
         schools.models.School,
-        related_name='absences_reasons'
+        on_delete=models.CASCADE,
+        related_name='absence_reasons'
     )
 
-    user = models.ForeignKey(users.models.User, related_name='absences_reasons')
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='absence_reasons',
+    )
 
     private_comment = models.TextField(
         blank=True,
@@ -401,11 +450,17 @@ class AbstractAbsenceReason(polymorphic.models.PolymorphicModel):
 
     created_by = models.ForeignKey(
         users.models.User,
+        on_delete=models.CASCADE,
         related_name='+',
-        null=True, default=None, blank=True
+        null=True,
+        default=None,
+        blank=True,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Absence reason'
 
     @classmethod
     def for_user_in_school(cls, user, school):
@@ -442,26 +497,38 @@ class EntranceStatus(models.Model):
         NOT_ENROLLED = djchoices.ChoiceItem(3, 'Не прошёл по конкурсу')
         ENROLLED = djchoices.ChoiceItem(4, 'Поступил')
         PARTICIPATING = djchoices.ChoiceItem(5, 'Подал заявку')
+        IN_RESERVE_LIST = djchoices.ChoiceItem(6, 'В резервном списке')
 
     school = models.ForeignKey(
         schools.models.School,
-        related_name='entrance_statuses'
+        on_delete=models.CASCADE,
+        related_name='entrance_statuses',
     )
 
     user = models.ForeignKey(
         users.models.User,
-        related_name='entrance_statuses'
+        on_delete=models.CASCADE,
+        related_name='entrance_statuses',
     )
 
     # created_by=None means system's auto creating
     created_by = models.ForeignKey(
         users.models.User,
-        blank=True, null=True, default=None
+        on_delete=models.CASCADE,
+        related_name='+',
+        blank=True,
+        null=True,
+        default=None,
     )
 
     public_comment = models.TextField(
         help_text='Публичный комментарий. Может быть виден поступающему',
-        blank=True
+        blank=True,
+    )
+
+    private_comment = models.TextField(
+        help_text='Приватный комментарий. Виден только админам вступительной',
+        blank=True,
     )
 
     is_status_visible = models.BooleanField(default=False)
@@ -472,12 +539,18 @@ class EntranceStatus(models.Model):
 
     session = models.ForeignKey(
         schools.models.Session,
-        blank=True, null=True, default=None
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        default=None,
     )
 
     parallel = models.ForeignKey(
         schools.models.Parallel,
-        blank=True, null=True, default=None
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        default=None,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -487,6 +560,10 @@ class EntranceStatus(models.Model):
     @property
     def is_enrolled(self):
         return self.status == self.Status.ENROLLED
+
+    @property
+    def is_in_reserve_list(self):
+        return self.status == self.Status.IN_RESERVE_LIST
 
     @classmethod
     def create_or_update(cls, school, user, status, **kwargs):

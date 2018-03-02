@@ -98,6 +98,16 @@ class StudyGroup(models.Model):
         help_text='Название'
     )
 
+    schools_group = models.OneToOneField(
+        schools.models.Group,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='poldnev_group',
+        help_text='Группа из модуля schools, соответствующая этой группе на '
+                  'poldnev.ru'
+    )
+
     def __str__(self):
         return '{} {}'.format(self.parallel, self.name)
 

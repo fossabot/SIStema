@@ -3,6 +3,9 @@
 from django.core import urlresolvers
 from django.db import models
 import django.utils.dateformat
+
+from constance import config
+
 import users.models
 
 
@@ -44,9 +47,26 @@ class School(models.Model):
         return urlresolvers.reverse('school:index',
                                     kwargs={'school_name': self.short_name})
 
+    def get_staff_url(self):
+        # TODO(Artem Tabolin): looks like schools app should know nothing about
+        #                      school namespace.
+        return urlresolvers.reverse('school:staff',
+                                    kwargs={'school_name': self.short_name})
+
+    def get_user_url(self):
+        # TODO(Artem Tabolin): looks like schools app should know nothing about
+        #                      school namespace.
+        return urlresolvers.reverse('school:user',
+                                    kwargs={'school_name': self.short_name})
+
+    @classmethod
+    def get_current_school(cls):
+        return cls.objects.get(
+            short_name=config.SISTEMA_CURRENT_SCHOOL_SHORT_NAME)
+
 
 class Session(models.Model):
-    school = models.ForeignKey(School)
+    school = models.ForeignKey(School, on_delete=models.CASCADE)
 
     name = models.CharField(
         max_length=50,
@@ -99,7 +119,11 @@ class Session(models.Model):
 
 
 class Parallel(models.Model):
-    school = models.ForeignKey(School, related_name='parallels')
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name='parallels',
+    )
 
     short_name = models.CharField(
         max_length=100,
@@ -117,14 +141,63 @@ class Parallel(models.Model):
         return '%s.%s' % (self.school.name, self.name)
 
 
+class Group(models.Model):
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='groups',
+    )
+
+    parallel = models.ForeignKey(
+        Parallel,
+        on_delete=models.CASCADE,
+        related_name='groups',
+    )
+
+    short_name = models.CharField(
+        max_length=100,
+        help_text='Используется в урлах. Лучше обойтись латинскими буквами, '
+                  'цифрами и подчёркиванием. Например, c5.')
+
+    name = models.CharField(max_length=100, help_text='Например, C5')
+
+    class Meta:
+        unique_together = ('session', 'parallel', 'short_name')
+
+    def __str__(self):
+        return '{}.{}'.format(self.session, self.name)
+
+    def save(self, *args, **kwargs):
+        if self.parallel.school_id != self.session.school_id:
+            raise ValueError(
+                'Error while saving study group: parallel ({}) and session '
+                '({}) should belong to the same school.'
+                .format(self.parallel, self.session)
+            )
+        super().save(*args, **kwargs)
+
+
 class SchoolParticipant(models.Model):
-    school = models.ForeignKey(School, related_name='participants')
+    school = models.ForeignKey(
+        School,
+        on_delete=models.CASCADE,
+        related_name='participants',
+    )
 
-    user = models.ForeignKey(users.models.User,
-                             related_name='school_participations')
+    user = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='school_participations',
+    )
 
-    parallel = models.ForeignKey(Parallel, null=True,
-                                 related_name='participants')
+    parallel = models.ForeignKey(
+        Parallel,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='participants',
+    )
+
     # TODO: Add group
 
     class Meta:

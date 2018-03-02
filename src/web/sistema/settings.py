@@ -2,33 +2,34 @@
 Django settings for sistema project.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/1.8/topics/settings/
+https://docs.djangoproject.com/en/1.10/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.8/ref/settings/
+https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import datetime
-from django.utils import timezone
 
-from sistema.local_settings import *
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '&2_k-9xguisgilttn3^akg2v0@%8&d8_l)g_5_yha0yvxll^)%'
+# SECURITY WARNING: keep the secret key used in production secret! Override it's
+#                   value in local_settings.py.
+SECRET_KEY = 'dummy secret key for the dev environment'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production! Override it
+#                   in local_settings.py.
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# TODO: remove after sorl-thumbnail>12.4a1 is released on pip.
+# This setting is removed from django but still referenced by sorl-thumbnail
+# which is the dependency of wiki.plugins.images. The issue is already fixed,
+# but not released on pip. See
+# https://github.com/jazzband/sorl-thumbnail/issues/476 for more details.
+TEMPLATE_DEBUG = DEBUG
 
-ADMINS = [('Андрей Гейн', 'andgein@yandex.ru')]
-
-SERVER_EMAIL = 'admin@sistema.lksh.ru'
 
 # Application definition
 
@@ -42,9 +43,10 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.humanize',
+    'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
 
     # External django modules
@@ -58,11 +60,24 @@ INSTALLED_APPS = (
     'polymorphic',
     'constance',
     'constance.backends.database',
+    'django_tables2',
+    'django_nyt',
+    'mptt',
+    'sekizai',
+    'sorl.thumbnail',
+    'wiki',
+    'wiki.plugins.attachments',
+    'wiki.plugins.help',
+    'wiki.plugins.images',
+    'wiki.plugins.links',
+    'wiki.plugins.macros',
+    'wiki.plugins.notifications',
 
     # Sistema core
-    'sistema',
+    'sistema.apps.SistemaConfig',
 
     # Sistema core modules
+    'dates',
     'frontend',
     'generator',
     'home',
@@ -123,6 +138,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django_settings_export.settings_export',
 
+                'sekizai.context_processors.sekizai',
+
                 'sistema.staff.staff_context_processor',
             ],
         },
@@ -162,6 +179,16 @@ DATABASES = {
 }
 
 
+# Cache
+
+if DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -186,6 +213,20 @@ STATICFILES_DIRS = [
 ]
 
 
+# Wiki
+MEDIA_URL = '/media/'
+WIKI_ACCOUNT_HANDLING = False
+WIKI_ANONYMOUS = False
+
+def WIKI_CAN_READ(article, user):
+    return user.is_staff
+
+# Disable check on page creation whether it's address already used by non-wiki
+# urls. It needs to be disabled because any address conflicts with
+# /<school_short_name>/... pattern as school_short_name can be equal to "wiki".
+WIKI_CHECK_SLUG_URL_AVAILABLE = False
+
+
 DATE_INPUT_FORMATS = (
     '%d.%m.%Y', '%d.%m.%Y', '%d.%m.%y',  # '25.10.2006', '25.10.2006', '25.10.06'
     '%d-%m-%Y', '%d/%m/%Y', '%d/%m/%y',  # '25-10-2006', '25/10/2006', '25/10/06'
@@ -204,6 +245,13 @@ if not os.path.exists(SISTEMA_UPLOAD_FILES_DIR):
 else:
     if not os.path.isdir(SISTEMA_UPLOAD_FILES_DIR):
         raise Exception('Upload directory (SISTEMA_UPLOAD_FILES_DIR) exists but is not a folder')
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+if not os.path.exists(MEDIA_ROOT):
+    os.mkdir(MEDIA_ROOT)
+else:
+    if not os.path.isdir(MEDIA_ROOT):
+        raise Exception('Upload directory (MEDIA_ROOT) exists but is not a folder')
 
 
 SISTEMA_GENERATOR_FONTS_DIR = os.path.join(SISTEMA_UPLOAD_FILES_DIR, 'generator-fonts')
@@ -279,8 +327,17 @@ SETTINGS_EXPORT = [
 ]
 
 
-"""For migration: to create SocialApp model"""
+# For migration: to create SocialApp model
 SOCIAL_AUTH_VK_OAUTH2_KEY = '2888774'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'xO6ka9PBnhNunuUyfx5f'
 SOCIAL_AUTH_TWITTER_KEY = 'a4XGu2XP4DZE7DAqphTZfdltj'
 SOCIAL_AUTH_TWITTER_SECRET = 'DRakQj6dslpLSG2ceoZRrkHF8uh4dGnlMia55cHt9fuuRrNiYs'
+
+
+# Override settings defined above with settings from local_settings.py
+try:
+    from sistema.local_settings import *
+except ImportError as e:
+    import logging
+    logging.getLogger(__name__).warning(
+        'WARNING: No local settings found. Using default values.')

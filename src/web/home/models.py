@@ -6,7 +6,9 @@ import schools.models
 
 class AbstractHomePageBlock(polymorphic.models.PolymorphicModel):
     school = models.ForeignKey(
-        schools.models.School, related_name='home_page_blocks'
+        schools.models.School,
+        on_delete=models.CASCADE,
+        related_name='home_page_blocks',
     )
 
     order = models.PositiveIntegerField(
@@ -18,6 +20,9 @@ class AbstractHomePageBlock(polymorphic.models.PolymorphicModel):
 
     # Override it in subclass to include some js files for your block
     js_files = []
+
+    class Meta:
+        verbose_name = 'home page block'
 
     def build(self, request):
         raise NotImplementedError()

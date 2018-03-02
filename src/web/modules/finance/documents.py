@@ -15,6 +15,13 @@ class DocumentGenerator:
             short_name='payment'
         ).first()
 
+        # TODO (andgein): This code should not contain questionnaire short_name
+        if self.payment_questionnaire is None:
+            self.payment_questionnaire = questionnaire.models.Questionnaire.objects.filter(
+                school=self.school,
+                short_name__in=['parent', 'details']
+            ).first()            
+
         self.payment_questions = questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
             questionnaire=self.payment_questionnaire
         )

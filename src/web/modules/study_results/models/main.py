@@ -31,12 +31,22 @@ class StudyResult(models.Model):
 
 
 class AbstractComment(polymorphic.models.PolymorphicModel):
-    study_result = models.ForeignKey(StudyResult, related_name='comments')
+    study_result = models.ForeignKey(
+        StudyResult,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
 
     comment = models.TextField(blank=True)
 
-    created_by = models.ForeignKey(users.models.User, related_name='+',
-                                   null=True, default=None, blank=True)
+    created_by = models.ForeignKey(
+        users.models.User,
+        on_delete=models.CASCADE,
+        related_name='+',
+        null=True,
+        default=None,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -49,12 +59,12 @@ class AbstractComment(polymorphic.models.PolymorphicModel):
 
 class StudyComment(AbstractComment):
     def verbose_type(self):
-        return 'Комментарий по учёбе'
+        return 'Учёба'
 
 
 class SocialComment(AbstractComment):
     def verbose_type(self):
-        return 'Комментарий по внеучебной деятельности'
+        return 'Внеучебная деятельность'
 
 
 class AsWinterParticipantComment(AbstractComment):

@@ -17,7 +17,7 @@
                 {% endwith %}
             </div>
         {% else %}
-            <div class="entrance-status alert alert-micro alert-border-left alert-danger">
+            <div class="entrance-status alert alert-micro alert-border-left {{ entrance_block.entrance_status.is_in_reserve_list|yesno:'alert-warning,alert-danger' }}">
                 {{ entrance_block.entrance_status.message|urlize|linebreaks }}
             </div>
         {% endif %}

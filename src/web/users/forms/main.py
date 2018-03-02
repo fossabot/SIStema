@@ -7,7 +7,7 @@ from allauth.socialaccount import forms as social_account_forms
 from django.core import exceptions as django_exceptions
 from django.utils.translation import ugettext_lazy as _
 from frontend.forms import TextInputWithFaIcon, PasswordInputWithFaIcon, \
-    SistemaRadioSelect
+    SistemaRadioSelect, SistemaCheckboxSelect
 
 from users import models
 from modules.poldnev import forms as poldnev_forms
@@ -181,9 +181,23 @@ class UserProfileForm(forms.Form):
         })
     )
 
+    vk = forms.CharField(
+        required=True,
+        label='Адрес страницы ВКонтакте',
+        max_length=100,
+        help_text='Адрес страницы ВКонтакте нужен нам для оперативной '
+                  'и удобной связи с вами. '
+                  'Если у вас нет страницы, заполните поле прочерком',
+        widget=TextInputWithFaIcon(attrs={
+            'placeholder': 'vk.com/example',
+            'class': 'gui-input',
+            'fa': 'vk',
+        })
+    )
+
     telegram = forms.CharField(
         required=False,
-        label='Ник в Телеграмме',
+        label='Ник в Телеграме',
         max_length=100,
         widget=TextInputWithFaIcon(attrs={
             'placeholder': '@nick',
@@ -226,16 +240,37 @@ class UserProfileForm(forms.Form):
         })
     )
 
-    insurance_number = forms.CharField(
-        label='Номер медицинского полиса',
-        help_text='Только для проживающих в России',
-        required=False,
-        max_length=100,
-        widget=TextInputWithFaIcon(attrs={
-            'class': 'gui-input',
-            'fa': 'file-text-o',
-        })
+    has_accepted_terms = forms.TypedMultipleChoiceField(
+        coerce=bool,
+        choices=[(
+            True,
+            {
+                # TODO (andgein): doesn't hard-code url to the agreement.pdf
+                'label':
+                    'Я даю свое согласие на передачу организатору ЛКШ, НОУ «МЦНМО», '
+                    'анкеты, содержащей мои персональные данные, и согласен с тем, '
+                    'что они будут храниться в НОУ «МЦНМО» и будут использованы '
+                    'в соответствии с Федеральным законом «О персональных данных». '
+                    'Даю согласие на обработку и проверку своего вступительного '
+                    'испытания. Ознакомлен с <a href="/static/users/agreement.pdf">договором присоединения</a>.',
+                'is_html': True,
+             }
+        )],
+        label='Согласие на обработку персональных данных',
+        required=True,
+        widget=SistemaCheckboxSelect()
     )
+
+    def __init__(self, *args, all_fields_are_required=False, **kwargs):
+        if 'initial' in kwargs and 'has_accepted_terms' in kwargs['initial']:
+            # As has_accepted_terms is a ChoiceField,
+            # its value should be a list, not a bool
+            kwargs['initial']['has_accepted_terms'] = \
+                [kwargs['initial']['has_accepted_terms']]
+        super().__init__(*args, **kwargs)
+        if all_fields_are_required:
+            for field_name in models.UserProfile.get_fully_filled_field_names():
+                self.fields[field_name].required = True
 
     def fill_user_profile(self, user):
         if not user.is_authenticated:
@@ -246,7 +281,12 @@ class UserProfileForm(forms.Form):
             user_profile = models.UserProfile(user=user)
         for field_name in user_profile.get_field_names():
             if field_name in self.cleaned_data:
-                setattr(user_profile, field_name, self.cleaned_data.get(field_name))
+                field_value = self.cleaned_data.get(field_name)
+                # has_accepted_terms is a BooleanField in the database, so we need to
+                # transform list to bool
+                if field_name == 'has_accepted_terms':
+                    field_value = field_value[0]
+                setattr(user_profile, field_name, field_value)
         return user_profile
 
 

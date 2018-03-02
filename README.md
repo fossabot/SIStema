@@ -3,8 +3,6 @@ SIStema
 
 Web service for easy Summer Informatic School creation
 
-Most relevant issues are [here](https://github.com/andgein/SIStema/milestone/2)
-
 Start from reading [wiki](https://github.com/andgein/SIStema/wiki)
 
 ## Install

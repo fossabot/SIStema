@@ -131,7 +131,7 @@ class GroupsConfig(AppConfig):
                 group=group,
                 member=member_group,
                 defaults={
-                    'created_by': None,
+                    'added_by': None,
                 }
             )
 

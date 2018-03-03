@@ -7,6 +7,7 @@ import home.models
 import sistema.polymorphic
 
 import users.models
+import groups.admin
 
 
 @admin.register(models.EntranceExamTask)
@@ -156,7 +157,7 @@ class CheckingCommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'school', 'user', 'commented_by', 'comment', 'created_at')
     list_filter = ('school', ('commented_by', admin.RelatedOnlyFieldListFilter))
     search_fields = (
-        'user__profile__first_name', 
+        'user__profile__first_name',
         'user__profile__last_name',
         'user__username')
 
@@ -315,3 +316,8 @@ class ParallelScoreEntranceUserMetricAdmin(PolymorphicChildModelAdmin):
         ParallelScoreEntranceUserMetricFileTaskEntryInline,
         ParallelScoreEntranceUserMetricProgramTaskEntryInline,
     )
+
+
+@admin.register(models.EntranceStatusGroup)
+class EntranceStatusGroupAdmin(groups.admin.AbstractGroupAdmin):
+    base_model = models.EntranceStatusGroup

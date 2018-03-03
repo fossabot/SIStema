@@ -60,7 +60,4 @@ urlpatterns = [
     url(r'^initial/auto_reject/$',
         views.initial_auto_reject,
         name='initial.auto_reject'),
-    url(r'^initial/checking_groups/$',
-        views.initial_checking_groups,
-        name='initial.checking_groups'),
 ]

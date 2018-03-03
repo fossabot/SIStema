@@ -2,6 +2,7 @@ import collections
 import operator
 import random
 
+import django.urls
 from django.contrib import messages
 from django.core import urlresolvers
 from django.db import transaction
@@ -9,26 +10,27 @@ from django.db.models import F
 from django.http.response import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.views.decorators.http import require_POST
-import django.urls
 from django.utils.http import is_safe_url
+from django.views.decorators.http import require_POST
 
-from frontend.table.utils import A, TableDataSource
-from modules.ejudge import models as ejudge_models
-from modules.entrance import models
-from modules.entrance import upgrades
-from modules.entrance import utils
-from modules.entrance.staff import forms
-from sistema.helpers import group_by, respond_as_attachment, nested_query_list
-from users import search_utils
 import frontend.icons
 import frontend.table
+import groups.decorators
 import modules.topics.views as topics_views
 import questionnaire.models
 import questionnaire.views
 import sistema.staff
 import users.models
 import users.views
+from frontend.table.utils import A, TableDataSource
+from modules.ejudge import models as ejudge_models
+from modules.entrance import models
+from modules.entrance import upgrades
+from modules.entrance.staff import forms
+import modules.entrance.groups as entrance_groups
+from sistema.helpers import group_by, respond_as_attachment, nested_query_list
+from users import search_utils
+from .. import helpers
 
 
 class EnrollingUsersTable(frontend.table.Table):
@@ -107,12 +109,14 @@ def enrolling_data(request):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def user_profile(request, user_id):
     user = get_object_or_404(users.models.User, id=user_id)
     return users.views.profile_for_user(request, user)
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def user_questionnaire(request, user_id, questionnaire_name):
     user = get_object_or_404(users.models.User, id=user_id)
     # TODO: use staff interface for showing questionnaire (here, in user_profile() and in user_topics())
@@ -120,6 +124,7 @@ def user_questionnaire(request, user_id, questionnaire_name):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 @topics_views.topic_questionnaire_view
 def user_topics(request, user_id):
     # TODO: check that status of topics questionnaire for this user is FINISHED
@@ -128,6 +133,7 @@ def user_topics(request, user_id):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 @require_POST
 def change_group(request, user_id):
     user = get_object_or_404(users.models.User, id=user_id)
@@ -145,6 +151,7 @@ def _remove_old_checking_locks():
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def check(request):
     _remove_old_checking_locks()
 
@@ -156,11 +163,6 @@ def check(request):
     return render(request, 'entrance/staff/check.html', {
         'checking_groups': checking_groups,
     })
-
-
-@sistema.staff.only_staff
-def results(request):
-    return None
 
 
 class UserSummary:
@@ -308,6 +310,7 @@ def check_user(request, user, group=None):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def check_group(request, group_name):
     group = get_object_or_404(
         models.CheckingGroup,
@@ -342,6 +345,7 @@ def check_group(request, group_name):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def checking_group_users(request, group_name):
     group = get_object_or_404(
         models.CheckingGroup,
@@ -388,6 +392,7 @@ def checking_group_users(request, group_name):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def checking_group_checks(request, group_name):
     group = get_object_or_404(
         models.CheckingGroup,
@@ -419,6 +424,7 @@ def checking_group_checks(request, group_name):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def task_checks(request, group_name, task_id):
     group = get_object_or_404(
         models.CheckingGroup,
@@ -451,6 +457,7 @@ def task_checks(request, group_name, task_id):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def check_task(request, group_name, task_id):
     group = get_object_or_404(
         models.CheckingGroup,
@@ -529,6 +536,7 @@ def check_task(request, group_name, task_id):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def check_users_task(request, task_id, user_id, group_name=None):
     _remove_old_checking_locks()
 
@@ -692,6 +700,7 @@ def check_users_task(request, task_id, user_id, group_name=None):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.admins)
 def enrolling_user(request, user_id):
     user = get_object_or_404(users.models.User, id=user_id)
     _remove_old_checking_locks()
@@ -700,6 +709,7 @@ def enrolling_user(request, user_id):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.can_check)
 def solution(request, solution_id):
     solution = get_object_or_404(models.EntranceExamTaskSolution, id=solution_id)
 
@@ -757,8 +767,9 @@ def _get_ejudge_task_accepted_solutions(school, solution_model):
 
 
 @sistema.staff.only_staff
+@groups.decorators.only_for_groups(entrance_groups.admins)
 def initial_auto_reject(request):
-    user_ids = list(utils.get_enrolling_user_ids(request.school))
+    user_ids = list(helpers.get_enrolling_users_ids(request.school))
 
     practice_user_ids = set(_get_ejudge_task_accepted_solutions(
         request.school, models.ProgramEntranceExamTaskSolution
@@ -804,8 +815,3 @@ def initial_auto_reject(request):
             status=models.EntranceStatus.Status.AUTO_REJECTED
         )]
     })
-
-
-@sistema.staff.only_staff
-def initial_checking_groups(request):
-    return None

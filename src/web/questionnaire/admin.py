@@ -5,6 +5,7 @@ from polymorphic.admin import (PolymorphicChildModelAdmin,
 import sistema.polymorphic
 from . import models
 
+import groups.admin
 
 @admin.register(models.Questionnaire)
 class QuestionnaireAdmin(admin.ModelAdmin):
@@ -94,14 +95,13 @@ class QuestionnaireAnswerAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.QuestionnaireTypingDynamics)
-class QuestionnaireTypingDynamicsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'questionnaire', 'created_at')
-    list_filter = ('questionnaire',)
-    search_fields = (
-        '=id',
-        '=user__id',
-        'user__email',
-        'user__profile__first_name',
-        'user__profile__last_name',
-    )
+@admin.register(models.QuestionnaireBlockShowCondition)
+class QuestionnaireBlockShowConditionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'block', 'need_to_be_checked')
+    list_filter = ('block__questionnaire',)
+
+
+@admin.register(models.UsersFilledQuestionnaireGroup)
+@admin.register(models.UsersNotFilledQuestionnaireGroup)
+class QuestionnaireGroupAdmin(groups.admin.AbstractGroupAdmin):
+    pass

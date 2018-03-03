@@ -51,7 +51,7 @@ INSTALLED_APPS = (
 
     # External django modules
     'reversion',
-    'social_django',
+    # 'social_django',
     'markdown_deux',
     'hijack',
     'hijack_admin',
@@ -84,6 +84,7 @@ INSTALLED_APPS = (
     'questionnaire',
     'schools',
     'users',
+    'groups.apps.GroupsConfig',
 
     # Allauth should be after importing 'users'
     'allauth',
@@ -95,7 +96,7 @@ INSTALLED_APPS = (
     # Sistema modules (all should be modules.*)
     'modules.ejudge',
     'modules.enrolled_scans',
-    'modules.entrance',
+    'modules.entrance.apps.EntranceConfig',
     'modules.exam_scorer_2016',
     'modules.finance',
     'modules.poldnev',
@@ -332,4 +333,4 @@ try:
 except ImportError as e:
     import logging
     logging.getLogger(__name__).warning(
-        'WARNING: No local settings found. Using default values.')
+        'WARNING: No local sistema settings (local_settings.py) found. Using default values from settings.py.')

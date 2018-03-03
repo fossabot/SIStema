@@ -1,13 +1,28 @@
 import frontend.icons
 import sistema.staff
-from modules.entrance import utils
+from . import views
+from .. import groups as entrance_groups
+from .. import helpers
+import groups
 
 
 @sistema.staff.register_staff_interface
 class EntranceStaffInterface(sistema.staff.StaffInterface):
     def __init__(self, request):
         super().__init__(request)
-        self._filled_an_application_count = len(utils.get_enrolling_user_ids(request.school))
+        self._enrollees_count = \
+            helpers.get_enrolling_users_ids(request.school).count()
+
+        self.is_entrance_admin = groups.is_user_in_group(
+            request.user,
+            entrance_groups.admins,
+            request.school
+        )
+        self.can_check = groups.is_user_in_group(
+            request.user,
+            entrance_groups.can_check,
+            request.school
+        )
 
     def get_sidebar_menu(self):
         filled_an_application = sistema.staff.MenuItem(
@@ -15,7 +30,7 @@ class EntranceStaffInterface(sistema.staff.StaffInterface):
             'Подавшие заявку',
             'school:entrance:enrolling',
             frontend.icons.FaIcon('envelope-o'),
-            label=sistema.staff.MenuItemLabel(self._filled_an_application_count, 'system')
+            label=sistema.staff.MenuItemLabel(self._enrollees_count, 'system')
         )
 
         exam_tasks = sistema.staff.MenuItem(
@@ -54,4 +69,10 @@ class EntranceStaffInterface(sistema.staff.StaffInterface):
             child=[exam_tasks, exam_checking, ejudge_stats, exam_results]
         )
 
-        return [filled_an_application, exam]
+        items = []
+        if self.is_entrance_admin:
+            items.append(filled_an_application)
+        if self.can_check:
+            items.append(exam)
+
+        return items

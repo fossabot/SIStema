@@ -1,6 +1,6 @@
 from django.apps import AppConfig, apps
-from django.db.models.signals import post_save
 from django.db import transaction
+from django.db.models.signals import post_save
 
 
 class GroupsConfig(AppConfig):
@@ -12,8 +12,20 @@ class GroupsConfig(AppConfig):
         self._auto_members = []
 
     def ready(self):
-        self._ensure_all_groups_exist_and_configured()
-        self._set_hook_for_new_school()
+        try:
+            self._ensure_all_groups_exist_and_configured()
+            self._set_hook_for_new_school()
+        except Exception as e:
+            if self.is_db_init_error(e):
+                print('Skipping groups creating because db is not ready yet')
+            else:
+                raise
+
+    @staticmethod
+    def is_db_init_error(e):
+        return "doesn't exist" in str(e) or \
+               'no such table:' in str(e) or \
+               'does not exist' in str(e)
 
     def _ensure_all_groups_exist_and_configured(self):
         self._auto_members.clear()

@@ -27,6 +27,9 @@ def only_for_groups(*group_names):
             if not request.user.is_authenticated():
                 return HttpResponseNotFound()
 
+            if request.user.is_superuser:
+                return handler(request, *args, **kwargs)
+
             school = getattr(request, 'school', None)
 
             matched_groups = AbstractGroup.objects.filter(

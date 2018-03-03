@@ -51,7 +51,7 @@ INSTALLED_APPS = (
 
     # External django modules
     'reversion',
-    'social_django',
+    # 'social_django',
     'markdown_deux',
     'hijack',
     'hijack_admin',
@@ -340,4 +340,4 @@ try:
 except ImportError as e:
     import logging
     logging.getLogger(__name__).warning(
-        'WARNING: No local settings found. Using default values.')
+        'WARNING: No local sistema settings (local_settings.py) found. Using default values from settings.py.')

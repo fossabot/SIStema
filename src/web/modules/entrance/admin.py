@@ -26,8 +26,6 @@ class EntranceExamTaskChildAdmin(PolymorphicChildModelAdmin):
     base_model = models.EntranceExamTask
 
 
-admin.site.register(models.EntranceExam)
-
 @admin.register(models.EntranceExam)
 class EntranceExamAdmin(admin.ModelAdmin):
     list_display = ('id', 'school', 'close_time')
@@ -159,7 +157,7 @@ class CheckingCommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'school', 'user', 'commented_by', 'comment', 'created_at')
     list_filter = ('school', ('commented_by', admin.RelatedOnlyFieldListFilter))
     search_fields = (
-        'user__profile__first_name', 
+        'user__profile__first_name',
         'user__profile__last_name',
         'user__username')
 

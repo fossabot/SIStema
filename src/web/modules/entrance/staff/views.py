@@ -2,6 +2,7 @@ import collections
 import operator
 import random
 
+import django.urls
 from django.contrib import messages
 from django.core import urlresolvers
 from django.db import transaction
@@ -9,26 +10,26 @@ from django.db.models import F
 from django.http.response import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.views.decorators.http import require_POST
-import django.urls
 from django.utils.http import is_safe_url
+from django.views.decorators.http import require_POST
 
-from frontend.table.utils import A, TableDataSource
-from modules.ejudge import models as ejudge_models
-from modules.entrance import models
-from modules.entrance import upgrades
-from modules.entrance import utils
-from modules.entrance.staff import forms
-from sistema.helpers import group_by, respond_as_attachment, nested_query_list
-from users import search_utils
 import frontend.icons
 import frontend.table
+import groups.decorators
 import modules.topics.views as topics_views
 import questionnaire.models
 import questionnaire.views
 import sistema.staff
 import users.models
 import users.views
+from frontend.table.utils import A, TableDataSource
+from modules.ejudge import models as ejudge_models
+from modules.entrance import models
+from modules.entrance import upgrades
+from modules.entrance.staff import forms
+import modules.entrance.groups as entrance_groups
+from sistema.helpers import group_by, respond_as_attachment, nested_query_list
+from users import search_utils
 from .. import helpers
 
 
@@ -57,33 +58,16 @@ class EnrollingUsersTable(frontend.table.Table):
         searchable=True,
         verbose_name='Город')
 
-        self.about_questionnaire = questionnaire.models.Questionnaire.objects.filter(short_name='about').first()
-        self.enrollee_questionnaire = questionnaire.models.Questionnaire.objects.filter(
-            school=self.school,
-            short_name='enrollee'
-        ).first()
     school_and_class = frontend.table.Column(
         accessor='profile',
         search_in='profile.school_name',
         verbose_name='Школа и класс')
 
-        name_column = frontend.table.SimplePropertyColumn(
-            'get_full_name', 'Имя',
-            search_attrs=['profile__first_name', 'profile__last_name'])
-        name_column.data_type = frontend.table.LinkDataType(
-            frontend.table.StringDataType(),
-            lambda user: reverse('school:entrance:enrolling_user', args=(self.school.short_name, user.id))
-        )
     class Meta:
         icon = frontend.icons.FaIcon('envelope-o')
         title = 'Подавшие заявку'
         exportable = True
 
-        email_column = frontend.table.SimplePropertyColumn('email', 'Почта')
-        email_column.data_type = frontend.table.LinkDataType(
-            frontend.table.StringDataType(),
-            lambda user: 'mailto:%s' % user.email
-        )
     def __init__(self, school, *args, **kwargs):
         qs = (users.models.User.objects
               .filter(entrance_statuses__school=school)

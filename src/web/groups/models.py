@@ -146,7 +146,7 @@ class ManuallyFilledGroup(AbstractGroup):
         return not_manually_filled_groups_members_ids.union(
             UserInGroupMembership.objects.filter(
                 group_id__in=visited_groups_ids
-            ).values_list('member_id').distinct()
+            ).values_list('member_id', flat=True).distinct()
         )
 
     @cached_property

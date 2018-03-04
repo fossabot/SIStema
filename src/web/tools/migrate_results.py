@@ -25,6 +25,7 @@ COMMENT_TYPE_MAP = {
     r'Комментарий по внеучебной деятельности': study_models.SocialComment,
     r'Брать ли в зиму': study_models.AsWinterParticipantComment,
     r'Куда брать в следующем году': study_models.NextYearComment,
+    r'Куда брать летом': study_models.NextYearComment,
     r'Брать ли препом': study_models.AsTeacherComment,
     r'Комментарий для зачисления школьником': study_models.AfterWinterComment,
 }

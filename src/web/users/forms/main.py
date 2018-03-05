@@ -246,6 +246,7 @@ class UserProfileForm(forms.Form):
         label='Размер футболки',
         widget=SistemaRadioSelect(attrs={'inline': True}),
         coerce=int,
+        empty_value=None,
     )
 
     has_accepted_terms = forms.TypedMultipleChoiceField(

@@ -37,7 +37,7 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
     )
 
     name = models.CharField(
-        max_length=30,
+        max_length=60,
         help_text='Покороче, используется на метках'
     )
 

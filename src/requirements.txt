@@ -9,7 +9,11 @@ bs4==0.0.1
 cached-property==1.3.0
 defusedxml==0.5.0
 Django==1.11.10
-django-allauth==0.35.0
+# VK authentication is broken on 0.35.0, installing from git until the next
+# version is released
+# TODO(artemtab): upgrade to the next release as soon as it's available
+# django-allauth==0.35.0
+git+https://github.com/pennersr/django-allauth.git@8e8bfc40111eb45a5e77d885051ac1b035935fee
 django-anymail==0.8
 django-autocomplete-light==3.2.1
 django-choices==1.4.4

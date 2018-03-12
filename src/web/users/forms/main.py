@@ -105,7 +105,7 @@ class UserProfileForm(forms.Form):
     )
 
     sex = forms.TypedChoiceField(
-        models.UserProfile.Sex.choices,
+        choices=models.UserProfile.Sex.choices,
         required=True,
         label='Пол',
         widget=SistemaRadioSelect(attrs={'inline': True}),
@@ -241,7 +241,7 @@ class UserProfileForm(forms.Form):
     )
 
     t_shirt_size = forms.TypedChoiceField(
-        models.UserProfile.TShirtSize.choices,
+        choices=models.UserProfile.TShirtSize.choices,
         required=False,
         label='Размер футболки',
         widget=SistemaRadioSelect(attrs={'inline': True}),

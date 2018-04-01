@@ -54,7 +54,7 @@ class TopicsEntranceLevelLimiter(levels.EntranceLevelLimiter):
     def get_limit(self, user):
         # TODO: check status, if not FINISHED, return self._find_minimal_level()
         # It's here to avoid cyclic imports
-        import modules.topics.models.main as models
+        from modules.topics import models
 
         user_marks = models.UserMark.objects.filter(user=user, scale_in_topic__topic__questionnaire=self.questionnaire)\
             .prefetch_related('scale_in_topic__topic__tags')

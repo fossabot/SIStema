@@ -55,6 +55,7 @@ class EntranceLevelAdmin(admin.ModelAdmin):
     )
     ordering = ('-school__year', '-school__name', 'name')
     search_fields = ('short_name', 'name', 'school__name')
+    autocomplete_fields = ('tasks', )
 
 
 @admin.register(models.EntranceLevelOverride)

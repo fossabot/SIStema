@@ -687,10 +687,16 @@ class SelectEnrollmentTypeEntranceStep(AbstractEntranceStep, EntranceStepTextsMi
         )
 
         block.is_moderating = selected is not None and not selected.is_moderated
-        block.passed_moderation = \
-            selected is not None and selected.is_moderated and selected.is_approved
-        block.failed_moderation = \
-            selected is not None and selected.is_moderated and not selected.is_approved
+        block.passed_moderation = (
+            selected is not None
+            and selected.enrollment_type.needs_moderation
+            and selected.is_moderated
+            and selected.is_approved)
+        block.failed_moderation = (
+            selected is not None
+            and selected.enrollment_type.needs_moderation
+            and selected.is_moderated
+            and not selected.is_approved)
 
         return block
 

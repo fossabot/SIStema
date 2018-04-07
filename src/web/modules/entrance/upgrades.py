@@ -39,8 +39,8 @@ def cache(seconds=900):
 #     checking 2017. We need to be able to see and export enrolling table
 #     without waiting forever. There shouldn't be any harm in doing that,
 #     because entrance levels do not change after exam is over.
-# TODO(andgein): In 2018 I've revered timeout back to 10 minutes
-@cache(10 * 60)
+# TODO(andgein): In 2018 I've revered timeout back to 30 seconds
+@cache(30)
 def get_base_entrance_level(school, user):
     override = (models.EntranceLevelOverride.objects
                 .filter(school=school, user=user).first())

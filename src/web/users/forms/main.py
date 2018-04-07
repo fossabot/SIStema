@@ -207,6 +207,28 @@ class UserProfileForm(forms.Form):
         })
     )
 
+    codeforces_handle = forms.CharField(
+        required=False,
+        label=mark_safe('Хэндл на&nbsp;<a href="https://codeforces.com">codeforces.com</a>'),
+        max_length=100,
+        widget=TextInputWithFaIcon(attrs={
+            'placeholder': '',
+            'class': 'gui-input',
+            'fa': 'user',
+        })
+    )
+
+    informatics_username = forms.CharField(
+        required=False,
+        label=mark_safe('Имя пользователя на&nbsp;<a href="http://informatics.msk.ru">informatics.msk.ru</a>'),
+        max_length=100,
+        widget=TextInputWithFaIcon(attrs={
+            'placeholder': '',
+            'class': 'gui-input',
+            'fa': 'user',
+        })
+    )
+
     citizenship = EmptyIntChoiceField(
         models.UserProfile.Citizenship.choices,
         label='Гражданство',

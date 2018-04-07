@@ -104,6 +104,18 @@ class UserProfile(models.Model):
         blank=True,
         default='',
     )
+    codeforces_handle = models.CharField(
+        'Хэндл на codeforces.com',
+        max_length=100,
+        blank=True,
+        default='',
+    )
+    informatics_username = models.CharField(
+        'Имя пользователя на informatics.msk.ru',
+        max_length=100,
+        blank=True,
+        default='',
+    )
 
     # TODO(artemtab): find a way to remove dependency on the non-core module
     poldnev_person = models.ForeignKey(
@@ -156,12 +168,12 @@ class UserProfile(models.Model):
         default=False,
     )
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.user.first_name = self.first_name
         self.user.last_name = self.last_name
         with django.db.transaction.atomic():
             self.user.save()
-            super().save()
+            super().save(*args, **kwargs)
 
     def get_zero_class_year(self):
         return self._zero_class_year
@@ -215,6 +227,8 @@ class UserProfile(models.Model):
             'phone',
             'vk',
             'telegram',
+            'codeforces_handle',
+            'informatics_username',
             'citizenship',
             'citizenship_other',
             'document_type',
@@ -234,6 +248,8 @@ class UserProfile(models.Model):
         fields.remove('citizenship_other')
         fields.remove('poldnev_person')
         fields.remove('telegram')
+        fields.remove('codeforces_handle')
+        fields.remove('informatics_username')
         return fields
 
     def is_fully_filled(self):

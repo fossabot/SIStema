@@ -1,3 +1,5 @@
+import operator
+
 import django.urls
 import ipware.ip
 import ipware.ip
@@ -21,9 +23,10 @@ import sistema.helpers
 import sistema.uploads
 import users.models
 from frontend.table.utils import TableDataSource
+from . import forms
 from . import models
 from . import upgrades
-from . import forms
+
 
 def get_entrance_level_and_tasks(school, user):
     base_level = upgrades.get_base_entrance_level(school, user)

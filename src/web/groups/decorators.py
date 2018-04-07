@@ -24,7 +24,7 @@ def only_for_groups(*group_names):
     def decorator(handler):
         @wraps(handler)
         def func_wrapper(request, *args, **kwargs):
-            if not request.user.is_authenticated():
+            if not request.user.is_authenticated:
                 return HttpResponseNotFound()
 
             if request.user.is_superuser:

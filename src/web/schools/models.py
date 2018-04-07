@@ -133,7 +133,10 @@ class Parallel(models.Model):
 
     name = models.CharField(max_length=100, help_text='Например, C\'')
 
-    sessions = models.ManyToManyField(Session)
+    sessions = models.ManyToManyField(
+        'Session',
+        blank=True,
+    )
 
     class Meta:
         unique_together = ('school', 'short_name')

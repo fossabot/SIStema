@@ -89,6 +89,7 @@
 }
 
 /* Fix issue on firefox, safari and other browsers */
-.entrance-exam .entrance-exam__task__program input.file {
+.entrance-exam .entrance-exam__task__program input.file,
+.entrance-exam .entrance-exam__task__file input.file{
     transform: translate(-150px, 0) scale(4);
 }

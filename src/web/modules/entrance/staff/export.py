@@ -363,13 +363,13 @@ class ExportCompleteEnrollingTable(django.views.View):
                     PlainExcelColumn(
                         name='Информатика',
                         cell_width=30,
-                        data=self.get_choice_question_for_users(
+                        data=self.get_text_question_for_users(
                             request.school, enrollees, 'informatics_olympiads'),
                     ),
                     PlainExcelColumn(
                         name='Математика',
                         cell_width=30,
-                        data=self.get_choice_question_for_users(
+                        data=self.get_text_question_for_users(
                             request.school, enrollees, 'math_olympiads'),
                     ),
                 ],

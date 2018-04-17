@@ -309,11 +309,13 @@ class TestEntranceExamTask(EntranceExamTask):
 
     def is_accepted_for_user(self, user):
         last_solution = self.solutions.filter(user=user).last()
-        return self.is_solution_valid(last_solution.solution)
+        return (last_solution is not None and
+                self.is_solution_valid(last_solution.solution))
 
     def is_solved_by_user(self, user):
         last_solution = self.solutions.filter(user=user).last()
-        return self.is_solution_correct(last_solution.solution)
+        return (last_solution is not None and
+                self.is_solution_correct(last_solution.solution))
 
     def get_form(self, user_solutions, *args, **kwargs):
         initial = {}

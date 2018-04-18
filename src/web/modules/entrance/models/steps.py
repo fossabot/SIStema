@@ -351,8 +351,8 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
         return super().is_passed(user) and self.is_closed(user)
 
     @staticmethod
-    def _get_solved_count(tasks):
-        return len(list(filter(lambda t: t.is_solved, tasks)))
+    def _get_accepted_count(tasks):
+        return len(list(filter(lambda t: t.is_accepted, tasks)))
 
     def build(self, user):
         # It's here to avoid cyclic imports
@@ -364,6 +364,7 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
         base_level, tasks = entrance_views.get_entrance_level_and_tasks(self.school, user)
 
         for task in tasks:
+            task.is_accepted = task.is_accepted_for_user(user)
             task.is_solved = task.is_solved_by_user(user)
 
         categories = list(sorted(
@@ -377,12 +378,12 @@ class SolveExamEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):
 
         block.task_category_stats = []
         for category, tasks in categories_with_tasks:
-            solved_count = self._get_solved_count(tasks)
+            accepted_count = self._get_accepted_count(tasks)
             block.task_category_stats.append({
                 'category': category,
                 'total_count': len(tasks),
-                'solved_count': solved_count,
-                'needs_attention': category.is_mandatory and solved_count == 0,
+                'solved_count': accepted_count,
+                'needs_attention': category.is_mandatory and accepted_count == 0,
             })
 
         block.level = entrance_upgrades.get_maximum_issued_entrance_level(

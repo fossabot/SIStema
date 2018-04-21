@@ -499,7 +499,7 @@ def check_task(request, group_name, task_id):
 
         # Get the random user for checking
         user_index = random.randint(0, users_count - 1)
-        user_for_checking = users_for_checking[user_index].user
+        user_for_checking = users_for_checking[user_index]
         models.CheckingLock.objects.create(
             user=user_for_checking,
             task=task,

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from polymorphic.admin import (PolymorphicChildModelAdmin,
                                PolymorphicChildModelFilter)
 
@@ -6,8 +8,6 @@ import groups.admin
 import home.models
 import sistema.polymorphic
 from modules.entrance import models
-from django.utils.safestring import mark_safe
-from django.urls import reverse
 
 
 @admin.register(models.EntranceExamTask)
@@ -17,6 +17,7 @@ class EntranceExamTaskAdmin(sistema.polymorphic.PolymorphicParentModelAdmin):
     list_display_links = ('id', 'get_description_html')
     list_filter = ('exam', PolymorphicChildModelFilter)
     ordering = ('exam', 'order')
+    autocomplete_fields = ('exam', 'category')
     search_fields = ('title', 'exam__school__name')
 
 
@@ -35,6 +36,7 @@ class EntranceExamTaskCategoryAdmin(admin.ModelAdmin):
 @admin.register(models.OutputOnlyEntranceExamTask)
 class EntranceExamTaskChildAdmin(PolymorphicChildModelAdmin):
     base_model = models.EntranceExamTask
+    autocomplete_fields = EntranceExamTaskAdmin.autocomplete_fields
     search_fields = EntranceExamTaskAdmin.search_fields
 
 

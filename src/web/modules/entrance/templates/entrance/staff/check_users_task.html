@@ -50,7 +50,7 @@
             Проверено <strong>{{ task.checked_solutions_count }} из {{ task.total_solutions_count }}</strong> решени{{ task.total_solutions_count|russian_pluralize:'я,й,й' }} этой задачи
             {% if group %}
                 <div class="hidden-md hidden-lg hidden-xl"></div>
-                в&nbsp;группе «{{ group.name }}»
+                &nbsp;в&nbsp;группе «{{ group.name }}»
             {% endif %}
             <div class="progress progress-bar-xxs mbn mt5 bg-danger">
                 {% with percents=task.checked_solutions_count|multiply:100|divide:task.total_solutions_count|to_int %}

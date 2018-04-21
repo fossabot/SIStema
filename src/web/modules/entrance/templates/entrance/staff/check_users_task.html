@@ -67,16 +67,23 @@
                 <div class="panel-heading">
                     <span class="panel-title" title="{{ task.title }}">
                         {{ task.title|truncatechars:30 }}
-                        <span class="fs12 text-muted pull-right mr10">{{ last_solution.created_at }}</span>
+                        <span class="fs12 text-muted pull-right mr10" title="{{ last_solution.created_at }}">{{ last_solution.created_at|without_year }}</span>
                     </span>
                 </div>
                 <div class="panel-body">
-                    <p class="fs20">
-                        <a href="{% url 'school:entrance:user_solution' request.school.short_name last_solution.id %}" title="Скачать решение">{{ last_solution.original_filename|default_if_none:'Решение' }}</a>
+                    <h3 class="mtn">
+                        Скачать решение
+                    </h3>
+                    <p>
+                        <a href="{% url 'school:entrance:user_solution' request.school.short_name last_solution.id %}" title="Скачать решение">{{ last_solution.original_filename|default_if_none:'Решение' }}</a>,
+                        загружено {{ last_solution.created_at }}
                     </p>
 
                     {% if locked_by_me %}
-                        <h3>Оценить решение</h3>
+                        <h3>Оценить</h3>
+                        {% if task.checking_criteria %}
+                            <p>Для выставления оценки используйте критерии, написанные справа</p>
+                        {% endif %}
                         <div class="btn-group mb20" data-toggle="buttons">
                             {% with max_score=task.max_score|add:1 %}
                                 {% mkrange max_score as marks_range %}
@@ -91,6 +98,7 @@
                         <div class="admin-form">
                             <form action="" method="POST">
                                 {% csrf_token %}
+                                <p class="fs13">В комментарии укажите, почему вы поставили такую оценку</p>
                                 {{ mark_form }}
 
                                 <button type="submit" class="btn btn-success mt15">Сохранить</button>

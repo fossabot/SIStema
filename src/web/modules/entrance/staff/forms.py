@@ -28,7 +28,7 @@ class FileEntranceExamTasksMarkForm(forms.Form):
                     widget=frontend.forms.TextareaWithFaIcon(attrs={
                         'fa': 'comment',
                         'id': comment_field_id,
-                        'placeholder': 'Комментарий о решении (необязательно)',
+                        'placeholder': 'Комментарий о решении',
                         'class': 'form-control',
                         'rows': 3
                     }),

@@ -228,14 +228,15 @@
                             {{ forloop.counter }}.
                             <span class="fw600">
                                 {% if file_task.last_solution %}
-                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}" title="Скачать решение">{{ file_task.title }}</a>
+                                    <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=user_for_checking.id task_id=file_task.id %}" title="Проверить и оценить решение">{{ file_task.title }}</a>
                                 {% else %}
                                     {{ file_task.title }}
                                 {% endif %}
                             </span>
                             {% if file_task.last_solution %}
                                 <div class="fs12 text-muted" title="{{ file_task.last_solution.created_at }}">
-                                    Загружено {{ file_task.last_solution.created_at|without_year }}
+                                    Загружено {{ file_task.last_solution.created_at|without_year }}:
+                                    <a href="{% url 'school:entrance:user_solution' request.school.short_name file_task.last_solution.id %}" title="Скачать решение школьника по задаче">{{ file_task.last_solution.original_filename }}</a>
                                     {% if file_task.checks %}
                                         <div>Проверено:</div>
                                     {% endif %}
@@ -248,10 +249,9 @@
                                             <span class="fs11 text-muted pull-right" title="{{ check.created_at }}">{{ check.created_at|without_year }}</span>
                                         </div>
                                     {% endfor %}
-                                    <div class="mb5">
-                                        <b>{{ user.get_full_name }}:</b>
-                                        <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=user_for_checking.id task_id=file_task.id %}" title="Оценить решение">оценить</a>
-                                    </div>
+                                    {% if file_task.checks %}
+                                        <a href="{% url 'school:entrance:check_users_task' school_name=request.school.short_name user_id=user_for_checking.id task_id=file_task.id %}" title="Проверить и оценить решение">Перейти к&nbsp;проверке</a>
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <span class="fs12 fw400">(не сдана)</span>

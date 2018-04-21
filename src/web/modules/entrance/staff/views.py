@@ -480,9 +480,9 @@ def check_task(request, group_name, task_id):
 
         users_for_checking = (
             checking_group.group.users
-            .exclude(user_id__in=locked_user_ids)
-            .exclude(user_id__in=already_checked_user_ids)
-            .filter(user_id__in=task_user_ids)
+            .exclude(id__in=locked_user_ids)
+            .exclude(id__in=already_checked_user_ids)
+            .filter(id__in=task_user_ids)
         )
 
         users_count = users_for_checking.count()

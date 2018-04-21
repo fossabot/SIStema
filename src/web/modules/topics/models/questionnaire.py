@@ -774,6 +774,7 @@ class TopicsEntranceLevelLimit(models.Model):
             self.level, self.user, self.questionnaire)
 
     @classmethod
+    @transaction.atomic
     def get_limit(cls, *, user, questionnaire):
         cached_limit = (
             cls.objects

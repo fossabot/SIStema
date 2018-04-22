@@ -44,6 +44,7 @@ class CheckingGroup(models.Model):
         if self.school_id != self.group.school_id:
             raise IntegrityError(
                 "Checking group should belong to the same school such as group")
+        super().save(*args, **kwargs)
 
 
 def get_locked_timeout():

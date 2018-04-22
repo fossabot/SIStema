@@ -288,7 +288,7 @@ class EntranceExamTask(polymorphic.models.PolymorphicModel):
     )
 
     def __str__(self):
-        return self.title
+        return "{}: {}".format(self.exam.school.name, self.title)
 
     def save(self, *args, **kwargs):
         if self.category.exam_id != self.exam_id:

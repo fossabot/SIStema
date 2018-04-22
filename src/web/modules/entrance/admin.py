@@ -173,7 +173,7 @@ class EntranceLevelUpgradeRequirementChildAdmin(PolymorphicChildModelAdmin):
 class CheckingGroupAdmin(admin.ModelAdmin):
     list_display = ('id', 'school', 'short_name', 'name')
     list_filter = ('school', )
-    autocomplete_fields = ('tasks',)
+    autocomplete_fields = ('tasks', 'group')
     search_fields = ('school__name', 'name')
 
 

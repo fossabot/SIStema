@@ -299,13 +299,13 @@ class ExportCompleteEnrollingTable(django.views.View):
                 columns.append(ExcelMultiColumn(name='Баллы',
                                                 subcolumns=subcolumns))
 
+            auto_parallels = [
+                self.get_auto_parallel_for_user(request.school, user)
+                for user in enrollees]
             columns.append(LinkExcelColumn(
                 name='Авто',
                 cell_width=5,
-                data=[
-                    self.get_auto_parallel_for_user(request.school, user)
-                    for user in enrollees
-                ],
+                data=auto_parallels,
                 data_urls=[
                     request.build_absolute_uri(reverse(
                         'school:entrance:enrollment_type_review_user',
@@ -313,8 +313,8 @@ class ExportCompleteEnrollingTable(django.views.View):
                             'school_name': request.school.short_name,
                             'user_id': user.id,
                         }
-                    ))
-                    for user in enrollees
+                    )) if parallel else ''
+                    for user, parallel in zip(enrollees, auto_parallels)
                 ]
             ))
 

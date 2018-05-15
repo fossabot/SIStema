@@ -36,10 +36,10 @@ teacher - the teacher all the checks are made by. Pass only if showing list of
                 {% if task or teacher %}
                     <div class="mb10">
                         {% if task %}
-                            <div class="label label-alert">Задача: {{ task.title }}</div>
+                            <div class="label label-alert mr5">Задача: {{ task.title }}</div>
                         {% endif %}
                         {% if teacher %}
-                            <div class="label label-system">Проверяющий: {{ teacher.get_full_name }}</div>
+                            <div class="label label-system mr5">Проверяющий: {{ teacher.get_full_name }}</div>
                         {% endif %}
                     </div>
                 {% endif %}

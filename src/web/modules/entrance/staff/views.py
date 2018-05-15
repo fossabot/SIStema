@@ -5,7 +5,7 @@ import collections
 import django.urls
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import F, Count, Sum, FloatField
+from django.db.models import F, Count, Sum, FloatField, IntegerField
 from django.db.models.functions import Cast
 from django.http.response import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -429,7 +429,10 @@ def checking_group_teachers(request, group_name):
     )
     average_scores = list_to_dict(
         checks_grouped_by_task_and_teacher.annotate(
-            average_score=Cast(Sum('score'), FloatField()) / Cast(Count('score'), FloatField())
+            average_score=sql_round_with_precision(
+                Cast(Sum('score'), FloatField()) / Cast(Count('score'), FloatField()),
+                2
+            )
         ),
         operator.itemgetter('checked_by_id'),
         operator.itemgetter('solution__task_id'),
@@ -461,6 +464,13 @@ def checking_group_teachers(request, group_name):
         'teacher_task_solutions_count': teacher_task_solutions_count,
         'average_scores': average_scores,
     })
+
+
+def sql_round_with_precision(expression, precision):
+    multiplier = 10 ** precision
+    # Multiply and truncate non-integer part
+    multiplied = Cast(multiplier * expression, IntegerField())
+    return Cast(multiplied, FloatField()) / multiplier
 
 
 @sistema.staff.only_staff

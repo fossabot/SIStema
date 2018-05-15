@@ -541,7 +541,7 @@ def task_checks(request, group_name, task_id):
 
 
 @sistema.staff.only_staff
-@groups.decorators.only_for_groups(entrance_groups.ADMINS)
+@groups.decorators.only_for_groups(entrance_groups.CAN_CHECK)
 def teacher_checks(request, group_name, teacher_id):
     checking_group = get_object_or_404(
         models.CheckingGroup,
@@ -569,7 +569,7 @@ def teacher_checks(request, group_name, teacher_id):
 
 
 @sistema.staff.only_staff
-@groups.decorators.only_for_groups(entrance_groups.ADMINS)
+@groups.decorators.only_for_groups(entrance_groups.CAN_CHECK)
 def teacher_task_checks(request, group_name, teacher_id, task_id):
     checking_group = get_object_or_404(
         models.CheckingGroup,

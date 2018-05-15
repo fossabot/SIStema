@@ -397,7 +397,7 @@ def checking_group_users(request, group_name):
 
 
 @sistema.staff.only_staff
-@groups.decorators.only_for_groups(entrance_groups.ADMINS)
+@groups.decorators.only_for_groups(entrance_groups.CAN_CHECK)
 def checking_group_teachers(request, group_name):
     checking_group = get_object_or_404(
         models.CheckingGroup,

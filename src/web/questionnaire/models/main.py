@@ -160,7 +160,7 @@ class InlineQuestionnaireBlock(AbstractQuestionnaireBlock):
         for child in self.children.all():
             child.pk = None
             child.parent = other_block
-            child.block = other_block.questionnaire.blocks.single(
+            child.block = other_block.questionnaire.blocks.get(
                 short_name=child.block.short_name
             )
             child.save()
@@ -659,7 +659,7 @@ class Questionnaire(models.Model):
         Copy block's dependencies when all blocks are already created
         """
         for block in self.blocks.all():
-            other_block = to_questionnaire.blocks.single(
+            other_block = to_questionnaire.blocks.get(
                 short_name=block.short_name
             )
             block.copy_dependencies_to_instance(other_block)

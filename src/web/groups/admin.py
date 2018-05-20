@@ -42,7 +42,10 @@ class ManuallyFilledGroupAdmin(AbstractGroupChildAdmin):
 @admin.register(models.UserInGroupMembership)
 class GroupMembershipAdmin(admin.ModelAdmin):
     list_display = ('id', 'group', 'member')
-    list_filter = (('group', admin.RelatedOnlyFieldListFilter), )
+    list_filter = (
+        ('group__school', admin.RelatedOnlyFieldListFilter),
+        ('group', admin.RelatedOnlyFieldListFilter),
+    )
     autocomplete_fields = ('group', 'added_by', 'member')
 
 

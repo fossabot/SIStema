@@ -1,10 +1,10 @@
 import django.shortcuts
+import django.urls
 
 import frontend.icons
 import frontend.table
 import groups.decorators
 import modules.study_results.models as study_results_models
-import sistema.staff
 import users.models
 from frontend.table.utils import A, TableDataSource
 from modules.study_results.groups import STUDENT_COMMENTS_VIEWERS

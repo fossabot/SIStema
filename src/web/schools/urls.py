@@ -12,6 +12,7 @@ urlpatterns = [
         url(r'^questionnaire/(?P<questionnaire_name>[^/]+)/$',
             views.questionnaire,
             name='questionnaire'),
+        url(r'^groups/', include('groups.school_urls', namespace='groups')),
 
         # Modules
         url(r'^entrance/', include('modules.entrance.urls', namespace='entrance')),

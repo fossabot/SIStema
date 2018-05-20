@@ -254,7 +254,7 @@ class DeclarativeColumnsMetaclass(type):
                 cols.append((attr_name, attr))
             else:
                 remainder[attr_name] = attr
-                if attr_name.startswith('render_'):
+                if attr_name.startswith('render_') or attr_name.startswith('value_'):
                     dt2_attrs[attr_name] = attr
 
         attrs = remainder
@@ -283,7 +283,7 @@ class DeclarativeColumnsMetaclass(type):
             if attr_name in base_columns:
                 base_columns.pop(attr_name)
 
-        # Set the ordering of django_tables2 columns exlicitly in order to get
+        # Set the ordering of django_tables2 columns explicitly in order to get
         # correct order when subclassing comes into play
         if not hasattr(dt2_attrs['Meta'], 'sequence'):
             dt2_attrs['Meta'].sequence = list(base_columns.keys())

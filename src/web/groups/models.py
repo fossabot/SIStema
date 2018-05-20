@@ -77,7 +77,7 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
     @property
     def user_ids(self):
         """
-        :return: QuerySet or list of ids of users which are members of this group
+        :return: QuerySet or list of ids of users which are group of this group
         """
         raise NotImplementedError(
             'Each group should implement user_ids(), but %s doesn\'t' %
@@ -91,6 +91,10 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
         return GroupAccess.Type.NONE
 
     def get_access_type_for_user(self, user):
+        # Superuser has admin access to any group
+        if user.is_superuser:
+            return GroupAccess.Type.ADMIN
+
         user_access = GroupAccessForUser.objects.filter(
             to_group=self, user=user
         ).first()
@@ -125,7 +129,7 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
 
 class ManuallyFilledGroup(AbstractGroup):
     # If there will be problems with performance of this method,
-    # it can be useful to cache full list of group's members and
+    # it can be useful to cache full list of group's group and
     # rebuild it after adding or removing a new member
     @cached_property
     def user_ids(self):
@@ -225,7 +229,6 @@ class GroupAccess(polymorphic.models.PolymorphicModel):
             value=0,
             label='Нет доступа, группа не видна',
         )
-
         LIST_MEMBERS = djchoices.ChoiceItem(
             value=10,
             label='Может просматривать участников',

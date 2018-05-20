@@ -1,0 +1,27 @@
+{% extends 'staff_layout.html' %}
+
+{% load static %}
+
+{% block title %}Участники группы «{{ group.name }}»{% if group.school %} в {{ group.school.name }}{% endif %}{% endblock %}
+
+{% block topbar_left %}
+    <ol class="breadcrumb">
+        <li class="crumb-active">
+            Группы
+        </li>
+        {% if group.school %}
+            <li class="crumb-link">
+                <a href="{% url 'school:groups:list' request.school.short_name %}">{{ group.school.full_name }}</a>
+            </li>
+        {% endif %}
+        <li class="crumb-train">{{ group.name }}</li>
+    </ol>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'frontend/js/table.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    {% include 'frontend/table.html' with table=table %}
+{% endblock %}

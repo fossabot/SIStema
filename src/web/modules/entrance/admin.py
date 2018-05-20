@@ -501,4 +501,7 @@ class EnrollmentApprovingStatusGroupAdmin(groups.admin.AbstractGroupChildAdmin):
 @admin.register(models.EnrolledUsersGroup)
 class EnrolledUsersGroupAdmin(groups.admin.AbstractGroupChildAdmin):
     base_model = models.EnrolledUsersGroup
-    autocomplete_fields = ('session', 'parallel')
+    autocomplete_fields = (
+        groups.admin.AbstractGroupChildAdmin.autocomplete_fields +
+        ('session', 'parallel')
+    )

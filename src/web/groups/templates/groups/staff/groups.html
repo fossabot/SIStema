@@ -1,5 +1,13 @@
 {% extends 'staff_layout.html' %}
 
+{% comment %}
+    Template for groups list in staff interface.
+
+    Parameters:
+        - school: School object
+        - table: configured instance of GroupsListTable
+{% endcomment %}
+
 {% load static %}
 
 {% block title %}Группы {{ school.name }}{% endblock %}
@@ -10,7 +18,7 @@
             Группы
         </li>
         <li class="crumb-train">
-            <a href="{% url 'school:groups:list' request.school.short_name %}">{{ school.full_name }}</a>
+            <a href="{% url 'school:groups:list' school.short_name %}">{{ school.full_name }}</a>
         </li>
     </ol>
 {% endblock %}

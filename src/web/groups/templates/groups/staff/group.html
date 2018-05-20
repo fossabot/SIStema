@@ -1,5 +1,13 @@
 {% extends 'staff_layout.html' %}
 
+{% comment %}
+    Template for members list of group.
+
+    Parameters:
+        - group: instance of AbstractGroup
+        - table: configure instance of GroupMembersTable
+{% endcomment %}
+
 {% load static %}
 
 {% block title %}Участники группы «{{ group.name }}»{% if group.school %} в {{ group.school.name }}{% endif %}{% endblock %}

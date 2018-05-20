@@ -165,6 +165,9 @@ class InlineQuestionnaireBlock(AbstractQuestionnaireBlock):
             )
             child.save()
 
+    def ordered_children(self):
+        return self.children.order_by('block__order')
+
 
 class InlineQuestionnaireBlockChild(models.Model):
     parent = models.ForeignKey(

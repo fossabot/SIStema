@@ -7,7 +7,7 @@
 {% endif %}
 
 <div class="row">
-    {% for child in block.children.all %}
+    {% for child in block.ordered_children %}
         <div class="col-xs-{{ child.xs_width }} col-sm-{{ child.sm_width }} col-md-{{ child.md_width }}">
             {% include 'questionnaire/block.html' with block=child.block %}
         </div>

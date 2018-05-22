@@ -53,8 +53,7 @@ def group_info(request, group_name):
         short_name=group_name
     )
 
-    access_type = group.get_access_type_for_user(request.user)
-    if access_type < models.GroupAccess.Type.LIST_MEMBERS:
+    if not group.can_user_list_members(request.user):
         return HttpResponseNotFound()
 
     table = GroupMembersTable(group)
@@ -74,8 +73,7 @@ def members_data(request, group_name):
         short_name=group_name
     )
 
-    access_type = group.get_access_type_for_user(request.user)
-    if access_type < models.GroupAccess.Type.LIST_MEMBERS:
+    if not group.can_user_list_members(request.user):
         return HttpResponseNotFound()
 
     table = GroupMembersTable(group)
@@ -99,7 +97,6 @@ class GroupsListTable(frontend.table.Table):
 
     description = frontend.table.Column(
         accessor='description',
-        orderable=True,
         searchable=True,
         verbose_name='Описание'
     )
@@ -115,10 +112,10 @@ class GroupsListTable(frontend.table.Table):
         visible_group_ids = []
         school_groups = models.AbstractGroup.objects.filter(school=school)
         for group in school_groups:
-            # Now following line produces extra query for each group.
+            # Now following line produces extra query for each group
             # TODO (andgein): make one smart query to database to fetch
             # all groups visible to current user
-            if group.get_access_type_for_user(user) >= models.GroupAccess.Type.LIST_MEMBERS:
+            if group.can_user_list_members(user):
                 visible_group_ids.append(group.id)
 
         qs = (

@@ -57,6 +57,12 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
         unique_together = ('short_name', 'school')
         verbose_name = 'group'
 
+    def __str__(self):
+        result = 'Группа «%s»' % self.name
+        if self.school is not None:
+            result += ' для ' + str(self.school)
+        return result
+
     def is_user_in_group(self, user):
         """
         You can override this method in subclass.
@@ -77,7 +83,7 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
     @property
     def user_ids(self):
         """
-        :return: QuerySet or list of ids of users which are group of this group
+        :return: QuerySet or list of ids of users which are member of this group
         """
         raise NotImplementedError(
             'Each group should implement user_ids(), but %s doesn\'t' %
@@ -121,16 +127,19 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
 
         return user_access
 
-    def __str__(self):
-        result = 'Группа «%s»' % self.name
-        if self.school is not None:
-            result += ' для ' + str(self.school)
-        return result
+    def can_user_list_members(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.LIST_MEMBERS
+
+    def can_user_edit_members(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.EDIT_MEMBERS
+
+    def is_user_admin(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.ADMIN
 
 
 class ManuallyFilledGroup(AbstractGroup):
     # If there will be problems with performance of this method,
-    # it can be useful to cache full list of group's group and
+    # it can be useful to cache full list of group's members and
     # rebuild it after adding or removing a new member
     @cached_property
     def user_ids(self):

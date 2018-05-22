@@ -216,6 +216,12 @@ class CheckingCommentAdmin(admin.ModelAdmin):
         'user__username')
 
 
+class EnrolledSessionAndParallelAdmin(admin.TabularInline):
+    model = models.EnrolledToSessionAndParallel
+    extra = 1
+    autocomplete_fields = ('session', 'parallel')
+
+
 @admin.register(models.EntranceStatus)
 class EntranceStatusAdmin(admin.ModelAdmin):
     list_display = (
@@ -227,24 +233,46 @@ class EntranceStatusAdmin(admin.ModelAdmin):
         'private_comment',
         'is_status_visible',
         'status',
-        'session',
-        'parallel',
+        'get_sessions',
+        'get_parallels',
         'created_at',
         'updated_at',
+        'is_approved',
     )
     list_filter = (
         ('school', admin.RelatedOnlyFieldListFilter),
         'status',
-        'session',
-        'parallel',
+        'sessions_and_parallels__session',
+        'sessions_and_parallels__parallel',
         ('created_by', admin.RelatedOnlyFieldListFilter),
+        'is_approved',
     )
-    autocomplete_fields = ('user', 'created_by', 'session', 'parallel')
+    autocomplete_fields = ('user', 'created_by')
     search_fields = (
         'user__profile__first_name',
         'user__profile__last_name',
         'user__username',
-        'public_comment')
+        'public_comment'
+    )
+    inlines = (EnrolledSessionAndParallelAdmin, )
+
+    def get_sessions(self, obj):
+        return ', '.join(set(
+            obj.sessions_and_parallels
+               .filter(session__isnull=False)
+               .values_list('session__name', flat=True)
+        ))
+
+    get_sessions.short_description = 'Session'
+
+    def get_parallels(self, obj):
+        return ', '.join(set(
+            obj.sessions_and_parallels
+               .filter(parallel__isnull=False)
+               .values_list('parallel__name', flat=True)
+        ))
+
+    get_parallels.short_description = 'Parallel'
 
 
 @admin.register(models.AbstractAbsenceReason)
@@ -463,3 +491,17 @@ class ParallelScoreEntranceUserMetricAdmin(PolymorphicChildModelAdmin):
 @admin.register(models.EntranceStatusGroup)
 class EntranceStatusGroupAdmin(groups.admin.AbstractGroupChildAdmin):
     base_model = models.EntranceStatusGroup
+
+
+@admin.register(models.EnrollmentApprovingStatusGroup)
+class EnrollmentApprovingStatusGroupAdmin(groups.admin.AbstractGroupChildAdmin):
+    base_model = models.EnrollmentApprovingStatusGroup
+
+
+@admin.register(models.EnrolledUsersGroup)
+class EnrolledUsersGroupAdmin(groups.admin.AbstractGroupChildAdmin):
+    base_model = models.EnrolledUsersGroup
+    autocomplete_fields = (
+        groups.admin.AbstractGroupChildAdmin.autocomplete_fields +
+        ('session', 'parallel')
+    )

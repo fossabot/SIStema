@@ -165,6 +165,9 @@ class InlineQuestionnaireBlock(AbstractQuestionnaireBlock):
             )
             child.save()
 
+    def ordered_children(self):
+        return self.children.order_by('block__order')
+
 
 class InlineQuestionnaireBlockChild(models.Model):
     parent = models.ForeignKey(
@@ -411,6 +414,32 @@ class DateQuestionnaireQuestion(AbstractQuestionnaireQuestion):
                 'data-pick-time': 'false',
                 'placeholder': 'дд.мм.гггг',
             }),
+        )
+
+
+class UserListQuestionnaireQuestion(AbstractQuestionnaireQuestion):
+    block_name = 'user_list_question'
+
+    group = models.ForeignKey(
+        'groups.AbstractGroup',
+        on_delete=models.CASCADE,
+        related_name='+',
+        help_text="Группа, пользователей которой можно выбирать",
+    )
+
+    placeholder = models.TextField(
+        blank=True,
+        help_text='Подсказка, показываемая в поле для ввода; пример',
+    )
+
+    def get_form_field(self, attrs=None):
+        return forms.ChooseUsersFromGroupField(
+            group=self.group,
+            required=self.is_required,
+            disabled=self.is_disabled,
+            label=self.text,
+            help_text=self.help_text,
+            placeholder=self.placeholder,
         )
 
 

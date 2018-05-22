@@ -5,7 +5,7 @@ import ipware.ip
 import ipware.ip
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Min
 from django.http.response import (HttpResponseNotFound,
                                   JsonResponse,
                                   HttpResponseForbidden)
@@ -16,7 +16,6 @@ from django.views.decorators.http import require_POST
 import frontend.icons
 import frontend.table
 import modules.ejudge.queue
-import questionnaire.models
 import sistema.helpers
 import sistema.uploads
 import users.models
@@ -33,8 +32,7 @@ def get_entrance_level_and_tasks(school, user):
 
 
 class EntrancedUsersTable(frontend.table.Table):
-    index = frontend.table.IndexColumn(
-        verbose_name='')
+    index = frontend.table.IndexColumn(verbose_name='')
 
     name = frontend.table.Column(
         accessor='get_full_name',
@@ -74,18 +72,16 @@ class EntrancedUsersTable(frontend.table.Table):
         pagination = False
 
     def __init__(self, school, *args, **kwargs):
-        enrolled_questionnaire = (
-            questionnaire.models.Questionnaire.objects
-            .filter(short_name='enrolled', school=school)
-            .first())
-
         qs = users.models.User.objects.filter(
             entrance_statuses__school=school,
             entrance_statuses__status=models.EntranceStatus.Status.ENROLLED,
             entrance_statuses__is_status_visible=True,
+        ).annotate(
+            min_session=Min('entrance_statuses__sessions_and_parallels__session__name'),
+            min_parallel=Min('entrance_statuses__sessions_and_parallels__parallel__name')
         ).order_by(
-            'entrance_statuses__session__name',
-            'entrance_statuses__parallel__name',
+            'min_session',
+            'min_parallel',
             'profile__last_name',
             'profile__first_name',
         ).select_related('profile').prefetch_related(
@@ -95,10 +91,6 @@ class EntrancedUsersTable(frontend.table.Table):
             Prefetch(
                 'absence_reasons',
                 models.AbstractAbsenceReason.objects.filter(school=school)),
-            Prefetch(
-                'questionnaire_answers',
-                questionnaire.models.QuestionnaireAnswer.objects.filter(
-                    questionnaire=enrolled_questionnaire)),
         )
 
         super().__init__(
@@ -117,25 +109,43 @@ class EntrancedUsersTable(frontend.table.Table):
 
     def render_session(self, value):
         # TODO: will it be filtered?
-        status = value.all()[0]
-        return status.session.name if status.session else ''
+        status = value.get()
+        sessions_and_parallels = status.sessions_and_parallels.all()
+        selected_session = sessions_and_parallels.filter(selected_by_user=True).first()
+        if selected_session is not None:
+            return selected_session.session.name if selected_session.session else ''
+        return ', '.join(set(
+            sessions_and_parallels
+                .filter(session__isnull=False)
+                .order_by('session_id')
+                .values_list('session__name', flat=True)
+        ))
 
     def render_parallel(self, value):
         # TODO: will it be filtered?
-        status = value.all()[0]
-        return status.parallel.name if status.parallel else ''
+        status = value.get()
+        sessions_and_parallels = status.sessions_and_parallels.all()
+        selected_parallel = sessions_and_parallels.filter(selected_by_user=True).first()
+        if selected_parallel is not None:
+            return selected_parallel.parallel.name if selected_parallel.parallel else ''
+        return ', '.join(set(
+            sessions_and_parallels
+                .filter(parallel__isnull=False)
+                .order_by('parallel_id')
+                .values_list('parallel__name', flat=True)
+        ))
 
     def render_enrolled_status(self, record):
         absence_reasons = record.absence_reasons.all()
         absence_reason = absence_reasons[0] if absence_reasons else None
-        if absence_reason is None:
-            # TODO: check for participation confirmation. Another invisible
-            #       step?
-            if record.questionnaire_answers.all():
-                return ''
-            else:
-                return 'Участие не подтверждено'
-        return str(absence_reason)
+        if absence_reason is not None:
+            return str(absence_reason)
+
+        entrance_status = record.entrance_statuses.get()
+        if not entrance_status.is_approved:
+            return 'Участие не подтверждено'
+
+        return ''
 
 
 @login_required
@@ -435,7 +445,7 @@ def set_enrollment_type(request, step_id):
 
 @require_POST
 @login_required
-def reset_step(request, step_id):
+def reset_enrollment_type(request, step_id):
     step = get_object_or_404(
         models.SelectEnrollmentTypeEntranceStep,
         id=step_id, school=request.school
@@ -445,4 +455,78 @@ def reset_step(request, step_id):
         step=step
     ).delete()
 
+    return redirect('school:user', request.school.short_name)
+
+
+@require_POST
+@login_required
+def select_session_and_parallel(request, step_id):
+    get_object_or_404(models.ResultsEntranceStep, id=step_id, school=request.school)
+    entrance_status = models.EntranceStatus.get_visible_status(request.school, request.user)
+    if not entrance_status.is_enrolled:
+        return HttpResponseNotFound()
+    form = forms.SelectSessionAndParallelForm(
+        entrance_status.sessions_and_parallels.all(),
+        data=request.POST
+    )
+    if form.is_valid():
+        selected = models.EnrolledToSessionAndParallel.objects.get(
+            pk=form.cleaned_data['session_and_parallel']
+        )
+        with transaction.atomic():
+            selected.select_this_option()
+            entrance_status.approve()
+    else:
+        # TODO (andgein): show error if form is not valid
+        raise ValueError('Errors: ' + ', '.join(map(str, form.errors)))
+    return redirect('school:user', request.school.short_name)
+
+
+@require_POST
+@login_required
+def reset_session_and_parallel(request, step_id):
+    step = get_object_or_404(models.ResultsEntranceStep, id=step_id, school=request.school)
+    entrance_status = models.EntranceStatus.get_visible_status(request.school, request.user)
+    if not entrance_status.is_enrolled:
+        return HttpResponseNotFound()
+
+    if step.available_to_time and step.available_to_time.passed_for_user(request.user):
+        return redirect('school:user', request.school.short_name)
+
+    with transaction.atomic():
+        entrance_status.sessions_and_parallels.update(selected_by_user=False)
+        entrance_status.remove_approving()
+    return redirect('school:user', request.school.short_name)
+
+
+@require_POST
+@login_required
+def approve_enrollment(request, step_id):
+    get_object_or_404(models.ResultsEntranceStep, id=step_id, school=request.school)
+    entrance_status = models.EntranceStatus.get_visible_status(request.school, request.user)
+    if not entrance_status.is_enrolled:
+        return HttpResponseNotFound()
+
+    if entrance_status.sessions_and_parallels.count() != 1:
+        return HttpResponseNotFound()
+
+    with transaction.atomic():
+        entrance_status.sessions_and_parallels.update(selected_by_user=True)
+        entrance_status.approve()
+    return redirect('school:user', request.school.short_name)
+
+
+@require_POST
+@login_required
+def reject_participation(request, step_id):
+    get_object_or_404(models.ResultsEntranceStep, id=step_id, school=request.school)
+    entrance_status = models.EntranceStatus.get_visible_status(request.school, request.user)
+    if not entrance_status.is_enrolled:
+        return HttpResponseNotFound()
+
+    models.RejectionAbsenceReason.objects.create(
+        school=request.school,
+        user=request.user,
+        created_by=request.user,
+    )
     return redirect('school:user', request.school.short_name)

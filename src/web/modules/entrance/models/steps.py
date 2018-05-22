@@ -4,7 +4,6 @@ import operator
 from django.db import models, transaction, IntegrityError
 from django.conf import settings
 from polymorphic import models as polymorphic_models
-from django.utils import timezone
 
 import questionnaire.models
 import schools.models
@@ -446,20 +445,31 @@ class ResultsEntranceStep(AbstractEntranceStep):
 
     def _get_entrance_message(self, entrance_status):
         if entrance_status.is_enrolled:
-            if entrance_status.session is not None:
-                session_name = entrance_status.session.get_full_name()
+            sessions_and_parallels = entrance_status.sessions_and_parallels.all()
+            selected = sessions_and_parallels.filter(selected_by_user=True).first()
+            if selected is not None:
+                session_name = selected.session.get_full_name()
+                parallel_name = selected.parallel.name if selected.parallel else ''
             else:
-                session_name = self.school.name
+                if sessions_and_parallels.values('session').distinct().count() == 1:
+                    session_name = sessions_and_parallels.first().session.get_full_name()
+                else:
+                    session_name = self.school.name
+
+                if sessions_and_parallels.values('parallel').distinct().count() == 1:
+                    parallel_name = sessions_and_parallels.first().parallel.name
+                else:
+                    parallel_name = ''
 
             message = 'Поздравляем! Вы приняты в ' + session_name
-            if entrance_status.parallel is not None:
-                message += ' в параллель ' + entrance_status.parallel.name
+            if parallel_name:
+                message += ' в параллель ' + parallel_name
         elif entrance_status.is_in_reserve_list:
             message = ('Вы находитесь в резервном списке на поступление. '
-                       'Вы будете зачислены в ' + self.school.name + ' '
-                                                                     'в случае появления свободных мест. '
-                                                                     'К сожалению, мы не можем гарантировать, '
-                                                                     'что это произойдёт.')
+                       'Вы будете зачислены в ' + self.school.name + ' ' +
+                       'в случае появления свободных мест. '
+                       'К сожалению, мы не можем гарантировать, '
+                       'что это произойдёт.')
             if entrance_status.public_comment:
                 message += '\nПричина: ' + entrance_status.public_comment
         else:
@@ -475,10 +485,28 @@ class ResultsEntranceStep(AbstractEntranceStep):
         entrance_status = self._get_visible_entrance_status(user)
         absence_reason = self._get_absence_reason(user)
         if entrance_status is not None:
-            entrance_status.message = self._get_entrance_message(
-                entrance_status)
+            entrance_status.message = self._get_entrance_message(entrance_status)
             if absence_reason is not None:
                 entrance_status.absence_reason = absence_reason
+                block.title = 'Вы отказались от участия в ' + self.school.name
+
+            if absence_reason is None and entrance_status.is_enrolled:
+                block.title = 'Вы приняты в ' + self.school.name
+
+            sessions_and_parallels = entrance_status.sessions_and_parallels.all()
+            selected_variant = sessions_and_parallels.filter(selected_by_user=True).first()
+
+            block.has_multiple_variants = len(sessions_and_parallels) > 1
+            block.has_selected_variant = selected_variant is not None
+
+            block.should_choose = block.has_multiple_variants and not block.has_selected_variant
+            block.can_reset = block.has_multiple_variants and block.has_selected_variant and (
+                self.available_to_time is None or not self.available_to_time.passed_for_user(user)
+            )
+            block.should_approve = not block.has_multiple_variants and not block.has_selected_variant
+            block.is_simple_approved = not block.has_multiple_variants and block.has_selected_variant
+
+            block.select_session_and_parallel_form = forms.SelectSessionAndParallelForm(sessions_and_parallels)
 
         block.entrance_status = entrance_status
         return block
@@ -507,7 +535,7 @@ class MakeUserParticipatingEntranceStep(AbstractEntranceStep):
                     user=user,
                 ).first()
                 if (current is None or
-                    current.status == entrance_models.EntranceStatus.Status.NOT_PARTICIPATED):
+                   current.status == entrance_models.EntranceStatus.Status.NOT_PARTICIPATED):
                     entrance_models.EntranceStatus.create_or_update(
                         self.school,
                         user,

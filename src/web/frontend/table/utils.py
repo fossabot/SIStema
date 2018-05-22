@@ -4,6 +4,7 @@ import django.http.response
 
 import django_tables2.utils
 
+
 class Accessor(django_tables2.utils.Accessor):
     @property
     def django_lookup(self):

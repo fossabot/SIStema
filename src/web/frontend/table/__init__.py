@@ -17,4 +17,5 @@ from .columns import (
 from .utils import (
     A,
     RequestConfig,
+    TableDataSource,
 )

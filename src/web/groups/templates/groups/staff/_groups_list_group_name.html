@@ -1,0 +1,13 @@
+{% comment %}
+    Template for rendering group name in groups list.
+
+    Parameters:
+        - value: instance of AbstractGroup
+{% endcomment %}
+
+{% load url %}
+
+<div>
+    <a href="{% url 'school:groups:group' value.school.short_name value.short_name %}">{{ value.name }}</a>
+</div>
+<div class="text-muted">{{ value.short_name }}</div>

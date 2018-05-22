@@ -178,6 +178,11 @@ class Group(models.Model):
                 '({}) should belong to the same school.'
                 .format(self.parallel, self.session)
             )
+        if not self.parallel.sessions.filter(id=self.session_id).exists():
+            raise IntegrityError(
+                'Error while saving study group: parallel ({}) doesn\'t belong'
+                'to session ({})'.format(self.parallel, self.session)
+            )
         super().save(*args, **kwargs)
 
 

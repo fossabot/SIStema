@@ -23,8 +23,7 @@ class UsersFromGroupAutocomplete(dal.autocomplete.Select2QuerySetView):
             return users.models.User.objects.none()
 
         # Check whether current user can see a list of group members
-        access_type = group.get_access_type_for_user(self.request.user)
-        if access_type < models.GroupAccess.Type.LIST_MEMBERS:
+        if not group.can_user_list_members(self.request.user):
             return users.models.User.objects.none()
 
         qs = group.users.order_by('profile__last_name', 'profile__first_name')

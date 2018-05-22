@@ -57,6 +57,12 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
         unique_together = ('short_name', 'school')
         verbose_name = 'group'
 
+    def __str__(self):
+        result = 'Группа «%s»' % self.name
+        if self.school is not None:
+            result += ' для ' + str(self.school)
+        return result
+
     def is_user_in_group(self, user):
         """
         You can override this method in subclass.
@@ -77,7 +83,7 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
     @property
     def user_ids(self):
         """
-        :return: QuerySet or list of ids of users which are members of this group
+        :return: QuerySet or list of ids of users which are member of this group
         """
         raise NotImplementedError(
             'Each group should implement user_ids(), but %s doesn\'t' %
@@ -91,6 +97,10 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
         return GroupAccess.Type.NONE
 
     def get_access_type_for_user(self, user):
+        # Superuser has admin access to any group
+        if user.is_superuser:
+            return GroupAccess.Type.ADMIN
+
         user_access = GroupAccessForUser.objects.filter(
             to_group=self, user=user
         ).first()
@@ -117,11 +127,14 @@ class AbstractGroup(polymorphic.models.PolymorphicModel):
 
         return user_access
 
-    def __str__(self):
-        result = 'Группа «%s»' % self.name
-        if self.school is not None:
-            result += ' для ' + str(self.school)
-        return result
+    def can_user_list_members(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.LIST_MEMBERS
+
+    def can_user_edit_members(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.EDIT_MEMBERS
+
+    def is_user_admin(self, user):
+        return self.get_access_type_for_user(user) >= GroupAccess.Type.ADMIN
 
 
 class ManuallyFilledGroup(AbstractGroup):
@@ -226,7 +239,6 @@ class GroupAccess(polymorphic.models.PolymorphicModel):
             value=0,
             label='Нет доступа, группа не видна',
         )
-
         LIST_MEMBERS = djchoices.ChoiceItem(
             value=10,
             label='Может просматривать участников',

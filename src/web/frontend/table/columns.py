@@ -2,6 +2,7 @@ import itertools
 
 import django_tables2 as tables
 
+
 class BaseColumn:
     def __init__(self, verbose_name=''):
         self.verbose_name = verbose_name
@@ -40,7 +41,6 @@ class Column(BaseColumn):
         render = getattr(self, 'render', None)
         if callable(render):
             self.dt2_column.render = render
-
 
     @property
     def accessor(self):

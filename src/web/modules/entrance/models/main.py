@@ -771,7 +771,8 @@ class EnrolledToSessionAndParallel(models.Model):
                 '%s: session and parallel can not be None at the same time' %
                 self.__class__.__name__
             )
-        if self.session.school_id != self.entrance_status.school_id:
+        if (self.session is not None and
+            self.session.school_id != self.entrance_status.school_id):
             raise IntegrityError(
                 '%s: session should belong to the same school as entrance status (%s != %s)' % (
                     self.__class__.__name__,
@@ -779,7 +780,8 @@ class EnrolledToSessionAndParallel(models.Model):
                     self.entrance_status.school,
                 )
             )
-        if self.parallel.school_id != self.entrance_status.school_id:
+        if (self.parallel is not None and
+            self.parallel.school_id != self.entrance_status.school_id):
             raise IntegrityError(
                 '%s: parallel should belong to the same school as entrance status (%s != %s)' % (
                     self.__class__.__name__,
@@ -787,7 +789,9 @@ class EnrolledToSessionAndParallel(models.Model):
                     self.entrance_status.school,
                 )
             )
-        if self.parallel.sessions.filter(id=self.session_id).count() == 0:
+        if (self.session is not None and
+            self.parallel is not None and
+            not self.parallel.sessions.filter(id=self.session_id).exists()):
             raise IntegrityError(
                 '%s: parallel %s doesn\'t belong to session %s' % (
                     self.__class__.__name__,

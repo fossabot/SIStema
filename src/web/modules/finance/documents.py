@@ -6,7 +6,6 @@ from modules.entrance.models import EntranceStatus
 from generator import generator
 import datetime
 
-
 class DocumentGenerator:
     def __init__(self, school):
         self.school = school
@@ -22,46 +21,70 @@ class DocumentGenerator:
                 short_name__in=['parent', 'details']
             ).first()
 
-        self.payment_questions = questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
-            questionnaire=self.payment_questionnaire
-        )
-        self.payment_questions = {q.short_name: q for q in self.payment_questions}
+        # For invitations to foreign countries
+        self.visa_questionnaire = questionnaire.models.Questionnaire.objects.filter(
+            school=self.school,
+            short_name='august_passport_visa'
+        ).first()
+        
+        self.questions = {
+            'payment': self._get_questions(payment_questionnaire),
+            'visa': self._get_questions(visa_questionnaire),
+        }
 
-        self.questionnaire_choice_variants = list(
+    
+    def _get_questions(self, questionnaire):
+        questions = questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
+            questionnaire=questionnaire
+        )
+        questions = {q.short_name: q for q in questions}
+
+        questionnaire_choice_variants = list(
             questionnaire.models.ChoiceQuestionnaireQuestionVariant.objects.filter(
-                question__questionnaire=self.payment_questionnaire
+                question__questionnaire=questionnaire
             )
         )
-        self.questionnaire_choice_variants = {v.id: v for v in self.questionnaire_choice_variants}
+        questionnaire_choice_variants = {v.id: v for v in questionnaire_choice_variants}
+
+        return {
+            'questions': questions,
+            'choices': questionnaire_choice_variants,
+        }
+
 
     # Return just user's answer if it's a text, integer or date,
     # otherwise return corresponding option from ChoiceQuestionnaireQuestionVariant
-    def _get_payment_question_answer(self, user_answer):
+    def _get_question_answer(self, user_answer, questions):
         question_short_name = user_answer.question_short_name
-        question = self.payment_questions[question_short_name]
+        question = questions['questions'][question_short_name]
 
         if user_answer.answer.strip() == '':
             return ''
 
         if isinstance(question, questionnaire.models.ChoiceQuestionnaireQuestion):
-            return self.questionnaire_choice_variants[int(user_answer.answer)].text
+            return questions['choices'][int(user_answer.answer)].text
 
         return user_answer.answer
+
+
+    def _get_dict_questionnaire(self, user, questionnaire, questions):
+        user_questionnaire = list(
+            questionnaire.models.QuestionnaireAnswer.objects.filter(
+                questionnaire=questionnaire,
+                user=user
+            )
+        )
+        user_questionnaire = {
+            a.question_short_name: self._get_question_answer(a, questions)
+            for a in user_questionnaire
+        }
+
 
     def generate(self, document_type, user):
         if not self.payment_questionnaire.is_filled_by(user):
             raise ValueError('User has not fill the payment questionnaire')
-
-        user_payment_questionnaire = list(
-            questionnaire.models.QuestionnaireAnswer.objects.filter(
-                questionnaire=self.payment_questionnaire,
-                user=user
-            )
-        )
-        user_payment_questionnaire = {
-            a.question_short_name: self._get_payment_question_answer(a)
-            for a in user_payment_questionnaire
-        }
+        user_payment_questionnaire = self._get_dict_questionnaire(user, self.payment_questionnaire, self.questions['payment'])
+        user_visa_questionnaire = self._get_dict_questionnaire(user, self.visa_questionnaire, self.questions['visa'])
 
         entrance_status = EntranceStatus.get_visible_status(self.school, user)
         if entrance_status is None or entrance_status.status != EntranceStatus.Status.ENROLLED:
@@ -84,5 +107,6 @@ class DocumentGenerator:
                 'created_at': datetime.date.today()
             },
             'payment': user_payment_questionnaire,
-            'price': price
+            'price': price,
+            'visa' : user_visa_questionnaire,
         })

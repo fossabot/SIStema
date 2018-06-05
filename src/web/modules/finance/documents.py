@@ -28,20 +28,20 @@ class DocumentGenerator:
         ).first()
         
         self.questions = {
-            'payment': self._get_questions(payment_questionnaire),
-            'visa': self._get_questions(visa_questionnaire),
+            'payment': self._get_questions(self.payment_questionnaire),
+            'visa': self._get_questions(self.visa_questionnaire),
         }
 
     
-    def _get_questions(self, questionnaire):
+    def _get_questions(self, current_questionnaire):
         questions = questionnaire.models.AbstractQuestionnaireQuestion.objects.filter(
-            questionnaire=questionnaire
+            questionnaire=current_questionnaire
         )
         questions = {q.short_name: q for q in questions}
 
         questionnaire_choice_variants = list(
             questionnaire.models.ChoiceQuestionnaireQuestionVariant.objects.filter(
-                question__questionnaire=questionnaire
+                question__questionnaire=current_questionnaire
             )
         )
         questionnaire_choice_variants = {v.id: v for v in questionnaire_choice_variants}
@@ -67,10 +67,10 @@ class DocumentGenerator:
         return user_answer.answer
 
 
-    def _get_dict_questionnaire(self, user, questionnaire, questions):
+    def _get_dict_questionnaire(self, user, current_questionnaire, questions):
         user_questionnaire = list(
             questionnaire.models.QuestionnaireAnswer.objects.filter(
-                questionnaire=questionnaire,
+                questionnaire=current_questionnaire,
                 user=user
             )
         )
@@ -78,11 +78,12 @@ class DocumentGenerator:
             a.question_short_name: self._get_question_answer(a, questions)
             for a in user_questionnaire
         }
+        return user_questionnaire
 
 
     def generate(self, document_type, user):
-        if not self.payment_questionnaire.is_filled_by(user):
-            raise ValueError('User has not fill the payment questionnaire')
+        # if not self.payment_questionnaire.is_filled_by(user):
+        #     raise ValueError('User has not fill the payment questionnaire')
         user_payment_questionnaire = self._get_dict_questionnaire(user, self.payment_questionnaire, self.questions['payment'])
         user_visa_questionnaire = self._get_dict_questionnaire(user, self.visa_questionnaire, self.questions['visa'])
 

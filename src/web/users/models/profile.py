@@ -213,10 +213,14 @@ class UserProfile(models.Model):
 
     @property
     def sex_str(self):
+        if self.sex is None:
+            return ''
         return self.Sex.values[self.sex]
 
     @property
     def t_shirt_size_str(self):
+        if self.t_shirt_size is None:
+            return ''
         return self.TShirtSize.values[self.t_shirt_size]
 
     @classmethod

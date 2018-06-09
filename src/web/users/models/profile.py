@@ -211,6 +211,14 @@ class UserProfile(models.Model):
 
     current_class = property(get_class, set_class)
 
+    @property
+    def sex_str(self):
+        return self.Sex.values[self.sex]
+
+    @property
+    def t_shirt_size_str(self):
+        return self.TShirtSize.values[self.t_shirt_size]
+
     @classmethod
     def get_field_names(cls):
         return [

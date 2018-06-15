@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'sorl.thumbnail',
     'wiki',
     'wiki.plugins.attachments',
+    'wiki.plugins.globalhistory',
     'wiki.plugins.help',
     'wiki.plugins.images',
     'wiki.plugins.links',

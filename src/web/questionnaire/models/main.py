@@ -147,8 +147,8 @@ class AbstractQuestionnaireBlock(polymorphic.models.PolymorphicModel):
     @cached_property
     def show_conditions(self):
         return (
-            self.show_conditions_questionnaireblockgroupmembershowcondition.all() +
-            self.show_conditions_questionnaireblockvariantcheckedshowcondition.all()
+            list(self.show_conditions_questionnaireblockgroupmembershowcondition.all()) +
+            list(self.show_conditions_questionnaireblockvariantcheckedshowcondition.all())
         )
 
 

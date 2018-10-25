@@ -5,6 +5,7 @@ from django.db import models, transaction, IntegrityError
 from django.conf import settings
 from polymorphic import models as polymorphic_models
 
+import groups.models
 import questionnaire.models
 import schools.models
 from . import main as main_models
@@ -622,6 +623,42 @@ class UserParticipatedInSchoolEntranceStepException(models.Model):
                         self.step.school_to_check_participation,
                         self.step.school)
         )
+
+
+class UserIsMemberOfGroupEntranceStep(AbstractEntranceStep,
+                                      EntranceStepTextsMixIn):
+    """
+    Step considered as passed only if a user is a member of the specified group.
+
+    Visible only if user is not a member of the group.
+    """
+
+    template_file = 'user_is_member_of_group.html'
+
+    group = models.ForeignKey(
+        groups.models.AbstractGroup,
+        on_delete=models.CASCADE,
+        related_name='+',
+        help_text='Шаг будет считаться пройденным только если пользователь '
+                  'состоит в группе. Пройденный шаг невидим.',
+    )
+
+    def __str__(self):
+        return 'Шаг проверки, состоит ли пользователь в группе "{}" для {}' \
+            .format(self.group.name, self.school)
+
+    def is_visible(self, user):
+        return not self.group.is_user_in_group(user)
+
+    def is_passed(self, user):
+        return self.group.is_user_in_group(user)
+
+    def build(self, user):
+        block = super().build(user)
+        # block may be equal to None if it's invisible to the current user
+        if block is not None:
+            block.group = self.group
+        return block
 
 
 class MarkdownEntranceStep(AbstractEntranceStep, EntranceStepTextsMixIn):

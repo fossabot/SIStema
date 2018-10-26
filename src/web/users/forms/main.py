@@ -272,23 +272,6 @@ class UserProfileForm(forms.Form):
         empty_value=None,
     )
 
-    has_accepted_terms = forms.TypedMultipleChoiceField(
-        coerce=bool,
-        choices=[(
-            True,
-            mark_safe(
-                # TODO (andgein): doesn't hard-code url to the agreement.pdf
-                '<a href="/static/users/agreement.pdf">С договором '
-                'присоединения</a> ознакомлен и согласен. Даю согласие на '
-                'обработку моих персональных данных в соответствии с этим '
-                'договором.'
-            )
-        )],
-        label='Согласие на обработку персональных данных',
-        required=True,
-        widget=SistemaCheckboxSelect()
-    )
-
     def __init__(self, *args, all_fields_are_required=False, **kwargs):
         if 'initial' in kwargs and 'has_accepted_terms' in kwargs['initial']:
             # As has_accepted_terms is a ChoiceField,

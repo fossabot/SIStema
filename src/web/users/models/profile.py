@@ -246,7 +246,7 @@ class UserProfile(models.Model):
             'document_type',
             'document_number',
             't_shirt_size',
-            'has_accepted_terms',
+            # 'has_accepted_terms',
         ]
 
     @classmethod

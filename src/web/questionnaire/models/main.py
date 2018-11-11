@@ -448,6 +448,7 @@ class UserListQuestionnaireQuestion(AbstractQuestionnaireQuestion):
 
     group = models.ForeignKey(
         'groups.AbstractGroup',
+        null=True,
         on_delete=models.CASCADE,
         related_name='+',
         help_text="Группа, пользователей которой можно выбирать",

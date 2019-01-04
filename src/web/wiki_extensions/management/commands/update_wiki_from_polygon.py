@@ -128,7 +128,7 @@ class Command(management.base.BaseCommand):
         # Keys are A, B, etc. Sort them to get problems in the right order
         keys = list(sorted(problems.keys()))
 
-        description_bits = ['\n']
+        description_bits = ['\r\n']
         for key in keys:
             problem = problems[key]
             request = polygon.Request(
@@ -136,7 +136,7 @@ class Command(management.base.BaseCommand):
                 args={'problemId': problem['id']})
             description = request.issue()['result']
             description_bits.append(
-                "1. `{name}:{id}` — {description}\n"
+                "1. `{name}:{id}` — {description}\r\n"
                 .format(name=problem["name"],
                         id=problem["id"],
                         description=description))

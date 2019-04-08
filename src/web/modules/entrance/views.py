@@ -171,7 +171,7 @@ def exam(request, selected_task_id=None):
         selected_task_id = tasks[0].id
     try:
         selected_task_id = int(selected_task_id)
-    except ValueError:
+    except (ValueError, TypeError):
         selected_task_id = None
 
     categories = list(sorted(

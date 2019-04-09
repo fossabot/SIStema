@@ -15,7 +15,7 @@
     <div class="entrance-exam__task__program__params mb20">
         <div>Имя входного файла: <b>{{ task.input_file_name }}</b></div>
         <div>Имя выходного файла: <b>{{ task.output_file_name }}</b></div>
-        <div>Ограничение по времени: <b>{% widthratio task.time_limit 1000 1%} с.</b></div>
+        <div>Ограничение по времени: <b>{% if task.time_limit >= 1000 %}{% widthratio task.time_limit 1000 1 %} с.{% else %}{{ task.time_limit }} мс.{% endif %}</b></div>
         <div>Ограничение по памяти: <b>{{ task.memory_limit|filesizeformat }} </b></div>
     </div>
 

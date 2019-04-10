@@ -228,6 +228,8 @@ class HistoryEntry(models.Model):
 
     @property
     def full_role(self):
+        if not self.role and not self.study_group:
+            return 'ученик'
         if not self.role:
             return self.study_group.name
         if not self.study_group:

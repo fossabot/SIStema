@@ -1,6 +1,6 @@
 # Script for making submissions archive for cheating review
 
-def collect_school(school_short_name, group_short_name):
+def collect_solutions(school_short_name, group_short_name):
     """
     Copy all the solutions to "submissions" directory and rename to the
     "<solution_id>-<user_id>-<task_id>.<lang>" format.

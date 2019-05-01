@@ -508,6 +508,15 @@ class EnrolledUsersGroupAdmin(groups.admin.AbstractGroupChildAdmin):
     )
 
 
+@admin.register(models.SelectedEnrollmentTypeGroup)
+class SelectedEnrollmentTypeGroupAdmin(groups.admin.AbstractGroupChildAdmin):
+    base_model = models.SelectedEnrollmentTypeGroup
+    autocomplete_fields = (
+        groups.admin.AbstractGroupChildAdmin.autocomplete_fields +
+        ('enrollment_type', )
+    )
+
+
 @admin.register(models.UsersParticipatedInSchoolGroup)
 class SchoolGroupAdmin(groups.admin.AbstractGroupChildAdmin):
     base_model = models.UsersParticipatedInSchoolGroup

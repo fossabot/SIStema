@@ -39,7 +39,8 @@ class Command(management.base.BaseCommand):
                                              message)
                 continue
 
-            if new_content == old_content:
+            if (new_content.replace('\r\n', '\n') ==
+                    old_content.replace('\r\n', '\n')):
                 # Nothing changed, do nothing
                 continue
 
